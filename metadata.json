@@ -1,0 +1,6 @@
+{
+  "name": "Estrelato",
+  "description": "Simulador de carreira de jogador de futebol onde você começa na base e busca o topo do mundo.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
