@@ -7,6 +7,17 @@ import { TEAMS } from "../data";
 type Action = "Chutar pro gol" | "Tocar a bola" | "Driblar" | "Correr pela Lateral";
 type MatchStatus = "INTRO" | "SIMULATING" | "WAITING_ACTION" | "FINISHED";
 
+// Lives at module scope (not component state) so it persists across finals and
+// seasons for as long as the app is open, but resets on a full page reload.
+// This is what prevents the player from facing the exact same rival final
+// after final — both within the same season (multiple finals) and across
+// consecutive seasons.
+const recentOpponentsByCategory = new Map<string, string[]>();
+
+export function resetOpponentMemory() {
+  recentOpponentsByCategory.clear();
+}
+
 interface MatchEvent {
   minute: number;
   text: string;
@@ -32,31 +43,57 @@ export function InteractiveMatchModal({
   // To track player chances
   const [chancesHad, setChancesHad] = useState(0);
   const [totalChances, setTotalChances] = useState(1);
+  const [resolvingPenalties, setResolvingPenalties] = useState(false);
 
   const isNational = finalType.includes("Copa do Mundo") || finalType.includes("Copa Continental (Seleção)");
   const playerTeamName = isNational ? player.nationality : player.currentTeam.name;
 
   useEffect(() => {
     let ops = TEAMS.map(t => t.name);
+    // `category` groups finals that draw from the same pool of possible
+    // opponents, so we know which "recently faced" list applies to this draw.
+    let category = "geral";
+
     if (finalType.includes("Mundial")) {
+      category = "mundial";
       ops = ["Real Madrid", "Manchester City", "Bayern de Munique", "Liverpool", "Barcelona", "Chelsea", "Inter de Milão", "Boca Juniors"];
     } else if (isNational) {
+      category = `selecao-${finalType}`;
       ops = ["França", "Alemanha", "Argentina", "Espanha", "Inglaterra", "Itália", "Portugal", "Holanda", "Uruguai", "Brasil"];
       ops = ops.filter(c => c !== player.nationality); // simple avoidance
     } else if (finalType.includes("Libertadores")) {
+      category = "libertadores";
       const libertadoresTeams = ["Boca Juniors", "River Plate", "Peñarol", "Nacional", "Independiente", "Colo-Colo"];
       const brTeams = TEAMS.filter(t => t.country === "BR" && t.level >= 2 && t.id !== player.currentTeam.id).map(t => t.name);
       ops = [...libertadoresTeams, ...brTeams];
     } else if (finalType.includes("Champions") || finalType.includes("Continental")) {
+      category = "continental";
       ops = TEAMS.filter(t => t.country !== "BR" && t.level >= 3 && t.id !== player.currentTeam.id).map(t => t.name);
       if (ops.length === 0) ops = ["Bayern de Munique", "Real Madrid", "PSG", "Manchester City", "Juventus"];
     } else {
+      category = `domestico-${player.currentTeam.country}`;
       const domestic = TEAMS.filter(t => t.country === player.currentTeam.country && t.id !== player.currentTeam.id);
       if (domestic.length > 0) {
         ops = domestic.map(t => t.name);
       }
     }
-    setOpponentName(ops[Math.floor(Math.random() * ops.length)] || "Adversário");
+
+    // Exclude opponents recently faced in this same category (this is what
+    // stops back-to-back finals — same season or consecutive seasons —
+    // against the identical rival). If excluding them would leave no
+    // options (tiny pools), fall back to the full list so the draw never breaks.
+    const recent = recentOpponentsByCategory.get(category) || [];
+    const freshOptions = ops.filter(name => !recent.includes(name));
+    const pool = freshOptions.length > 0 ? freshOptions : ops;
+
+    const chosen = pool[Math.floor(Math.random() * pool.length)] || "Adversário";
+    setOpponentName(chosen);
+
+    // Remember this pick. We only keep up to half the pool size so that in
+    // small pools (e.g. a 5-team domestic league) we don't end up excluding
+    // every possible opponent.
+    const memorySize = Math.max(1, Math.floor(ops.length / 2));
+    recentOpponentsByCategory.set(category, [chosen, ...recent].slice(0, memorySize));
 
     setStatus("INTRO");
     setMinute(0);
@@ -200,7 +237,12 @@ export function InteractiveMatchModal({
   };
 
   const handleFinish = () => {
+    // Guard against rapid double-clicks: once the penalty shootout has
+    // started, ignore further clicks on this same button until it resolves.
+    if (resolvingPenalties) return;
+
     if (scoreUs === scoreThem) {
+      setResolvingPenalties(true);
       const won = Math.random() > 0.5;
       addEvent("Fim do tempo regulamentar! Vamos para a disputa de pênaltis!", "neutral");
       
@@ -212,6 +254,7 @@ export function InteractiveMatchModal({
           setScoreThem(s => s + 1);
           addEvent(`Cobrança na trave... O ${opponentName} vence nos pênaltis.`, "goal_them");
         }
+        setResolvingPenalties(false);
       }, 1500);
       return;
     }
@@ -333,9 +376,10 @@ export function InteractiveMatchModal({
           {status === "FINISHED" && (
             <button 
               onClick={handleFinish}
-              className="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-black rounded-2xl transition-all text-xl"
+              disabled={resolvingPenalties}
+              className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-black rounded-2xl transition-all text-xl"
             >
-              {scoreUs === scoreThem ? "Ir para os Pênaltis" : "Continuar"}
+              {resolvingPenalties ? "Cobrando pênaltis..." : scoreUs === scoreThem ? "Ir para os Pênaltis" : "Continuar"}
             </button>
           )}
         </div>

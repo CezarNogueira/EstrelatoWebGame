@@ -10,7 +10,7 @@ import { FinalsModal } from "./components/FinalsModal";
 import { ProContractModal } from "./components/ProContractModal";
 import { CareerSummary } from "./components/CareerSummary";
 import { ContractNegotiationModal } from "./components/ContractNegotiationModal";
-import { InteractiveMatchModal } from "./components/InteractiveMatchModal";
+import { InteractiveMatchModal, resetOpponentMemory } from "./components/InteractiveMatchModal";
 import { simulateSeason, applyGrowth, autoDistributePoints, generatePressMessage, calculateMarketValue, calculateOverall, formatCurrency, getReachedFinals } from "./utils";
 
 type Screen = "START" | "CHOOSE_NATIONALITY" | "ROULETTE" | "CHOOSE_POSITION" | "DASHBOARD" | "CAREER_SUMMARY";
@@ -480,6 +480,7 @@ export default function App() {
   };
 
   const handleRestart = () => {
+    resetOpponentMemory();
     setPlayer(null);
     setDraftTeam(null);
     setPlayerName("Você");
