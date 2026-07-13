@@ -45,6 +45,7 @@ export type Player = {
   history: SeasonStat[];
   retired: boolean;
   caps: number;
+  nationality: string;
   isPro: boolean;
   marketValue: number;
   salary: number;

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Player } from "../types";
 import { calculateOverall } from "../utils";
 import { Trophy, Goal, Activity, FastForward, Play, AlertCircle } from "lucide-react";
-import { INITIAL_TEAMS } from "../data";
+import { TEAMS } from "../data";
 
 type Action = "Chutar pro gol" | "Tocar a bola" | "Driblar" | "Correr pela Lateral";
 type MatchStatus = "INTRO" | "SIMULATING" | "WAITING_ACTION" | "FINISHED";
@@ -31,24 +31,27 @@ export function InteractiveMatchModal({
   
   // To track player chances
   const [chancesHad, setChancesHad] = useState(0);
-  const [totalChances, setTotalChances] = useState(1 + Math.floor(Math.random() * 2));
+  const [totalChances, setTotalChances] = useState(1);
+
+  const isNational = finalType.includes("Copa do Mundo") || finalType.includes("Copa Continental (Seleção)");
+  const playerTeamName = isNational ? player.nationality : player.currentTeam.name;
 
   useEffect(() => {
-    let ops = INITIAL_TEAMS.map(t => t.name);
+    let ops = TEAMS.map(t => t.name);
     if (finalType.includes("Mundial")) {
-      ops = ["Real Madrid", "Manchester City", "Bayern de Munique", "Liverpool", "Barcelona"];
-    } else if (finalType.includes("Copa do Mundo") || finalType.includes("Copa Continental (Seleção)")) {
+      ops = ["Real Madrid", "Manchester City", "Bayern de Munique", "Liverpool", "Barcelona", "Chelsea", "Inter de Milão", "Boca Juniors"];
+    } else if (isNational) {
       ops = ["França", "Alemanha", "Argentina", "Espanha", "Inglaterra", "Itália", "Portugal", "Holanda", "Uruguai", "Brasil"];
-      ops = ops.filter(c => c !== player.currentTeam.country); // simple avoidance, though country codes are BR, EN, etc.
+      ops = ops.filter(c => c !== player.nationality); // simple avoidance
     } else if (finalType.includes("Libertadores")) {
-      const libertadoresTeams = ["Boca Juniors", "River Plate", "Peñarol", "Nacional", "Independiente"];
-      const brTeams = INITIAL_TEAMS.filter(t => t.country === "BR" && t.level >= 2 && t.id !== player.currentTeam.id).map(t => t.name);
+      const libertadoresTeams = ["Boca Juniors", "River Plate", "Peñarol", "Nacional", "Independiente", "Colo-Colo"];
+      const brTeams = TEAMS.filter(t => t.country === "BR" && t.level >= 2 && t.id !== player.currentTeam.id).map(t => t.name);
       ops = [...libertadoresTeams, ...brTeams];
     } else if (finalType.includes("Champions") || finalType.includes("Continental")) {
-      ops = INITIAL_TEAMS.filter(t => t.country !== "BR" && t.level >= 3 && t.id !== player.currentTeam.id).map(t => t.name);
-      if (ops.length === 0) ops = ["Bayern de Munique", "Real Madrid", "PSG"];
+      ops = TEAMS.filter(t => t.country !== "BR" && t.level >= 3 && t.id !== player.currentTeam.id).map(t => t.name);
+      if (ops.length === 0) ops = ["Bayern de Munique", "Real Madrid", "PSG", "Manchester City", "Juventus"];
     } else {
-      const domestic = INITIAL_TEAMS.filter(t => t.country === player.currentTeam.country && t.id !== player.currentTeam.id);
+      const domestic = TEAMS.filter(t => t.country === player.currentTeam.country && t.id !== player.currentTeam.id);
       if (domestic.length > 0) {
         ops = domestic.map(t => t.name);
       }
@@ -62,7 +65,7 @@ export function InteractiveMatchModal({
     setEvents([]);
     setChancesHad(0);
     setTotalChances(1); // Max 1 chance for realism and tighter scores
-  }, [finalType, player.currentTeam.country, player.currentTeam.id]);
+  }, [finalType, player.currentTeam.country, player.currentTeam.id, player.nationality, isNational]);
 
   const eventsEndRef = useRef<HTMLDivElement>(null);
 
@@ -106,19 +109,19 @@ export function InteractiveMatchModal({
           }
 
           // Opponent scores (lowered probability for realistic score)
-          if (Math.random() < 0.006) {
+          if (Math.random() < 0.004) {
             setScoreThem(s => s + 1);
             addEvent(`GOL DO ${opponentName.toUpperCase()}! Eles abrem a defesa e marcam.`, "goal_them");
           }
 
           // Team scores without player (lowered probability)
-          if (Math.random() < 0.004) {
+          if (Math.random() < 0.003) {
             setScoreUs(s => s + 1);
-            addEvent("GOL DO SEU TIME! Uma bela jogada coletiva termina na rede!", "goal_us");
+            addEvent(`GOL DA SUA EQUIPE! Uma bela jogada coletiva termina na rede!`, "goal_us");
           }
 
           // Player chance!
-          if (chancesHad < totalChances && Math.random() < 0.03) {
+          if (chancesHad < totalChances && Math.random() < 0.02) {
             setStatus("WAITING_ACTION");
             addEvent(`${player.name} recebe a bola em ótima posição contra a zaga do ${opponentName}! O que ele vai fazer?`, "chance");
           }
@@ -233,7 +236,7 @@ export function InteractiveMatchModal({
           </div>
           <div className="flex justify-center items-center gap-8 mt-4">
             <div className="text-right flex-1 overflow-hidden">
-              <h2 className="text-3xl font-black text-slate-100 truncate">{player.currentTeam.name}</h2>
+              <h2 className="text-3xl font-black text-slate-100 truncate">{playerTeamName}</h2>
               <span className="text-emerald-400 font-bold text-sm">Seu Time</span>
             </div>
             
@@ -260,7 +263,7 @@ export function InteractiveMatchModal({
           {events.length === 0 && status === "INTRO" && (
             <div className="h-full flex flex-col items-center justify-center text-slate-500 space-y-4">
               <Trophy className="w-16 h-16 opacity-20" />
-              <p>Aguardando o apito inicial para {player.currentTeam.name} x {opponentName}...</p>
+              <p>Aguardando o apito inicial para {playerTeamName} x {opponentName}...</p>
             </div>
           )}
           {events.map((ev, i) => (

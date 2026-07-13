@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Attributes, FinalResult, Player, Position, SeasonStat, Team } from "./types";
 import { StartScreen } from "./components/StartScreen";
+import { ChooseNationality } from "./components/ChooseNationality";
 import { Roulette } from "./components/Roulette";
 import { ChoosePosition } from "./components/ChoosePosition";
 import { Dashboard } from "./components/Dashboard";
@@ -12,16 +13,22 @@ import { ContractNegotiationModal } from "./components/ContractNegotiationModal"
 import { InteractiveMatchModal } from "./components/InteractiveMatchModal";
 import { simulateSeason, applyGrowth, autoDistributePoints, generatePressMessage, calculateMarketValue, calculateOverall, formatCurrency, getReachedFinals } from "./utils";
 
-type Screen = "START" | "ROULETTE" | "CHOOSE_POSITION" | "DASHBOARD" | "CAREER_SUMMARY";
+type Screen = "START" | "CHOOSE_NATIONALITY" | "ROULETTE" | "CHOOSE_POSITION" | "DASHBOARD" | "CAREER_SUMMARY";
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>("START");
   const [player, setPlayer] = useState<Player | null>(null);
   const [draftTeam, setDraftTeam] = useState<Team | null>(null);
   const [playerName, setPlayerName] = useState<string>("Você");
+  const [playerNationality, setPlayerNationality] = useState<string>("");
 
   const handleStart = (name: string) => {
     setPlayerName(name);
+    setScreen("CHOOSE_NATIONALITY");
+  };
+
+  const handleNationalitySelected = (nationality: string) => {
+    setPlayerNationality(nationality);
     setScreen("ROULETTE");
   };
 
@@ -52,6 +59,7 @@ export default function App() {
       history: [],
       retired: false,
       caps: 0,
+      nationality: playerNationality,
       isPro: false,
       marketValue: initialMarketValue,
       salary: 0,
@@ -488,6 +496,7 @@ export default function App() {
   return (
     <>
       {screen === "START" && <StartScreen onStart={handleStart} />}
+      {screen === "CHOOSE_NATIONALITY" && <ChooseNationality onSelect={handleNationalitySelected} />}
       {screen === "ROULETTE" && <Roulette onTeamSelected={handleTeamSelected} />}
       {screen === "CHOOSE_POSITION" && <ChoosePosition onPositionSelected={handlePositionSelected} />}
       {screen === "CAREER_SUMMARY" && player && <CareerSummary player={player} onRestart={handleRestart} />}

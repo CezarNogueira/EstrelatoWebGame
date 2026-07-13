@@ -1,3 +1,4 @@
+cat << 'INNER_EOF' > src/data.ts
 import { Team } from "./types";
 
 export const NATIONALITIES = [
@@ -122,3 +123,5 @@ export const TEAMS: Team[] = [
 ];
 
 export const INITIAL_TEAMS = TEAMS.filter((t) => t.level <= 2);
+INNER_EOF
+sh update_data.sh

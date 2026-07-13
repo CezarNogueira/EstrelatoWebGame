@@ -246,8 +246,30 @@ export const getReachedFinals = (player: Player, currentOvr: number): string[] =
       cupName = "Copa del Rey";
       leagueName = "La Liga";
       continentalName = "Champions League";
-    } else if (["PT", "NL", "DE"].includes(country)) {
+    } else if (country === "DE") {
+      cupName = "DFB-Pokal";
+      leagueName = "Bundesliga";
       continentalName = "Champions League";
+    } else if (country === "FR") {
+      cupName = "Coupe de France";
+      leagueName = "Ligue 1";
+      continentalName = "Champions League";
+    } else if (country === "PT") {
+      cupName = "Taça de Portugal";
+      leagueName = "Primeira Liga";
+      continentalName = "Champions League";
+    } else if (country === "NL") {
+      cupName = "KNVB Cup";
+      leagueName = "Eredivisie";
+      continentalName = "Champions League";
+    } else if (country === "US") {
+      cupName = "US Open Cup";
+      leagueName = "MLS";
+      continentalName = "Copa Libertadores";
+    } else if (country === "SA") {
+      cupName = "King\'s Cup";
+      leagueName = "Saudi Pro League";
+      continentalName = "AFC Champions League";
     }
 
     if (Math.random() * 100 < teamPower * 0.15) {
@@ -272,8 +294,8 @@ export const getReachedFinals = (player: Player, currentOvr: number): string[] =
   // National Team check
   const expectedOvr = player.currentTeam.level * 15 + 35;
   const performanceRatio = Math.min(1.5, Math.max(0.5, currentOvr / expectedOvr));
-  const goals = Math.round(randomInt(5, 25) * performanceRatio * (player.attributes.shooting / 50));
-  const assists = Math.round(randomInt(2, 15) * performanceRatio * (player.attributes.passing / 50));
+  const goals = Math.round(randomInt(2, 18) * performanceRatio * (player.attributes.shooting / 50));
+  const assists = Math.round(randomInt(1, 10) * performanceRatio * (player.attributes.passing / 50));
   
   if (currentOvr > 78 && (goals + assists) >= 15 && Math.random() > 0.4) {
     if (player.age % 4 === 0 && Math.random() > 0.7) {
@@ -297,8 +319,8 @@ export const simulateSeason = (
   const performanceRatio = Math.min(1.5, Math.max(0.5, currentOvr / expectedOvr));
   
   const matches = Math.min(50, Math.max(0, Math.round(randomInt(20, 45) * performanceRatio)));
-  const goals = Math.round(randomInt(5, 25) * performanceRatio * (player.attributes.shooting / 50));
-  const assists = Math.round(randomInt(2, 15) * performanceRatio * (player.attributes.passing / 50));
+  const goals = Math.round(randomInt(2, 18) * performanceRatio * (player.attributes.shooting / 50));
+  const assists = Math.round(randomInt(1, 10) * performanceRatio * (player.attributes.passing / 50));
 
   let nationalTeamCall = false;
   if (currentOvr > 78 && (goals + assists) >= 15) {
@@ -340,8 +362,30 @@ export const simulateSeason = (
       cupName = "Copa del Rey";
       leagueName = "La Liga";
       continentalName = "Champions League";
-    } else if (["PT", "NL", "DE"].includes(country)) {
+    } else if (country === "DE") {
+      cupName = "DFB-Pokal";
+      leagueName = "Bundesliga";
       continentalName = "Champions League";
+    } else if (country === "FR") {
+      cupName = "Coupe de France";
+      leagueName = "Ligue 1";
+      continentalName = "Champions League";
+    } else if (country === "PT") {
+      cupName = "Taça de Portugal";
+      leagueName = "Primeira Liga";
+      continentalName = "Champions League";
+    } else if (country === "NL") {
+      cupName = "KNVB Cup";
+      leagueName = "Eredivisie";
+      continentalName = "Champions League";
+    } else if (country === "US") {
+      cupName = "US Open Cup";
+      leagueName = "MLS";
+      continentalName = "Copa Libertadores";
+    } else if (country === "SA") {
+      cupName = "King\'s Cup";
+      leagueName = "Saudi Pro League";
+      continentalName = "AFC Champions League";
     }
   }
 
