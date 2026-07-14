@@ -328,7 +328,6 @@ export default function App() {
         }
       }
     }
-    checkSocialEventOrFinish(stateToPass);
   };
 
   const handlePartyDecision = (accept: boolean) => {
@@ -348,7 +347,6 @@ export default function App() {
     }
 
     setPendingParty(null);
-    checkSocialEventOrFinish(stateToPass);
   };
 
   const MAINTENANCE_COSTS: Record<string, number> = {
@@ -363,45 +361,9 @@ export default function App() {
     "Helicóptero": 80000
   };
 
-  const SOCIAL_EVENTS = [
-    {
-      title: "Encontro Romântico!",
-      desc: "Uma super modelo te chamou para jantar no restaurante mais caro de Paris. O que você faz?",
-      cost: 50000,
-      press: "Romance no ar! Jogador é visto com estrela em Paris!"
-    },
-    {
-      title: "Viagem com Amigos",
-      desc: "Seus amigos antigos da cidade natal querem ir pra Ibiza. Vai bancar tudo?",
-      cost: 150000,
-      press: "O rei de Ibiza! Jogador e amigos esbanjam nas férias."
-    },
-    {
-      title: "Evento Beneficente VIP",
-      desc: "Você foi convidado para um gala de caridade com as maiores celebridades do mundo, pedem uma grande doação.",
-      cost: 100000,
-      press: "Coração de ouro! Jogador doa fortuna em evento VIP."
-    }
-  ];
-
   const [pendingSocialEvent, setPendingSocialEvent] = useState<any>(null);
 
   const [pendingSponsorChoice, setPendingSponsorChoice] = useState<boolean>(false);
-
-  const checkSocialEventOrFinish = (stateToPass: any) => {
-    const p = stateToPass.baseUpdatedPlayer;
-    if (p.personal.social >= 70 && !p.retired) {
-      if (Math.random() <= 0.4) { // 40% chance of a social event
-        const evt = SOCIAL_EVENTS[Math.floor(Math.random() * SOCIAL_EVENTS.length)];
-        if (p.money >= evt.cost) {
-          setPendingSocialEvent(evt);
-          setPendingSimulationPhase(stateToPass);
-          return;
-        }
-      }
-    }
-    checkSponsorOrFinish(stateToPass);
-  };
 
   const checkSponsorOrFinish = (stateToPass: any) => {
     const p = stateToPass.baseUpdatedPlayer;
