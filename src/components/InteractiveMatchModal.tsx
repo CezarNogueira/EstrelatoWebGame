@@ -66,9 +66,14 @@ export function InteractiveMatchModal({
       const libertadoresTeams = ["Boca Juniors", "River Plate", "Peñarol", "Nacional", "Independiente", "Colo-Colo"];
       const brTeams = TEAMS.filter(t => t.country === "BR" && t.level >= 2 && t.id !== player.currentTeam.id).map(t => t.name);
       ops = [...libertadoresTeams, ...brTeams];
-    } else if (finalType.includes("Champions") || finalType.includes("Continental")) {
+    } else if (finalType.includes("Champions") || (finalType.includes("Continental") && !isNational)) {
+      // A Champions League é uma competição europeia - só clubes da Europa
+      // (EN/ES/IT/DE/FR/PT/NL) podem entrar nesse sorteio. Antes, o filtro
+      // usava "país !== BR", o que deixava clubes sul-americanos (ex: Boca
+      // Juniors), sauditas ou norte-americanos entrarem como adversários.
       category = "continental";
-      ops = TEAMS.filter(t => t.country !== "BR" && t.level >= 3 && t.id !== player.currentTeam.id).map(t => t.name);
+      const UEFA_COUNTRIES = ["EN", "ES", "IT", "DE", "FR", "PT", "NL"];
+      ops = TEAMS.filter(t => UEFA_COUNTRIES.includes(t.country) && t.level >= 3 && t.id !== player.currentTeam.id).map(t => t.name);
       if (ops.length === 0) ops = ["Bayern de Munique", "Real Madrid", "PSG", "Manchester City", "Juventus"];
     } else {
       category = `domestico-${player.currentTeam.country}`;

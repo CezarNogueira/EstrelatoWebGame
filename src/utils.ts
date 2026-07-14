@@ -345,6 +345,14 @@ export const getReachedFinals = (player: Player, currentOvr: number): string[] =
       cupName = "King\'s Cup";
       leagueName = "Saudi Pro League";
       continentalName = "AFC Champions League";
+    } else if (country === "AR") {
+      cupName = "Copa Argentina";
+      leagueName = "Liga Profesional Argentina";
+      continentalName = "Copa Libertadores";
+    } else if (country === "UY") {
+      cupName = "Copa Uruguay";
+      leagueName = "Primera División Uruguaya";
+      continentalName = "Copa Libertadores";
     }
 
     if (Math.random() * 100 < teamPower * 0.15) {
@@ -465,6 +473,14 @@ export const simulateSeason = (
       cupName = "King\'s Cup";
       leagueName = "Saudi Pro League";
       continentalName = "AFC Champions League";
+    } else if (country === "AR") {
+      cupName = "Copa Argentina";
+      leagueName = "Liga Profesional Argentina";
+      continentalName = "Copa Libertadores";
+    } else if (country === "UY") {
+      cupName = "Copa Uruguay";
+      leagueName = "Primera División Uruguaya";
+      continentalName = "Copa Libertadores";
     }
   }
 

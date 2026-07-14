@@ -57,6 +57,7 @@ export type Player = {
   hasPersonalTrainer: boolean;
   hasMasseuse?: boolean;
   bootSponsor?: string | null;
+  bootSponsorSeasonsLeft?: number; // temporadas restantes do contrato de chuteira (dura 5 temporadas)
   personal: {
     mood: number;
     health: number;

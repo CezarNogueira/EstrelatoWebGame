@@ -383,6 +383,7 @@ export default function App() {
     const stateToPass = { ...pendingSimulationPhase };
     const p = stateToPass.baseUpdatedPlayer;
     p.bootSponsor = sponsorName;
+    p.bootSponsorSeasonsLeft = 5;
     if (p.history.length > 0) {
         p.history[0].pressMessage = `"Novo patrocínio! ${p.name} fecha com a ${sponsorName}!"`;
     }
@@ -398,6 +399,16 @@ export default function App() {
         const sponsorObj = BOOT_SPONSORS.find(s => s.name === p.bootSponsor);
         if (sponsorObj) {
             p.money += sponsorObj.pay;
+        }
+        p.bootSponsorSeasonsLeft = (p.bootSponsorSeasonsLeft ?? 5) - 1;
+        if (p.bootSponsorSeasonsLeft <= 0) {
+            // Contrato de chuteira encerrado após 5 temporadas - na próxima
+            // temporada o jogador volta a escolher um novo patrocinador.
+            p.bootSponsor = null;
+            p.bootSponsorSeasonsLeft = undefined;
+            if (p.history.length > 0) {
+                p.history[0].pressMessage = `"Fim de contrato! O acordo de ${p.name} com a chuteira chegou ao fim."`;
+            }
         }
     }
     finishSeason(stateToPass);
