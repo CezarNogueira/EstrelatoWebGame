@@ -20,6 +20,8 @@ import JuventudeLogo from "./assets/teams/Juventude.png";
 import VascoDaGamaLogo from "./assets/teams/VascoDaGama.png";
 import SantosLogo from "./assets/teams/Santos.png";
 import GoiasLogo from "./assets/teams/Goias.png";
+import ChapecoenseLogo from "./assets/teams/Chapecoense.png";
+import BragantinoLogo from "./assets/teams/Bragantino.png";
 
 export const NATIONALITIES = [
   "Brasil",
@@ -40,12 +42,12 @@ export const TEAMS: Team[] = [
   { id: "br2", name: "Palmeiras", level: 3, color: "#008000", country: "BR", logo: PalmeirasLogo },
   { id: "br3", name: "São Paulo", level: 3, color: "#FF1000", country: "BR", logo: SaoPauloLogo },
   { id: "br4", name: "Atlético Mineiro", level: 2, color: "#FFFFFF", country: "BR", logo: AtleticoMineiroLogo },
-  { id: "br5", name: "Fluminense", level: 2, color: "#000000", country: "BR", logo: FluminenseLogo },
-  { id: "br6", name: "Internacional", level: 2, color: "#FFFF00", country: "BR", logo: InternacionalLogo },
+  { id: "br5", name: "Fluminense", level: 3, color: "#3d9e10", country: "BR", logo: FluminenseLogo },
+  { id: "br6", name: "Internacional", level: 3, color: "#FFFF00", country: "BR", logo: InternacionalLogo },
   { id: "br7", name: "Grêmio", level: 2, color: "#800080", country: "BR", logo: GremioLogo },
-  { id: "br8", name: "Corinthians", level: 2, color: "#FFA500", country: "BR", logo: CorinthiansLogo },
-  { id: "br9", name: "Cruzeiro", level: 2, color: "#FF0000", country: "BR", logo: CruzeiroLogo },
-  { id: "br10", name: "Botafogo", level: 2, color: "#0000FF", country: "BR", logo: BotafogoLogo },
+  { id: "br8", name: "Corinthians", level: 3, color: "#FFA500", country: "BR", logo: CorinthiansLogo },
+  { id: "br9", name: "Cruzeiro", level: 3, color: "#FF0000", country: "BR", logo: CruzeiroLogo },
+  { id: "br10", name: "Botafogo", level: 3, color: "#0000FF", country: "BR", logo: BotafogoLogo },
   { id: "br11", name: "Athletico Paranaense", level: 2, color: "#008000", country: "BR", logo: AthleticoParanaenseLogo },
   { id: "br12", name: "Vasco da Gama", level: 2, color: "#FFFFFF", country: "BR", logo: VascoDaGamaLogo },
   { id: "br13", name: "Bahia", level: 2, color: "#000000", country: "BR", logo: BahiaLogo },
@@ -64,14 +66,14 @@ export const TEAMS: Team[] = [
   { id: "br25", name: "América Mineiro", level: 1, color: "#000000", country: "BR", division: 2 },
   { id: "br26", name: "Criciúma", level: 1, color: "#FFFF00", country: "BR", division: 2 },
   { id: "br27", name: "Avaí", level: 1, color: "#800080", country: "BR", division: 2 },
-  { id: "br28", name: "Chapecoense", level: 1, color: "#FFA500", country: "BR", division: 2 },
+  { id: "br28", name: "Chapecoense", level: 1, color: "#FFA500", country: "BR", division: 2, logo: ChapecoenseLogo },
   { id: "br29", name: "CRB", level: 1, color: "#FF0000", country: "BR", division: 2 },
   { id: "br30", name: "Novorizontino", level: 1, color: "#0000FF", country: "BR", division: 2 },
   { id: "br31", name: "Mirassol", level: 1, color: "#008000", country: "BR", division: 2 },
   { id: "br32", name: "Paysandu", level: 1, color: "#FFFFFF", country: "BR", division: 2 },
   { id: "br33", name: "Remo", level: 1, color: "#000000", country: "BR", division: 2, logo: RemoLogo },
   { id: "br34", name: "Ituano", level: 1, color: "#FFFF00", country: "BR", division: 2 },
-  { id: "br35", name: "Brusque", level: 1, color: "#800080", country: "BR", division: 2 },
+  { id: "br35", name: "Bragantino", level: 1, color: "#b1b1b1", country: "BR", division: 2, logo: BragantinoLogo },
   { id: "br36", name: "Operário", level: 1, color: "#FFA500", country: "BR", division: 2 },
   { id: "br37", name: "Amazonas", level: 1, color: "#FF0000", country: "BR", division: 2 },
   { id: "br38", name: "Botafogo-SP", level: 1, color: "#0000FF", country: "BR", division: 2 },
