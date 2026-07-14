@@ -92,6 +92,17 @@ export function InteractiveMatchModal({
       }
     }
 
+    // Nunca deixa o adversário ser o próprio time (ou a própria seleção) do
+    // jogador. Algumas listas são fixas (Mundial de Clubes, Libertadores) e
+    // não filtravam isso por id/nome, o que permitia sorteios como
+    // "Barcelona x Barcelona" quando o jogador defendia esse mesmo clube.
+    ops = ops.filter(name => name !== playerTeamName);
+    if (ops.length === 0) {
+      // Pool ficou vazio (só existia o próprio time/seleção nele) - usa um
+      // adversário genérico em vez de deixar o jogador enfrentar a si mesmo.
+      ops = ["Rival"];
+    }
+
     // Exclude opponents recently faced in this same category (this is what
     // stops back-to-back finals — same season or consecutive seasons —
     // against the identical rival). If excluding them would leave no
