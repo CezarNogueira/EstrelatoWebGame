@@ -87,14 +87,18 @@ export function Roulette({ nationality, onTeamSelected }: { nationality: string;
                 className="flex flex-col items-center justify-center shrink-0"
                 style={{ width: ITEM_WIDTH }}
               >
-                <div 
-                  className="w-16 h-16 rounded-full border-4 border-slate-950 shadow-inner mb-2 bg-cover bg-center"
-                  style={
-                    team.logo 
-                      ? { backgroundImage: team.logo } 
-                      : { backgroundColor: team.color }
-                  }
-                />
+                {team.logo ? (
+                  <img 
+                    src={team.logo} 
+                    alt="Logo do time"
+                    className="w-16 h-16 rounded-full border-4 border-slate-950 shadow-inner mb-2 object-cover" 
+                  />
+                ) : (
+                  <div 
+                    className="w-16 h-16 rounded-full border-4 border-slate-950 shadow-inner mb-2"
+                    style={{ backgroundColor: team.color }}
+                  />
+                )}
                 <span className="text-sm font-black tracking-wide text-white truncate max-w-full px-2 text-center">
                   {team.name}
                 </span>
