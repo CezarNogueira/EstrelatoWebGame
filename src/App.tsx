@@ -104,6 +104,10 @@ export default function App() {
   const [playedFinals, setPlayedFinals] = useState<{type: string; won: boolean}[]>([]);
   const [currentFinalType, setCurrentFinalType] = useState<string | null>(null);
   const [pendingTrainingBuff, setPendingTrainingBuff] = useState<Partial<Attributes> | undefined>();
+  // Soma de gols e assistências que o jogador fez pessoalmente nas finais
+  // interativas jogadas nesta temporada - somada ao total gerado pela
+  // simulação da temporada quando ela termina.
+  const [finalsGoalsAssists, setFinalsGoalsAssists] = useState({ goals: 0, assists: 0 });
 
   const handleSimulate = () => {
     if (!player) return;
@@ -130,15 +134,22 @@ export default function App() {
     if (reached.length > 0) {
       setReachedFinalsQueue(reached);
       setPlayedFinals([]);
+      setFinalsGoalsAssists({ goals: 0, assists: 0 });
       setCurrentFinalType(reached[0]);
     } else {
       executeSimulation(trainingBuff, []);
     }
   };
 
-  const handleInteractiveFinalComplete = (won: boolean) => {
+  const handleInteractiveFinalComplete = (won: boolean, playerGoals: number, playerAssists: number) => {
     const updatedPlayed = [...playedFinals, { type: currentFinalType!, won }];
     setPlayedFinals(updatedPlayed);
+
+    const updatedGoalsAssists = {
+      goals: finalsGoalsAssists.goals + playerGoals,
+      assists: finalsGoalsAssists.assists + playerAssists,
+    };
+    setFinalsGoalsAssists(updatedGoalsAssists);
 
     if (reachedFinalsQueue.length > 1) {
       const newQueue = reachedFinalsQueue.slice(1);
@@ -147,11 +158,15 @@ export default function App() {
     } else {
       setReachedFinalsQueue([]);
       setCurrentFinalType(null);
-      executeSimulation(pendingTrainingBuff, updatedPlayed);
+      executeSimulation(pendingTrainingBuff, updatedPlayed, updatedGoalsAssists);
     }
   };
 
-  const executeSimulation = (trainingBuff?: Partial<Attributes>, prePlayedFinals?: {type: string; won: boolean}[]) => {
+  const executeSimulation = (
+    trainingBuff?: Partial<Attributes>,
+    prePlayedFinals?: {type: string; won: boolean}[],
+    finalsStatsBonus?: { goals: number; assists: number }
+  ) => {
     if (!player) return;
     const { baseUpdatedPlayer, seasonStat, transfer, earnedPoints, proContractOffer } = simulateSeason(player, prePlayedFinals);
 
@@ -178,6 +193,10 @@ export default function App() {
 
     const finalStat: SeasonStat = {
       ...seasonStat,
+      // Gols e assistências feitos pelo jogador nas finais interativas somam
+      // ao total gerado pela simulação da temporada.
+      goals: seasonStat.goals + (finalsStatsBonus?.goals || 0),
+      assists: seasonStat.assists + (finalsStatsBonus?.assists || 0),
       attributeChanges: {
         pace: (seasonStat.attributeChanges.pace || 0) + (combinedBuff.pace || 0),
         shooting: (seasonStat.attributeChanges.shooting || 0) + (combinedBuff.shooting || 0),

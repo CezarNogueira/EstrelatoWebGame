@@ -52,6 +52,11 @@ interface ActionDef {
   label: string;
   icon: typeof Goal;
   classes: string;
+  // Para cenários ofensivos, indica se um sucesso nessa ação conta como gol
+  // do próprio jogador ou como assistência (jogada finalizada por um
+  // companheiro). Cenários defensivos (INFILTRACAO) não usam este campo,
+  // já que um sucesso ali apenas evita o gol adversário.
+  resultType?: "goal" | "assist";
 }
 
 interface ScenarioConfig {
@@ -66,8 +71,8 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
   FRENTE_GOL: {
     chanceText: (name) => `${name} recebe a bola na frente do gol! O que ele vai fazer?`,
     actions: [
-      { id: "chutar", label: "Chutar", icon: Goal, classes: "bg-red-900/50 hover:bg-red-800/80 border border-red-700 text-red-200" },
-      { id: "passe", label: "Passe", icon: MoveRight, classes: "bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-200" },
+      { id: "chutar", label: "Chutar", icon: Goal, classes: "bg-red-900/50 hover:bg-red-800/80 border border-red-700 text-red-200", resultType: "goal" },
+      { id: "passe", label: "Passe", icon: MoveRight, classes: "bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-200", resultType: "assist" },
     ],
     computeChance: (actionId, player, difficultyMod) => {
       const { attributes: attrs, position } = player;
@@ -94,8 +99,8 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
   LATERAL: {
     chanceText: (name) => `${name} recebe a bola na lateral do campo! O que ele vai fazer?`,
     actions: [
-      { id: "cruzar", label: "Cruzar", icon: Activity, classes: "bg-amber-900/50 hover:bg-amber-800/80 border border-amber-700 text-amber-200" },
-      { id: "passe", label: "Passe", icon: MoveRight, classes: "bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-200" },
+      { id: "cruzar", label: "Cruzar", icon: Activity, classes: "bg-amber-900/50 hover:bg-amber-800/80 border border-amber-700 text-amber-200", resultType: "assist" },
+      { id: "passe", label: "Passe", icon: MoveRight, classes: "bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-200", resultType: "assist" },
     ],
     computeChance: (actionId, player, difficultyMod) => {
       const { attributes: attrs, position } = player;
@@ -122,8 +127,8 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
   MEIO_CAMPO: {
     chanceText: (name) => `${name} toma a bola no meio de campo! O que ele vai fazer?`,
     actions: [
-      { id: "correr", label: "Correr pra Área", icon: Rocket, classes: "bg-purple-900/50 hover:bg-purple-800/80 border border-purple-700 text-purple-200" },
-      { id: "passe", label: "Passe", icon: MoveRight, classes: "bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-200" },
+      { id: "correr", label: "Correr pra Área", icon: Rocket, classes: "bg-purple-900/50 hover:bg-purple-800/80 border border-purple-700 text-purple-200", resultType: "goal" },
+      { id: "passe", label: "Passe", icon: MoveRight, classes: "bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-200", resultType: "assist" },
     ],
     computeChance: (actionId, player, difficultyMod) => {
       const { attributes: attrs, position } = player;
@@ -151,9 +156,9 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
   ENTRADA_AREA: {
     chanceText: (name) => `A bola sobra para ${name} na entrada da área! O que ele vai fazer?`,
     actions: [
-      { id: "chutar", label: "Chutar", icon: Goal, classes: "bg-red-900/50 hover:bg-red-800/80 border border-red-700 text-red-200" },
-      { id: "driblar", label: "Driblar", icon: FastForward, classes: "bg-purple-900/50 hover:bg-purple-800/80 border border-purple-700 text-purple-200" },
-      { id: "passe", label: "Passe", icon: MoveRight, classes: "bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-200" },
+      { id: "chutar", label: "Chutar", icon: Goal, classes: "bg-red-900/50 hover:bg-red-800/80 border border-red-700 text-red-200", resultType: "goal" },
+      { id: "driblar", label: "Driblar", icon: FastForward, classes: "bg-purple-900/50 hover:bg-purple-800/80 border border-purple-700 text-purple-200", resultType: "goal" },
+      { id: "passe", label: "Passe", icon: MoveRight, classes: "bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-200", resultType: "assist" },
     ],
     computeChance: (actionId, player, difficultyMod) => {
       const { attributes: attrs, position } = player;
@@ -215,8 +220,8 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
   PENALTI: {
     chanceText: (name) => `PÊNALTI para o seu time! Como cobrador oficial, ${name} se prepara para bater. Como vai cobrar?`,
     actions: [
-      { id: "canto", label: "Canto do Gol", icon: Target, classes: "bg-red-900/50 hover:bg-red-800/80 border border-red-700 text-red-200" },
-      { id: "cavadinha", label: "Cavadinha", icon: FastForward, classes: "bg-purple-900/50 hover:bg-purple-800/80 border border-purple-700 text-purple-200" },
+      { id: "canto", label: "Canto do Gol", icon: Target, classes: "bg-red-900/50 hover:bg-red-800/80 border border-red-700 text-red-200", resultType: "goal" },
+      { id: "cavadinha", label: "Cavadinha", icon: FastForward, classes: "bg-purple-900/50 hover:bg-purple-800/80 border border-purple-700 text-purple-200", resultType: "goal" },
     ],
     computeChance: (actionId, player, difficultyMod) => {
       const { attributes: attrs } = player;
@@ -243,8 +248,8 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
   FALTA: {
     chanceText: (name) => `Falta perigosa na entrada da área! ${name}, o cobrador oficial do time, vai bater. O que fazer?`,
     actions: [
-      { id: "cobrar", label: "Cobrar no Ângulo", icon: Crosshair, classes: "bg-red-900/50 hover:bg-red-800/80 border border-red-700 text-red-200" },
-      { id: "cruzar", label: "Cruzar na Área", icon: MoveRight, classes: "bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-200" },
+      { id: "cobrar", label: "Cobrar no Ângulo", icon: Crosshair, classes: "bg-red-900/50 hover:bg-red-800/80 border border-red-700 text-red-200", resultType: "goal" },
+      { id: "cruzar", label: "Cruzar na Área", icon: MoveRight, classes: "bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-200", resultType: "assist" },
     ],
     computeChance: (actionId, player, difficultyMod) => {
       const { attributes: attrs } = player;
@@ -298,7 +303,7 @@ export function InteractiveMatchModal({
 }: { 
   player: Player; 
   finalType: string; 
-  onComplete: (won: boolean) => void;
+  onComplete: (won: boolean, playerGoals: number, playerAssists: number) => void;
 }) {
   const [status, setStatus] = useState<MatchStatus>("INTRO");
   const [minute, setMinute] = useState(0);
@@ -312,6 +317,12 @@ export function InteractiveMatchModal({
   const [chancesHad, setChancesHad] = useState(0);
   const [totalChances, setTotalChances] = useState(1);
   const [resolvingPenalties, setResolvingPenalties] = useState(false);
+
+  // Gols e assistências que o PRÓPRIO jogador fez nesta final (somados ao
+  // total da temporada quando a partida termina). Gols/assistências de
+  // outros companheiros ("GOL DA SUA EQUIPE!") não entram aqui.
+  const [matchGoals, setMatchGoals] = useState(0);
+  const [matchAssists, setMatchAssists] = useState(0);
 
   const isNational = finalType.includes("Copa do Mundo") || finalType.includes("Eurocopa") || finalType.includes("Copa América") || finalType.includes("Copa Continental (Seleção)");
   const playerTeamName = isNational ? player.nationality : player.currentTeam.name;
@@ -395,6 +406,8 @@ export function InteractiveMatchModal({
     setEvents([]);
     setChancesHad(0);
     setCurrentScenario(null);
+    setMatchGoals(0);
+    setMatchAssists(0);
     // Cada final agora sorteia entre 1 e 6 chances de o jogador participar
     // ativamente da jogada, em vez de sempre uma única oportunidade.
     setTotalChances(Math.floor(Math.random() * 6) + 1);
@@ -497,6 +510,12 @@ export function InteractiveMatchModal({
         addEvent(config.successText(actionId, player.name, opponentName), "chance");
       } else {
         setScoreUs(s => s + 1);
+        const action = config.actions.find(a => a.id === actionId);
+        if (action?.resultType === "goal") {
+          setMatchGoals(g => g + 1);
+        } else if (action?.resultType === "assist") {
+          setMatchAssists(a => a + 1);
+        }
         addEvent(config.successText(actionId, player.name, opponentName), "goal_us");
       }
     } else {
@@ -547,7 +566,7 @@ export function InteractiveMatchModal({
     }
     
     let won = scoreUs > scoreThem;
-    onComplete(won);
+    onComplete(won, matchGoals, matchAssists);
   };
 
   const currentActions = currentScenario ? SCENARIOS[currentScenario].actions : [];
