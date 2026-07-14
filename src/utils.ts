@@ -122,8 +122,8 @@ export const getPlayerTitle = (age: number, ovr: number): string => {
 export const getSeasonHealthDecline = (age: number): number => {
   if (age <= 18) return 1;
   if (age <= 23) return 4;
-  if (age <= 29) return 6;
-  return 14;
+  if (age <= 29) return 9;
+  return 15;
 };
 
 export const generateGrowthPoints = (age: number): { points: number, decline: Partial<Attributes> } => {
@@ -586,24 +586,26 @@ export const simulateSeason = (
 
     let wonBallonDor = false;
     
-    // A lógica abaixo tenta capturar a raridade do prêmio, mas ainda assim permitir que jogadores excepcionais o conquistem.
     if (wonWC && wcTopScorer) {
       wonBallonDor = true;
-    } else if (wonCL && clTopScorer && currentOvr >= 80) {
-      wonBallonDor = Math.random() > 0.02; // 98% chance
-    } else if (currentOvr >= 85 && goals + assists >= 40 && (wonWC || wonCL)) {
-      wonBallonDor = Math.random() > 0.2; // 80% chance
-    } else if (currentOvr >= 89 && goals + assists >= 50) {
+    } else if (wonCL && clTopScorer && currentOvr >= 85) {
       wonBallonDor = Math.random() > 0.1; // 90% chance
+    } else if (currentOvr >= 90 && goals + assists >= 40 && (wonWC || wonCL)) {
+      wonBallonDor = Math.random() > 0.2;
+    } else if (currentOvr >= 92 && goals + assists >= 50) {
+      wonBallonDor = Math.random() > 0.1;
     } else if (currentOvr >= 88 && goals + assists >= 35 && wonLeague) {
-      wonBallonDor = Math.random() > 0.6; // 40% chance
+      wonBallonDor = Math.random() > 0.6;
     }
 
+    // Exceptional zagueiros can also win the Bola de Ouro on defensive
+    // merit alone - mirrors real cases like a dominant, title-winning
+    // center-back season, rather than requiring goal contributions.
     if (!wonBallonDor && player.position === "ZAG" && currentOvr >= 87) {
       const exceptionalDefender = cleanSheetRateThisSeason >= 0.55 && tackles >= 120;
       const majorTitleWon = wonWC || wonCL;
       if (exceptionalDefender && majorTitleWon) {
-        wonBallonDor = Math.random() > 0.5; // 50% chance
+        wonBallonDor = Math.random() > 0.5;
       }
     }
 
@@ -680,13 +682,12 @@ export const simulateSeason = (
     careerEndingInjury: careerEndingInjury || undefined,
   };
 
-  // Evolução de atributos com base nos pontos ganhos
   const baseUpdatedPlayer: Player = {
     ...player,
     age: player.age + 1,
     attributes: newAttributes,
-    history: player.history, // historico de temporadas
-    retired: careerEndingInjury || player.age >= 50 || (player.age >= 38 && Math.random() > 0.7), // Logica de aposentadoria: 38 anos ou 34+ com chance aleatória
+    history: player.history, // history is not updated yet, will be appended after point distribution
+    retired: careerEndingInjury || player.age >= 38 || (player.age >= 34 && Math.random() > 0.7),
     contractYears: player.isPro ? Math.max(0, (player.contractYears || 0) - 1) : 0,
     personal: {
       ...player.personal,
@@ -695,4 +696,60 @@ export const simulateSeason = (
   };
 
   return { baseUpdatedPlayer, seasonStat, transfer, earnedPoints: points, proContractOffer };
+};
+
+// -----------------------------------------------------------------------------
+// Propostas de fim de contrato
+// -----------------------------------------------------------------------------
+// Quando o contrato do jogador chega ao fim, ele não recebe apenas a
+// possibilidade de renovar com o próprio clube: dependendo dos prêmios
+// individuais conquistados na carreira e do OVR atual, outros clubes também
+// podem entrar na disputa, oferecendo entre 1 e 5 propostas no total (o time
+// atual sempre está entre elas, representando a chance de renovação).
+export const getContractEndOffers = (player: Player, currentOvr: number): Team[] => {
+  // Prêmios individuais conquistados em toda a carreira - quanto mais
+  // prêmios, maior o assédio de outros clubes no mercado.
+  const totalIndividualAwards = player.history.reduce(
+    (sum, s) => sum + (s.individualAwards?.length || 0),
+    0
+  );
+
+  let numOffers = 1;
+  if (totalIndividualAwards >= 1 || currentOvr >= 75) numOffers = 2;
+  if (totalIndividualAwards >= 3 || currentOvr >= 80) numOffers = 3;
+  if (totalIndividualAwards >= 6 || currentOvr >= 87) numOffers = 4;
+  if (totalIndividualAwards >= 10 || currentOvr >= 92) numOffers = 5;
+  numOffers = Math.max(1, Math.min(5, numOffers));
+
+  // O próprio clube sempre aparece na lista - é a opção de renovação.
+  const offers: Team[] = [player.currentTeam];
+
+  if (numOffers > 1) {
+    // Quanto maior o OVR do jogador, mais forte é o perfil dos clubes
+    // interessados (níveis mais altos entram no sorteio).
+    let candidateLevels: number[];
+    if (currentOvr >= 88) candidateLevels = [4, 5];
+    else if (currentOvr >= 78) candidateLevels = [3, 4, 5];
+    else if (currentOvr >= 65) candidateLevels = [2, 3, 4];
+    else candidateLevels = [1, 2, 3];
+
+    let pool = TEAMS.filter(
+      (t) => candidateLevels.includes(t.level) && t.id !== player.currentTeam.id
+    );
+    if (pool.length === 0) {
+      pool = TEAMS.filter((t) => t.id !== player.currentTeam.id);
+    }
+
+    // Sorteia clubes distintos do pool até completar numOffers (contando o
+    // próprio clube, que já está na lista).
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    for (const team of shuffled) {
+      if (offers.length >= numOffers) break;
+      if (!offers.some((o) => o.id === team.id)) {
+        offers.push(team);
+      }
+    }
+  }
+
+  return offers;
 };

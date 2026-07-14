@@ -10,9 +10,10 @@ import { FinalsModal } from "./components/FinalsModal";
 import { ProContractModal } from "./components/ProContractModal";
 import { CareerSummary } from "./components/CareerSummary";
 import { ContractNegotiationModal } from "./components/ContractNegotiationModal";
+import { ContractOffersModal } from "./components/ContractOffersModal";
 import { InjuryModal } from "./components/InjuryModal";
 import { InteractiveMatchModal, resetOpponentMemory } from "./components/InteractiveMatchModal";
-import { simulateSeason, applyGrowth, autoDistributePoints, generatePressMessage, calculateMarketValue, calculateOverall, formatCurrency, getReachedFinals } from "./utils";
+import { simulateSeason, applyGrowth, autoDistributePoints, generatePressMessage, calculateMarketValue, calculateOverall, formatCurrency, getReachedFinals, getContractEndOffers } from "./utils";
 
 type Screen = "START" | "CHOOSE_NATIONALITY" | "ROULETTE" | "CHOOSE_POSITION" | "DASHBOARD" | "CAREER_SUMMARY";
 
@@ -90,6 +91,7 @@ export default function App() {
     type: "PRO" | "TRANSFER" | "RENEWAL";
     team: Team;
   } | null>(null);
+  const [pendingContractOffers, setPendingContractOffers] = useState<Team[] | null>(null);
 
   const [pendingSimulationPhase, setPendingSimulationPhase] = useState<{
     baseUpdatedPlayer: Player;
@@ -266,14 +268,26 @@ export default function App() {
   const checkRenewalOrFinish = (stateToPass: any) => {
     const p = stateToPass.baseUpdatedPlayer;
     if (p.isPro && p.contractYears === 0 && !p.retired) {
-      setPendingContractNegotiation({
-        type: "RENEWAL",
-        team: p.currentTeam,
-      });
+      // Fim de contrato: em vez de oferecer apenas a renovação com o time
+      // atual, o jogador recebe de 1 a 5 propostas de clubes, dependendo
+      // dos prêmios individuais conquistados na carreira e do OVR atual.
+      const currentOvr = calculateOverall(p.attributes, p.position);
+      const offers = getContractEndOffers(p, currentOvr);
+      setPendingContractOffers(offers);
       setPendingSimulationPhase(stateToPass);
     } else {
       checkPartyOrFinish(stateToPass);
     }
+  };
+
+  const handleSelectContractOffer = (team: Team) => {
+    if (!pendingSimulationPhase) return;
+    const currentTeamId = pendingSimulationPhase.baseUpdatedPlayer.currentTeam.id;
+    setPendingContractOffers(null);
+    setPendingContractNegotiation({
+      type: team.id === currentTeamId ? "RENEWAL" : "TRANSFER",
+      team,
+    });
   };
 
   const [pendingParty, setPendingParty] = useState<{ cost: number } | null>(null);
@@ -527,6 +541,7 @@ export default function App() {
     setPendingInjury(null);
     setPendingProContract(false);
     setPendingContractNegotiation(null);
+    setPendingContractOffers(null);
     setPendingSimulationPhase(null);
     setShowTraining(false);
     setNationalTeamMsg(false);
@@ -572,6 +587,14 @@ export default function App() {
             <div className="fixed top-8 left-1/2 -translate-x-1/2 z-[70] bg-yellow-400 text-slate-950 px-6 py-3 rounded-full font-bold shadow-2xl animate-bounce">
               Você foi convocado para a Seleção Nacional!
             </div>
+          )}
+
+          {pendingContractOffers && pendingSimulationPhase && (
+            <ContractOffersModal
+              offers={pendingContractOffers}
+              currentTeamId={pendingSimulationPhase.baseUpdatedPlayer.currentTeam.id}
+              onSelect={handleSelectContractOffer}
+            />
           )}
 
           {pendingContractNegotiation && pendingSimulationPhase && (
