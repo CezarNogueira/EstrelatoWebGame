@@ -26,6 +26,8 @@ export type SeasonStat = {
   matches: number;
   goals: number;
   assists: number;
+  tackles: number; // desarmes - key stat for ZAG/LAT/VOL
+  cleanSheets: number; // jogos sem sofrer gols - key stat for ZAG/LAT/VOL
   rating: number; // overall rating that season
   attributeChanges: Partial<Attributes>; 
   nationalTeamCall?: boolean;

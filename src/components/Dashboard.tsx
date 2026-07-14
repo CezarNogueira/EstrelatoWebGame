@@ -1,6 +1,6 @@
 import { Player, SeasonStat } from "../types";
 import { calculateOverall, getPlayerTitle, formatCurrency } from "../utils";
-import { ArrowRight, Calendar, Goal, User, Zap, FileSignature, ShoppingBag } from "lucide-react";
+import { ArrowRight, Calendar, Goal, User, Zap, FileSignature, ShoppingBag, Shield, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useState } from "react";
 import { StoreModal } from "./StoreModal";
@@ -34,6 +34,9 @@ export function Dashboard({
   const [showStore, setShowStore] = useState(false);
   const ovr = calculateOverall(player.attributes, player.position);
   const title = getPlayerTitle(player.age, ovr);
+  const totalTackles = player.history.reduce((sum, stat) => sum + (stat.tackles || 0), 0);
+  const totalCleanSheets = player.history.reduce((sum, stat) => sum + (stat.cleanSheets || 0), 0);
+  const isDefensivePlayer = player.position === "ZAG" || player.position === "LAT" || player.position === "VOL";
 
   const handleSimulate = () => {
     onSimulate();
@@ -149,6 +152,22 @@ export function Dashboard({
                     <span className="text-yellow-500 font-bold">{player.caps} Convocações</span>
                   </>
                 )}
+                {totalTackles > 0 && (
+                  <>
+                    <span>•</span>
+                    <span className="text-blue-400 font-bold flex items-center gap-1">
+                      <Shield className="w-4 h-4" /> {totalTackles} Desarmes
+                    </span>
+                  </>
+                )}
+                {totalCleanSheets > 0 && (
+                  <>
+                    <span>•</span>
+                    <span className="text-emerald-400 font-bold flex items-center gap-1">
+                      <ShieldCheck className="w-4 h-4" /> {totalCleanSheets} Jogos sem Sofrer
+                    </span>
+                  </>
+                )}
               </div>
 
               {/* Personal Attributes */}
@@ -202,6 +221,27 @@ export function Dashboard({
                 <AttributeBar label="Físico" value={player.attributes.physical} />
               </div>
             </div>
+
+            {isDefensivePlayer && (
+              <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-lg">
+                <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
+                  <Shield className="w-5 h-5 text-blue-400" />
+                  Estatísticas Defensivas
+                </h2>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col items-center gap-1">
+                    <Shield className="w-6 h-6 text-blue-400" />
+                    <span className="text-2xl font-black text-slate-100">{totalTackles}</span>
+                    <span className="text-slate-500 font-bold uppercase text-[10px]">Desarmes</span>
+                  </div>
+                  <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col items-center gap-1">
+                    <ShieldCheck className="w-6 h-6 text-emerald-400" />
+                    <span className="text-2xl font-black text-slate-100">{totalCleanSheets}</span>
+                    <span className="text-slate-500 font-bold uppercase text-[10px]">Sem Sofrer</span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="space-y-3">
               <button
@@ -265,10 +305,12 @@ export function Dashboard({
                               <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-500 rounded-md text-xs">Seleção</span>
                             )}
                           </div>
-                          <div className="text-slate-400 text-sm flex gap-4">
+                          <div className="text-slate-400 text-sm flex flex-wrap gap-4">
                             <span>{stat.matches} Jogos</span>
                             <span>{stat.goals} Gols</span>
                             <span>{stat.assists} Assists</span>
+                            <span className="text-blue-400">{stat.tackles ?? 0} Desarmes</span>
+                            <span className="text-emerald-400">{stat.cleanSheets ?? 0} Sem Sofrer</span>
                           </div>
                           {stat.finals && stat.finals.length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-2">

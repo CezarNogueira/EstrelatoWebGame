@@ -43,6 +43,73 @@ export const calculateOverall = (attr: Attributes, pos: Position): number => {
 const randomInt = (min: number, max: number) =>
   Math.floor(Math.random() * (max - min + 1)) + min;
 
+// How much each position contributes to each kind of stat. This is what
+// stops every position from behaving like a potential striker: attacking
+// positions score/assist far more, while ZAG/LAT/VOL generate most of their
+// value from tackles and clean sheets instead.
+type PositionStatWeights = {
+  goals: number;
+  assists: number;
+  tackles: number;
+  cleanSheets: number;
+};
+
+export const POSITION_STAT_WEIGHTS: Record<Position, PositionStatWeights> = {
+  ATA: { goals: 1.00, assists: 0.55, tackles: 0.15, cleanSheets: 0.25 },
+  PON: { goals: 0.75, assists: 0.85, tackles: 0.20, cleanSheets: 0.25 },
+  MEI: { goals: 0.55, assists: 1.00, tackles: 0.35, cleanSheets: 0.35 },
+  MC:  { goals: 0.30, assists: 0.75, tackles: 0.70, cleanSheets: 0.50 },
+  VOL: { goals: 0.12, assists: 0.45, tackles: 1.00, cleanSheets: 0.75 },
+  LAT: { goals: 0.10, assists: 0.60, tackles: 0.85, cleanSheets: 0.75 },
+  ZAG: { goals: 0.06, assists: 0.30, tackles: 0.95, cleanSheets: 1.00 },
+};
+
+// Positions whose value is primarily defensive - used to gate defensive-only
+// awards and national call-ups so they don't depend on goals/assists.
+export const DEFENSIVE_POSITIONS: Position[] = ["ZAG", "LAT", "VOL"];
+
+// Single source of truth for match-stat generation, shared by getReachedFinals
+// (which needs a rough estimate to gate national-team finals) and
+// simulateSeason (which generates the real season numbers). Keeping this in
+// one place means every position is scored consistently everywhere.
+export const generateSeasonMatchStats = (
+  player: Player,
+  matches: number,
+  performanceRatio: number
+): { goals: number; assists: number; tackles: number; cleanSheets: number } => {
+  const w = POSITION_STAT_WEIGHTS[player.position];
+
+  const goals = Math.max(0, Math.round(
+    randomInt(2, 20) * performanceRatio * (player.attributes.shooting / 55) * w.goals
+  ));
+  const assists = Math.max(0, Math.round(
+    randomInt(2, 14) * performanceRatio * (player.attributes.passing / 55) * w.assists
+  ));
+
+  const tacklesPerMatch = (0.6 + (player.attributes.defending / 99) * 3.4) * w.tackles;
+  const tackles = Math.max(0, Math.round(matches * tacklesPerMatch * (0.85 + Math.random() * 0.3)));
+
+  const teamDefenseFactor = Math.min(1, Math.max(0.05,
+    (player.attributes.defending / 99) * 0.5 + (player.currentTeam.level / 5) * 0.5
+  ));
+  const cleanSheetRate = Math.min(0.75, 0.12 + teamDefenseFactor * 0.5) * w.cleanSheets;
+  const cleanSheets = Math.min(matches, Math.max(0, Math.round(matches * cleanSheetRate)));
+
+  return { goals, assists, tackles, cleanSheets };
+};
+
+// Combines attacking and defensive output into one "worthy of a call-up"
+// score, so a great ZAG/LAT/VOL can reach the national team purely on
+// tackles and clean sheets, without needing goals or assists.
+export const getNationalCallScore = (
+  goals: number,
+  assists: number,
+  tackles: number,
+  cleanSheets: number
+): number => {
+  return (goals + assists) + tackles * 0.10 + cleanSheets * 0.6;
+};
+
 export const getPlayerTitle = (age: number, ovr: number): string => {
   if (ovr >= 99) return "Super Estrela";
   if (ovr >= 94) return "Estrela";
@@ -188,6 +255,14 @@ export const generatePressMessage = (
     messages.push(`"O maestro do time! ${player.name} anota um 'duplo-duplo' com gols e assistências de sobra."`);
   }
 
+  // Defensive awards & standout defensive seasons
+  if (stat.individualAwards && (stat.individualAwards.includes("Muralha da Temporada") || stat.individualAwards.includes("Muralha da Base"))) {
+    messages.push(`"Intransponível! ${player.name} vira sinônimo de segurança na defesa e conquista a Muralha da Temporada."`);
+    messages.push(`"Ninguém passa! ${player.name} anula os atacantes rivais e leva a Muralha da Temporada."`);
+  } else if (stat.tackles > 100 && stat.cleanSheets > 10) {
+    messages.push(`"Parede na defesa! ${player.name} foi decisivo evitando gols do adversário nesta temporada."`);
+  }
+
   // Pro contract
   if (proContractOffer) {
     messages.push(`"Olho nele! A jovem promessa ${player.name} ganha sua primeira chance no time profissional."`);
@@ -294,10 +369,13 @@ export const getReachedFinals = (player: Player, currentOvr: number): string[] =
   // National Team check
   const expectedOvr = player.currentTeam.level * 15 + 35;
   const performanceRatio = Math.min(1.5, Math.max(0.5, currentOvr / expectedOvr));
-  const goals = Math.round(randomInt(2, 18) * performanceRatio * (player.attributes.shooting / 50));
-  const assists = Math.round(randomInt(1, 10) * performanceRatio * (player.attributes.passing / 50));
-  
-  if (currentOvr > 78 && (goals + assists) >= 15 && Math.random() > 0.4) {
+  // Estimated matches just for this gating calculation - the real season
+  // stats are generated later in simulateSeason.
+  const estimatedMatches = 30;
+  const { goals, assists, tackles, cleanSheets } = generateSeasonMatchStats(player, estimatedMatches, performanceRatio);
+  const callScore = getNationalCallScore(goals, assists, tackles, cleanSheets);
+
+  if (currentOvr > 78 && callScore >= 15 && Math.random() > 0.4) {
     if (player.age % 4 === 0 && Math.random() > 0.7) {
       finals.push("Copa do Mundo");
     } else if (player.age % 4 === 2 && Math.random() > 0.6) {
@@ -319,11 +397,12 @@ export const simulateSeason = (
   const performanceRatio = Math.min(1.5, Math.max(0.5, currentOvr / expectedOvr));
   
   const matches = Math.min(50, Math.max(0, Math.round(randomInt(20, 45) * performanceRatio)));
-  const goals = Math.round(randomInt(2, 18) * performanceRatio * (player.attributes.shooting / 50));
-  const assists = Math.round(randomInt(1, 10) * performanceRatio * (player.attributes.passing / 50));
+  const { goals, assists, tackles, cleanSheets } = generateSeasonMatchStats(player, matches, performanceRatio);
+  const cleanSheetRateThisSeason = matches > 0 ? cleanSheets / matches : 0;
 
   let nationalTeamCall = false;
-  if (currentOvr > 78 && (goals + assists) >= 15) {
+  const callScore = getNationalCallScore(goals, assists, tackles, cleanSheets);
+  if (currentOvr > 78 && callScore >= 15) {
     if (Math.random() > 0.4) {
       nationalTeamCall = true;
     }
@@ -421,6 +500,17 @@ export const simulateSeason = (
       individualAwards.push("Chuteira de Ouro");
     }
 
+    // Muralha da Temporada - defensive counterpart to the top-scorer awards,
+    // for ZAG/LAT/VOL who dominate through tackles and clean sheets instead.
+    if (
+      DEFENSIVE_POSITIONS.includes(player.position) &&
+      cleanSheetRateThisSeason >= 0.4 &&
+      tackles >= 70 &&
+      Math.random() > 0.35
+    ) {
+      individualAwards.push("Muralha da Temporada");
+    }
+
     // Bola de Ouro
     const wonWC = finals.some(f => f.type === "Copa do Mundo" && f.won);
     const wcTopScorer = individualAwards.includes("Artilheiro da Copa do Mundo");
@@ -442,12 +532,31 @@ export const simulateSeason = (
       wonBallonDor = Math.random() > 0.6;
     }
 
+    // Exceptional zagueiros can also win the Bola de Ouro on defensive
+    // merit alone - mirrors real cases like a dominant, title-winning
+    // center-back season, rather than requiring goal contributions.
+    if (!wonBallonDor && player.position === "ZAG" && currentOvr >= 87) {
+      const exceptionalDefender = cleanSheetRateThisSeason >= 0.55 && tackles >= 120;
+      const majorTitleWon = wonWC || wonCL;
+      if (exceptionalDefender && majorTitleWon) {
+        wonBallonDor = Math.random() > 0.5;
+      }
+    }
+
     if (wonBallonDor) {
       individualAwards.push("Bola de Ouro");
     }
   } else {
     if (goals >= 15 && Math.random() > 0.4) {
       individualAwards.push(getArtilheiroString("Torneio de Base"));
+    }
+    if (
+      DEFENSIVE_POSITIONS.includes(player.position) &&
+      cleanSheetRateThisSeason >= 0.35 &&
+      tackles >= 40 &&
+      Math.random() > 0.4
+    ) {
+      individualAwards.push("Muralha da Base");
     }
   }
 
@@ -495,6 +604,8 @@ export const simulateSeason = (
     matches,
     goals,
     assists,
+    tackles,
+    cleanSheets,
     rating: currentOvr,
     attributeChanges: decline, // will be augmented with distributed points later
     nationalTeamCall,

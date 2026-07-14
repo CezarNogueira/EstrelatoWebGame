@@ -1,10 +1,12 @@
 import { Player } from "../types";
-import { Trophy, Goal, Calendar, Medal } from "lucide-react";
+import { Trophy, Goal, Calendar, Medal, Shield, ShieldCheck } from "lucide-react";
 
 export function CareerSummary({ player, onRestart }: { player: Player; onRestart: () => void }) {
   const totalMatches = player.history.reduce((sum, stat) => sum + stat.matches, 0);
   const totalGoals = player.history.reduce((sum, stat) => sum + stat.goals, 0);
   const totalAssists = player.history.reduce((sum, stat) => sum + stat.assists, 0);
+  const totalTackles = player.history.reduce((sum, stat) => sum + (stat.tackles || 0), 0);
+  const totalCleanSheets = player.history.reduce((sum, stat) => sum + (stat.cleanSheets || 0), 0);
   
   const teamTitles = player.history.reduce((acc, stat) => {
     stat.finals?.forEach(f => {
@@ -39,7 +41,7 @@ export function CareerSummary({ player, onRestart }: { player: Player; onRestart
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full max-w-2xl">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 w-full max-w-4xl">
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col items-center gap-2">
             <Calendar className="w-8 h-8 text-slate-400" />
             <span className="text-3xl font-black">{totalMatches}</span>
@@ -54,6 +56,16 @@ export function CareerSummary({ player, onRestart }: { player: Player; onRestart
             <Goal className="w-8 h-8 text-blue-400" />
             <span className="text-3xl font-black">{totalAssists}</span>
             <span className="text-slate-500 font-bold uppercase text-xs">Assistências</span>
+          </div>
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col items-center gap-2">
+            <Shield className="w-8 h-8 text-blue-400" />
+            <span className="text-3xl font-black">{totalTackles}</span>
+            <span className="text-slate-500 font-bold uppercase text-xs">Desarmes</span>
+          </div>
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col items-center gap-2">
+            <ShieldCheck className="w-8 h-8 text-emerald-400" />
+            <span className="text-3xl font-black">{totalCleanSheets}</span>
+            <span className="text-slate-500 font-bold uppercase text-xs">Sem Sofrer</span>
           </div>
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col items-center gap-2">
             <Trophy className="w-8 h-8 text-amber-400" />
