@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Attributes, FinalResult, Player, Position, SeasonStat, Team } from "./types";
+import { Attributes, FinalResult, Player, Position, RomanceEvent, SeasonStat, Team } from "./types";
 import { StartScreen } from "./components/StartScreen";
 import { ChooseNationality } from "./components/ChooseNationality";
 import { Roulette } from "./components/Roulette";
@@ -13,7 +13,13 @@ import { ContractNegotiationModal } from "./components/ContractNegotiationModal"
 import { ContractOffersModal } from "./components/ContractOffersModal";
 import { InjuryModal } from "./components/InjuryModal";
 import { InteractiveMatchModal, resetOpponentMemory } from "./components/InteractiveMatchModal";
+import { RomanceEventModal, ROMANCE_EVENTS } from "./components/RomanceEventModal";
+import { HeartCrack } from "lucide-react";
 import { simulateSeason, applyGrowth, autoDistributePoints, generatePressMessage, calculateMarketValue, calculateOverall, formatCurrency, getReachedFinals, getContractEndOffers } from "./utils";
+
+// Abaixo deste valor de Social, os encontros da temporada tendem a terminar
+// em "não rolou química" em vez de virarem um evento de romance completo.
+const ROMANCE_INTEREST_THRESHOLD = 40;
 
 type Screen = "START" | "CHOOSE_NATIONALITY" | "ROULETTE" | "CHOOSE_POSITION" | "DASHBOARD" | "CAREER_SUMMARY";
 
@@ -328,6 +334,7 @@ export default function App() {
         }
       }
     }
+    checkRomanceEventOrNext(stateToPass);
   };
 
   const handlePartyDecision = (accept: boolean) => {
@@ -347,6 +354,82 @@ export default function App() {
     }
 
     setPendingParty(null);
+    checkRomanceEventOrNext(stateToPass);
+  };
+
+  const [pendingRomanceEvent, setPendingRomanceEvent] = useState<RomanceEvent | null>(null);
+  const [pendingRomanceRejection, setPendingRomanceRejection] = useState<boolean>(false);
+
+  // Quanto maior o Social do jogador, mais comum é surgir um evento de
+  // romance na temporada — com Social em 100%, o evento acontece sempre.
+  // Quando o encontro rola mas o Social ainda é baixo, em vez do evento
+  // completo (com escolhas) aparece só um aviso de que não houve interesse.
+  const checkRomanceEventOrNext = (stateToPass: any) => {
+    const p = stateToPass.baseUpdatedPlayer;
+    if (!p.retired) {
+      const social = p.personal.social;
+      const eventChance = Math.min(100, Math.max(15, social));
+
+      if (Math.random() * 100 < eventChance) {
+        if (social >= ROMANCE_INTEREST_THRESHOLD) {
+          const event = ROMANCE_EVENTS[Math.floor(Math.random() * ROMANCE_EVENTS.length)];
+          setPendingRomanceEvent(event);
+          setPendingSimulationPhase(stateToPass);
+          return;
+        } else {
+          setPendingRomanceRejection(true);
+          setPendingSimulationPhase(stateToPass);
+          return;
+        }
+      }
+    }
+    checkSponsorOrFinish(stateToPass);
+  };
+
+  const handleRomanceChoice = (choiceId: string) => {
+    if (!pendingSimulationPhase || !pendingRomanceEvent) return;
+
+    const stateToPass = { ...pendingSimulationPhase };
+    const p = stateToPass.baseUpdatedPlayer;
+    const choice = pendingRomanceEvent.choices.find((c) => c.id === choiceId);
+
+    if (choice) {
+      switch (choice.tone) {
+        case "safe":
+          p.personal.social = Math.min(100, p.personal.social + 5);
+          p.personal.mood = Math.min(100, p.personal.mood + 5);
+          break;
+        case "positive":
+          p.personal.social = Math.min(100, p.personal.social + 10);
+          p.personal.mood = Math.min(100, p.personal.mood + 5);
+          break;
+        case "risky":
+          p.personal.mood = Math.min(100, p.personal.mood + 10);
+          p.personal.social = Math.max(0, p.personal.social - 15);
+          p.personal.health = Math.max(0, p.personal.health - 5);
+          if (p.history.length > 0) {
+            p.history[0].pressMessage = `"Escândalo! ${p.name} é flagrado em um affair e vira manchete da imprensa marrom."`;
+          }
+          break;
+        default:
+          p.personal.mood = Math.min(100, p.personal.mood + 2);
+          break;
+      }
+    }
+
+    setPendingRomanceEvent(null);
+    checkSponsorOrFinish(stateToPass);
+  };
+
+  const handleRomanceRejectionContinue = () => {
+    if (!pendingSimulationPhase) return;
+
+    const stateToPass = { ...pendingSimulationPhase };
+    const p = stateToPass.baseUpdatedPlayer;
+    p.personal.mood = Math.max(0, p.personal.mood - 5);
+
+    setPendingRomanceRejection(false);
+    checkSponsorOrFinish(stateToPass);
   };
 
   const MAINTENANCE_COSTS: Record<string, number> = {
@@ -531,6 +614,8 @@ export default function App() {
     setPendingSimulationPhase(null);
     setShowTraining(false);
     setNationalTeamMsg(false);
+    setPendingRomanceEvent(null);
+    setPendingRomanceRejection(false);
     setScreen("START");
   };
 
@@ -618,6 +703,32 @@ export default function App() {
                     Dar a Festa!
                   </button>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {pendingRomanceEvent && (
+            <RomanceEventModal event={pendingRomanceEvent} onChoice={handleRomanceChoice} />
+          )}
+
+          {pendingRomanceRejection && (
+            <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/90 p-4">
+              <div className="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl max-w-md w-full text-center space-y-6">
+                <div className="w-16 h-16 mx-auto rounded-full bg-slate-800 flex items-center justify-center">
+                  <HeartCrack className="w-8 h-8 text-slate-500" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-2xl font-black text-slate-300">Sem Sorte no Amor</h3>
+                  <p className="text-slate-400">
+                    Durante a temporada você até conheceu uma mulher interessante, mas ela não demonstrou nenhum interesse em você. Talvez sua vida social precise melhorar.
+                  </p>
+                </div>
+                <button
+                  onClick={handleRomanceRejectionContinue}
+                  className="w-full py-4 bg-slate-700 hover:bg-slate-600 text-slate-100 font-bold rounded-xl transition-all"
+                >
+                  Continuar
+                </button>
               </div>
             </div>
           )}
