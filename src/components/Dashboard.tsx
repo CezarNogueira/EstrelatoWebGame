@@ -3,7 +3,7 @@ import { calculateOverall, getPlayerTitle, formatCurrency } from "../utils";
 import { ArrowRight, Calendar, Goal, User, Zap, FileSignature, ShoppingBag, Shield, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useState } from "react";
-import { StoreModal } from "./StoreModal";
+import { StoreModal, STORE_ITEMS } from "./StoreModal";
 
 function AttributeBar({ label, value }: { label: string; value: number }) {
   return (
@@ -43,25 +43,37 @@ export function Dashboard({
   };
 
   const handleBuyItem = (itemId: string, price: number) => {
-    if (player.money >= price) {
-      const updatedPlayer = { 
-        ...player, 
-        money: player.money - price,
-        personal: { ...player.personal }
-      };
+    if (player.money < price) return;
 
-      updatedPlayer.personal.social = Math.min(100, updatedPlayer.personal.social + 1);
-      updatedPlayer.personal.mood = Math.min(100, updatedPlayer.personal.mood + 1);
+    const item = STORE_ITEMS.find(i => i.id === itemId);
 
-      if (itemId === "Preparador") {
-        updatedPlayer.hasPersonalTrainer = true;
-      } else if (itemId === "Massagista") {
-        updatedPlayer.personal.health = Math.min(100, updatedPlayer.personal.health + 10);
-      } else {
-        updatedPlayer.assets = [...player.assets, itemId];
-      }
-      onUpdatePlayer(updatedPlayer);
+    // Trava de segurança: Preparador e Massagista só podem ser contratados
+    // uma vez por temporada (o botão já fica desabilitado na loja, mas
+    // reforçamos aqui para o caso de outro clique escapar).
+    if (itemId === "Preparador" && player.hasPersonalTrainer) return;
+    if (itemId === "Massagista" && player.hasMasseuse) return;
+
+    const updatedPlayer = { 
+      ...player, 
+      money: player.money - price,
+      personal: { ...player.personal }
+    };
+
+    const socialGain = item?.socialGain ?? 1;
+    updatedPlayer.personal.social = Math.min(100, updatedPlayer.personal.social + socialGain);
+    updatedPlayer.personal.mood = Math.min(100, updatedPlayer.personal.mood + 1);
+
+    if (itemId === "Preparador") {
+      updatedPlayer.hasPersonalTrainer = true;
+    } else if (itemId === "Massagista") {
+      updatedPlayer.hasMasseuse = true;
+      // Cura 50% da Saúde que falta para o jogador chegar aos 100%.
+      const missingHealth = 100 - updatedPlayer.personal.health;
+      updatedPlayer.personal.health = Math.min(100, updatedPlayer.personal.health + missingHealth * 0.5);
+    } else if (!item?.consumable) {
+      updatedPlayer.assets = [...player.assets, itemId];
     }
+    onUpdatePlayer(updatedPlayer);
   };
 
   return (

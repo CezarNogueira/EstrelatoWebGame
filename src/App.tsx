@@ -219,6 +219,7 @@ export default function App() {
       caps: player.caps + (finalStat.nationalTeamCall ? 1 : 0),
       money: player.money + (player.salary || 0),
       hasPersonalTrainer: false,
+      hasMasseuse: false,
     };
 
     if (finalStat.nationalTeamCall) {

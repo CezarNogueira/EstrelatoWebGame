@@ -1,22 +1,40 @@
 import { Player } from "../types";
 import { formatCurrency } from "../utils";
-import { Home, Castle, Car, Ship, Shirt, Watch, Dumbbell, X, Plane, Palmtree, Ghost, Brush, UserPlus } from "lucide-react";
+import {
+  Home, Castle, Car, Ship, Shirt, Watch, Dumbbell, X, Plane, Palmtree, Ghost, Brush, UserPlus,
+  Building2, Gem, Footprints, Wine, Mic2, TreePine, Store as StoreIcon, PartyPopper, Globe,
+} from "lucide-react";
 
 export const STORE_ITEMS = [
-  { id: "Casa", name: "Casa", price: 500000, icon: Home, description: "Custo: 40k/ano" },
-  { id: "Mansão", name: "Mansão", price: 5000000, icon: Castle, description: "Custo: 100k/ano" },
-  { id: "Carro de Luxo", name: "Carro de Luxo", price: 200000, icon: Car, description: "Custo: 50k/ano" },
-  { id: "Jetski", name: "Jetski", price: 30000, icon: Ship, description: "Custo: 5k/ano" },
-  { id: "Iate", name: "Iate", price: 2000000, icon: Ship, description: "Custo: 600k/ano" },
-  { id: "Helicóptero", name: "Helicóptero", price: 800000, icon: Plane, description: "Custo: 80k/ano" },
-  { id: "Avião Particular", name: "Avião Particular", price: 15000000, icon: Plane, description: "Custo: 1M/ano" },
-  { id: "Ilha Privativa", name: "Ilha Privativa", price: 50000000, icon: Palmtree, description: "Custo: 20M/ano" },
-  { id: "Cavalo de Raça", name: "Cavalo de Raça", price: 500000, icon: Ghost, description: "Custo: 50k/ano" },
-  { id: "Obras de Arte", name: "Obras de Arte", price: 1000000, icon: Brush },
-  { id: "Ternos", name: "Ternos de Grife", price: 10000, icon: Shirt },
-  { id: "Relógios", name: "Relógios de Luxo", price: 50000, icon: Watch },
-  { id: "Preparador", name: "Preparador Físico", price: 150000, icon: Dumbbell, description: "+50% de ganho de Físico (dura 1 temporada)" },
-  { id: "Massagista", name: "Massagista Particular", price: 50000, icon: UserPlus, description: "+10 de Saúde imediatamente" },
+  // Ativos permanentes (comprados uma única vez)
+  { id: "Casa", name: "Casa", price: 500000, icon: Home, description: "Custo: 40k/ano", socialGain: 5 },
+  { id: "Mansão", name: "Mansão", price: 5000000, icon: Castle, description: "Custo: 100k/ano", socialGain: 20 },
+  { id: "Carro de Luxo", name: "Carro de Luxo", price: 200000, icon: Car, description: "Custo: 50k/ano", socialGain: 8 },
+  { id: "Jetski", name: "Jetski", price: 30000, icon: Ship, description: "Custo: 5k/ano", socialGain: 3 },
+  { id: "Iate", name: "Iate", price: 2000000, icon: Ship, description: "Custo: 600k/ano", socialGain: 18 },
+  { id: "Helicóptero", name: "Helicóptero", price: 800000, icon: Plane, description: "Custo: 80k/ano", socialGain: 13 },
+  { id: "Avião Particular", name: "Avião Particular", price: 15000000, icon: Plane, description: "Custo: 1M/ano", socialGain: 25 },
+  { id: "Ilha Privativa", name: "Ilha Privativa", price: 50000000, icon: Palmtree, description: "Custo: 20M/ano", socialGain: 25 },
+  { id: "Cavalo de Raça", name: "Cavalo de Raça", price: 500000, icon: Ghost, description: "Custo: 50k/ano", socialGain: 10 },
+  { id: "Obras de Arte", name: "Obras de Arte", price: 1000000, icon: Brush, socialGain: 11 },
+  { id: "Ternos", name: "Ternos de Grife", price: 10000, icon: Shirt, socialGain: 4 },
+  { id: "Relógios", name: "Relógios de Luxo", price: 50000, icon: Watch, socialGain: 6 },
+  { id: "Cobertura de Luxo", name: "Cobertura de Luxo", price: 3000000, icon: Building2, description: "Custo: 90k/ano", socialGain: 16 },
+  { id: "Coleção de Carros Antigos", name: "Coleção de Carros Antigos", price: 4000000, icon: Car, description: "Custo: 120k/ano", socialGain: 19 },
+  { id: "Joias Exclusivas", name: "Joias Exclusivas", price: 300000, icon: Gem, socialGain: 9 },
+  { id: "Coleção de Tênis", name: "Coleção de Tênis Raros", price: 80000, icon: Footprints, socialGain: 5 },
+  { id: "Adega de Vinhos", name: "Adega de Vinhos Raros", price: 250000, icon: Wine, description: "Custo: 20k/ano", socialGain: 7 },
+  { id: "Estúdio de Gravação", name: "Estúdio de Gravação", price: 600000, icon: Mic2, description: "Custo: 30k/ano", socialGain: 12 },
+  { id: "Fazenda", name: "Fazenda de Luxo", price: 1500000, icon: TreePine, description: "Custo: 70k/ano", socialGain: 12 },
+  { id: "Marca Própria", name: "Marca de Roupas Própria", price: 2000000, icon: StoreIcon, description: "Custo: 100k/ano", socialGain: 20 },
+
+  // Consumíveis: efeito imediato, podem ser comprados quantas vezes o jogador quiser
+  { id: "Festa Exclusiva", name: "Festa Exclusiva", price: 40000, icon: PartyPopper, description: "Consumível: eleva seu status social na hora", socialGain: 14, consumable: true },
+  { id: "Viagem Internacional", name: "Viagem Internacional", price: 25000, icon: Globe, description: "Consumível: eleva seu status social na hora", socialGain: 7, consumable: true },
+
+  // Consumíveis limitados a 1 vez por temporada
+  { id: "Preparador", name: "Preparador Físico", price: 150000, icon: Dumbbell, description: "+50% de ganho de Físico (dura 1 temporada)", socialGain: 2 },
+  { id: "Massagista", name: "Massagista Particular", price: 50000, icon: UserPlus, description: "Cura 50% da Saúde na hora (1x por temporada)", socialGain: 1 },
 ];
 
 export function StoreModal({ 
@@ -52,7 +70,9 @@ export function StoreModal({
             if (item.id === "Preparador") {
               owned = player.hasPersonalTrainer;
             } else if (item.id === "Massagista") {
-              owned = false; // Consumable
+              owned = !!player.hasMasseuse;
+            } else if (item.consumable) {
+              owned = false; // Consumível: pode ser comprado repetidas vezes
             } else {
               owned = player.assets.includes(item.id);
             }
@@ -73,6 +93,9 @@ export function StoreModal({
                     <p className="text-emerald-400 font-medium">{formatCurrency(item.price)}</p>
                     {item.description && (
                       <p className="text-xs text-slate-500 mt-1">{item.description}</p>
+                    )}
+                    {item.socialGain && (
+                      <p className="text-xs text-pink-400 font-bold mt-1">+{item.socialGain}% Social</p>
                     )}
                   </div>
                 </div>
