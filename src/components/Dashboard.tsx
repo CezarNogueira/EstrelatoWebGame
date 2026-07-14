@@ -71,7 +71,7 @@ export function Dashboard({
       updatedPlayer.hasMasseuse = true;
       // Cura 50% da Saúde que falta para o jogador chegar aos 100%.
       const missingHealth = 100 - updatedPlayer.personal.health;
-      updatedPlayer.personal.health = Math.min(100, updatedPlayer.personal.health + missingHealth * 0.5);
+      updatedPlayer.personal.health = Math.round(Math.min(100, updatedPlayer.personal.health + missingHealth * 0.5));
     } else if (itemId === "Festa Exclusiva") {
       updatedPlayer.usedExclusiveParty = true;
     } else if (itemId === "Viagem Internacional") {
@@ -177,7 +177,7 @@ export function Dashboard({
                 <div className="flex gap-4 mt-4">
                   <div className="flex flex-col">
                     <span className="text-[10px] text-slate-500 font-bold uppercase">Humor</span>
-                    <span className="text-sm font-bold text-blue-400">{player.personal.mood}%</span>
+                    <span className="text-sm font-bold text-blue-400">{Math.round(player.personal.mood)}%</span>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[10px] text-slate-500 font-bold uppercase">Saúde</span>
@@ -188,12 +188,12 @@ export function Dashboard({
                           ? "text-orange-400"
                           : "text-emerald-400"
                     }`}>
-                      {player.personal.health}%
+                      {Math.round(player.personal.health)}%
                     </span>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[10px] text-slate-500 font-bold uppercase">Social</span>
-                    <span className="text-sm font-bold text-purple-400">{player.personal.social}%</span>
+                    <span className="text-sm font-bold text-purple-400">{Math.round(player.personal.social)}%</span>
                   </div>
                 </div>
               )}
