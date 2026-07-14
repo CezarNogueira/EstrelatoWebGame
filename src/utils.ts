@@ -412,7 +412,7 @@ export const simulateSeason = (
   const healthDecline = getSeasonHealthDecline(player.age);
   let newHealth = Math.max(0, Math.min(100, player.personal.health - healthDecline));
 
-  const BASELINE_INJURY_CHANCE = 4; // risco mínimo mesmo com 100% de Saúde
+  const BASELINE_INJURY_CHANCE = 1; // risco mínimo mesmo com 100% de Saúde
   const injuryChance = Math.min(85, BASELINE_INJURY_CHANCE + (100 - newHealth) * 0.65);
 
   let injured = false;
