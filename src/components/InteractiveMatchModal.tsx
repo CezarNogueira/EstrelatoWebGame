@@ -126,7 +126,9 @@ export function InteractiveMatchModal({
     setScoreThem(0);
     setEvents([]);
     setChancesHad(0);
-    setTotalChances(1); // Max 1 chance for realism and tighter scores
+    // Cada final agora sorteia entre 1 e 6 chances de o jogador participar
+    // ativamente da jogada, em vez de sempre uma única oportunidade.
+    setTotalChances(Math.floor(Math.random() * 6) + 1);
   }, [finalType, player.currentTeam.country, player.currentTeam.id, player.nationality, isNational]);
 
   const eventsEndRef = useRef<HTMLDivElement>(null);
@@ -182,8 +184,10 @@ export function InteractiveMatchModal({
             addEvent(`GOL DA SUA EQUIPE! Uma bela jogada coletiva termina na rede!`, "goal_us");
           }
 
-          // Player chance!
-          if (chancesHad < totalChances && Math.random() < 0.02) {
+          // Player chance! (probabilidade um pouco maior que antes para que
+          // seja realmente possível emplacar as até 6 chances sorteadas
+          // dentro dos 90 minutos, e não só na teoria)
+          if (chancesHad < totalChances && Math.random() < 0.035) {
             setStatus("WAITING_ACTION");
             addEvent(`${player.name} recebe a bola em ótima posição contra a zaga do ${opponentName}! O que ele vai fazer?`, "chance");
           }
