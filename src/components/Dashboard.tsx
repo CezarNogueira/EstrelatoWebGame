@@ -152,22 +152,6 @@ export function Dashboard({
                     <span className="text-yellow-500 font-bold">{player.caps} Convocações</span>
                   </>
                 )}
-                {totalTackles > 0 && (
-                  <>
-                    <span>•</span>
-                    <span className="text-blue-400 font-bold flex items-center gap-1">
-                      <Shield className="w-4 h-4" /> {totalTackles} Desarmes
-                    </span>
-                  </>
-                )}
-                {totalCleanSheets > 0 && (
-                  <>
-                    <span>•</span>
-                    <span className="text-emerald-400 font-bold flex items-center gap-1">
-                      <ShieldCheck className="w-4 h-4" /> {totalCleanSheets} Jogos sem Sofrer
-                    </span>
-                  </>
-                )}
               </div>
 
               {/* Personal Attributes */}
