@@ -140,8 +140,8 @@ export function InteractiveMatchModal({
     }
   }, [events]);
 
-  const addEvent = (text: string, type: MatchEvent["type"] = "neutral") => {
-    setEvents(prev => [...prev, { minute, text, type }]);
+  const addEvent = (text: string, type: MatchEvent["type"] = "neutral", atMinute?: number) => {
+    setEvents(prev => [...prev, { minute: atMinute ?? minute, text, type }]);
   };
 
   useEffect(() => {
@@ -153,7 +153,7 @@ export function InteractiveMatchModal({
           
           if (nextMin >= 90) {
             setStatus("FINISHED");
-            addEvent("Fim de Jogo! O árbitro apita o final da partida.", "neutral");
+            addEvent("Fim de Jogo! O árbitro apita o final da partida.", "neutral", nextMin);
             return 90;
           }
 
@@ -169,19 +169,19 @@ export function InteractiveMatchModal({
               "Impedimento marcado pelo bandeirinha.",
               "Jogo paralisado para atendimento médico."
             ];
-            addEvent(genericEvents[Math.floor(Math.random() * genericEvents.length)]);
+            addEvent(genericEvents[Math.floor(Math.random() * genericEvents.length)], "neutral", nextMin);
           }
 
           // Opponent scores (lowered probability for realistic score)
           if (Math.random() < 0.004) {
             setScoreThem(s => s + 1);
-            addEvent(`GOL DO ${opponentName.toUpperCase()}! Eles abrem a defesa e marcam.`, "goal_them");
+            addEvent(`GOL DO ${opponentName.toUpperCase()}! Eles abrem a defesa e marcam.`, "goal_them", nextMin);
           }
 
           // Team scores without player (lowered probability)
           if (Math.random() < 0.003) {
             setScoreUs(s => s + 1);
-            addEvent(`GOL DA SUA EQUIPE! Uma bela jogada coletiva termina na rede!`, "goal_us");
+            addEvent(`GOL DA SUA EQUIPE! Uma bela jogada coletiva termina na rede!`, "goal_us", nextMin);
           }
 
           // Player chance! (probabilidade um pouco maior que antes para que
@@ -189,7 +189,7 @@ export function InteractiveMatchModal({
           // dentro dos 90 minutos, e não só na teoria)
           if (chancesHad < totalChances && Math.random() < 0.035) {
             setStatus("WAITING_ACTION");
-            addEvent(`${player.name} recebe a bola em ótima posição contra a zaga do ${opponentName}! O que ele vai fazer?`, "chance");
+            addEvent(`${player.name} recebe a bola em ótima posição contra a zaga do ${opponentName}! O que ele vai fazer?`, "chance", nextMin);
           }
 
           return nextMin;
