@@ -235,7 +235,7 @@ export const TEAMS: Team[] = [
   { id: "uy16", name: "Juventud de Las Piedras", level: 1, color: "#FFFF00", country: "UY" }
 ];
 
-export const INITIAL_TEAMS = TEAMS.filter((t) => t.level <= 2);
+export const INITIAL_TEAMS = TEAMS.filter((t) => t.level <= 5);
 
 // Maps the Portuguese nationality labels shown in ChooseNationality to the
 // country codes used on Team.country, so the roulette can be restricted to
