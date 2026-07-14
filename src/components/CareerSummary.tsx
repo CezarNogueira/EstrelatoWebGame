@@ -83,7 +83,7 @@ export function CareerSummary({ player, onRestart }: { player: Player; onRestart
             {Object.keys(teamTitles).length === 0 ? (
               <p className="text-slate-500 italic">Nenhum título conquistado.</p>
             ) : (
-              <ul className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar pr-2">
+              <ul className="space-y-2">
                 {Object.entries(teamTitles).sort((a,b) => b[1] - a[1]).map(([title, count]) => (
                   <li key={title} className="flex justify-between items-center bg-slate-950 p-3 rounded-lg border border-slate-800">
                     <span className="text-slate-300 font-medium">{title}</span>
@@ -102,7 +102,7 @@ export function CareerSummary({ player, onRestart }: { player: Player; onRestart
             {Object.keys(individualAwards).length === 0 ? (
               <p className="text-slate-500 italic">Nenhum prêmio individual.</p>
             ) : (
-              <ul className="space-y-2 max-h-64 overflow-y-auto custom-scrollbar pr-2">
+              <ul className="space-y-2">
                 {Object.entries(individualAwards).sort((a,b) => b[1] - a[1]).map(([award, count]) => (
                   <li key={award} className="flex justify-between items-center bg-slate-950 p-3 rounded-lg border border-slate-800">
                     <span className="text-slate-300 font-medium">{award}</span>
