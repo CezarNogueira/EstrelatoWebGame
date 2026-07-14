@@ -586,26 +586,24 @@ export const simulateSeason = (
 
     let wonBallonDor = false;
     
+    // A lógica abaixo tenta capturar a raridade do prêmio, mas ainda assim permitir que jogadores excepcionais o conquistem.
     if (wonWC && wcTopScorer) {
       wonBallonDor = true;
-    } else if (wonCL && clTopScorer && currentOvr >= 85) {
+    } else if (wonCL && clTopScorer && currentOvr >= 80) {
+      wonBallonDor = Math.random() > 0.02; // 98% chance
+    } else if (currentOvr >= 85 && goals + assists >= 40 && (wonWC || wonCL)) {
+      wonBallonDor = Math.random() > 0.2; // 80% chance
+    } else if (currentOvr >= 89 && goals + assists >= 50) {
       wonBallonDor = Math.random() > 0.1; // 90% chance
-    } else if (currentOvr >= 90 && goals + assists >= 40 && (wonWC || wonCL)) {
-      wonBallonDor = Math.random() > 0.2;
-    } else if (currentOvr >= 92 && goals + assists >= 50) {
-      wonBallonDor = Math.random() > 0.1;
     } else if (currentOvr >= 88 && goals + assists >= 35 && wonLeague) {
-      wonBallonDor = Math.random() > 0.6;
+      wonBallonDor = Math.random() > 0.6; // 40% chance
     }
 
-    // Exceptional zagueiros can also win the Bola de Ouro on defensive
-    // merit alone - mirrors real cases like a dominant, title-winning
-    // center-back season, rather than requiring goal contributions.
     if (!wonBallonDor && player.position === "ZAG" && currentOvr >= 87) {
       const exceptionalDefender = cleanSheetRateThisSeason >= 0.55 && tackles >= 120;
       const majorTitleWon = wonWC || wonCL;
       if (exceptionalDefender && majorTitleWon) {
-        wonBallonDor = Math.random() > 0.5;
+        wonBallonDor = Math.random() > 0.5; // 50% chance
       }
     }
 
