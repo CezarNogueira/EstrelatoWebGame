@@ -81,10 +81,10 @@ export const generateSeasonMatchStats = (
 
   // O número de gols e assistências é influenciado pelos atributos de finalização e passe do jogador, respectivamente, bem como pela taxa de desempenho e pelos pesos de posição.
   const goals = Math.max(0, Math.round(
-    randomInt(1, 20) * performanceRatio * (player.attributes.shooting / 35) * w.goals
+    randomInt(1, 20) * performanceRatio * (player.attributes.shooting / 39) * w.goals
   ));
   const assists = Math.max(0, Math.round(
-    randomInt(1, 20) * performanceRatio * (player.attributes.passing / 35) * w.assists
+    randomInt(1, 20) * performanceRatio * (player.attributes.passing / 39) * w.assists
   ));
 
   const tacklesPerMatch = (0.6 + (player.attributes.defending / 99) * 3.4) * w.tackles;
@@ -99,9 +99,6 @@ export const generateSeasonMatchStats = (
   return { goals, assists, tackles, cleanSheets };
 };
 
-// Combines attacking and defensive output into one "worthy of a call-up"
-// score, so a great ZAG/LAT/VOL can reach the national team purely on
-// tackles and clean sheets, without needing goals or assists.
 export const getNationalCallScore = (
   goals: number,
   assists: number,
@@ -122,9 +119,6 @@ export const getPlayerTitle = (age: number, ovr: number): string => {
   return "Padrão";
 };
 
-// How much Saúde (health) a player naturally loses each season just from
-// wear and tear, based on age: young players recover fast, older players
-// accumulate much more physical toll.
 export const getSeasonHealthDecline = (age: number): number => {
   if (age <= 18) return 1;
   if (age <= 23) return 4;
@@ -227,7 +221,7 @@ export const autoDistributePoints = (
         }
       }
     }
-    // If all attributes are 99 or we couldn't allocate
+
     if (!pointAllocated && priority.every(attr => currentAttributes[attr] + (distribution[attr] || 0) >= 99)) {
       break;
     }
@@ -391,11 +385,9 @@ export const getReachedFinals = (player: Player, currentOvr: number): string[] =
     }
   }
 
-  // National Team check
   const expectedOvr = player.currentTeam.level * 15 + 35;
   const performanceRatio = Math.min(1.5, Math.max(0.5, currentOvr / expectedOvr));
-  // Estimated matches just for this gating calculation - the real season
-  // stats are generated later in simulateSeason.
+
   const estimatedMatches = 30;
   const { goals, assists, tackles, cleanSheets } = generateSeasonMatchStats(player, estimatedMatches, performanceRatio);
   const callScore = getNationalCallScore(goals, assists, tackles, cleanSheets);
@@ -417,9 +409,6 @@ export const simulateSeason = (
 ): { baseUpdatedPlayer: Player; seasonStat: SeasonStat; transfer?: Team; earnedPoints: number; proContractOffer?: boolean } => {
   const currentOvr = calculateOverall(player.attributes, player.position);
 
-  // Health decline by age, plus injury roll: the lower the Saúde, the higher
-  // the chance of an injury - but there's always a small baseline risk even
-  // at full health. If Saúde bottoms out at 0%, it's a career-ending injury.
   const healthDecline = getSeasonHealthDecline(player.age);
   let newHealth = Math.max(0, Math.min(100, player.personal.health - healthDecline));
 
@@ -449,10 +438,11 @@ export const simulateSeason = (
     }
   }
 
-  // Match Stats Generation based on CURRENT OVR vs Team Level
+  // OVR esperado com base no nível do time e na posição do jogador, para calcular a taxa de desempenho
   const expectedOvr = player.currentTeam.level * 15 + 35; 
   let performanceRatio = Math.min(1.5, Math.max(0.5, currentOvr / expectedOvr));
 
+  // O número de partidas disputadas é influenciado pela taxa de desempenho do jogador e por um fator aleatório, mas limitado a um intervalo de 0 a 50 partidas
   let matches = Math.min(50, Math.max(0, Math.round(randomInt(20, 45) * performanceRatio)));
 
   if (injured) {
