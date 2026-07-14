@@ -14,6 +14,7 @@ import { ContractOffersModal } from "./components/ContractOffersModal";
 import { InjuryModal } from "./components/InjuryModal";
 import { InteractiveMatchModal, resetOpponentMemory } from "./components/InteractiveMatchModal";
 import { RomanceEventModal, ROMANCE_EVENTS } from "./components/RomanceEventModal";
+import { MentalHealthModal } from "./components/MentalHealthModal";
 import { HeartCrack } from "lucide-react";
 import { generateRelationships } from "./data";
 import { simulateSeason, applyGrowth, autoDistributePoints, generatePressMessage, calculateMarketValue, calculateOverall, formatCurrency, getReachedFinals, getContractEndOffers } from "./utils";
@@ -118,6 +119,8 @@ export default function App() {
   // interativas jogadas nesta temporada - somada ao total gerado pela
   // simulação da temporada quando ela termina.
   const [finalsGoalsAssists, setFinalsGoalsAssists] = useState({ goals: 0, assists: 0 });
+
+  const [pendingMentalHealthEvent, setPendingMentalHealthEvent] = useState<{ type: "depressed" | "isolated" } | null>(null);
 
   const handleSimulate = () => {
     if (!player) return;
@@ -246,15 +249,34 @@ export default function App() {
       proContractOffer: proContractOffer || false,
     };
 
-    if (finalStat.injured) {
+    if (finalStat.depressed) {
+      setPendingMentalHealthEvent({ type: "depressed" });
+      setPendingSimulationPhase(stateToPass);
+    } else if (finalStat.isolated) {
+      setPendingMentalHealthEvent({ type: "isolated" });
+      setPendingSimulationPhase(stateToPass);
+    } else {
+      proceedToInjuryCheck(stateToPass);
+    }
+  };
+
+  const proceedToInjuryCheck = (stateToPass: any) => {
+    if (stateToPass.seasonStat.injured) {
       setPendingInjury({
-        days: finalStat.injuryDays || 0,
-        careerEnding: finalStat.careerEndingInjury || false,
+        days: stateToPass.seasonStat.injuryDays || 0,
+        careerEnding: stateToPass.seasonStat.careerEndingInjury || false,
       });
       setPendingSimulationPhase(stateToPass);
     } else {
       proceedAfterInjuryCheck(stateToPass);
     }
+  };
+
+  const handleContinueFromMentalHealth = () => {
+    if (!pendingSimulationPhase) return;
+    const stateToPass = pendingSimulationPhase;
+    setPendingMentalHealthEvent(null);
+    proceedToInjuryCheck(stateToPass);
   };
 
   const proceedAfterInjuryCheck = (stateToPass: any) => {
@@ -645,6 +667,7 @@ export default function App() {
     setTransferOffer(null);
     setPendingFinals(null);
     setPendingInjury(null);
+    setPendingMentalHealthEvent(null);
     setPendingProContract(false);
     setPendingContractNegotiation(null);
     setPendingContractOffers(null);
@@ -666,6 +689,13 @@ export default function App() {
       {screen === "DASHBOARD" && player && !player.retired && (
         <div className="relative">
           {showTraining && <TrainingModal onTrain={handleTrain} />}
+
+          {pendingMentalHealthEvent && (
+            <MentalHealthModal 
+              type={pendingMentalHealthEvent.type}
+              onContinue={handleContinueFromMentalHealth}
+            />
+          )}
 
           {pendingInjury && (
             <InjuryModal

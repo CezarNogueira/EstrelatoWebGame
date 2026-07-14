@@ -13,6 +13,8 @@ export type Team = {
   level: number; // 1 to 5 stars
   color: string;
   country: string;
+  division?: number;
+  logo?: string; // URL do escudo do time (opcional)
 };
 
 export type FinalResult = {
@@ -37,6 +39,11 @@ export type SeasonStat = {
   injured?: boolean;
   injuryDays?: number; // duração da lesão em dias (4 a 60)
   careerEndingInjury?: boolean; // lesão gravíssima que encerra a carreira (saúde chegou a 0%)
+  relationshipLosses?: string[]; // mensagens de brigas e términos
+  isolated?: boolean;
+  depressed?: boolean;
+  leaguePosition?: number;
+  leagueName?: string;
 };
 
 export type Position = "ATA" | "PON" | "MEI" | "MC" | "VOL" | "ZAG" | "LAT";
@@ -57,6 +64,18 @@ export type RomanceEvent = {
   description: string;
   attraction: number; // 0 a 100, exibido como barra
   choices: RomanceChoice[];
+};
+
+export type FamilyEvent = {
+  id: string;
+  role: FamilyRole | "Amigo"; // quem causou o evento
+  title: string;
+  description: string;
+  choices: {
+    id: string;
+    label: string;
+    tone: RomanceChoiceTone; 
+  }[];
 };
 
 export type FamilyRole = "Pai" | "Mãe" | "Irmão" | "Irmã";

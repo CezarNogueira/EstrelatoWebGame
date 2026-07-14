@@ -12,7 +12,7 @@ function AffinityBar({ value }: { value: number }) {
   );
 }
 
-export function RelationshipsModal({ player, onClose }: { player: Player; onClose: () => void }) {
+export function RelationshipsModal({ player, onClose, onSpendTime }: { player: Player; onClose: () => void; onSpendTime: (id: string, type: "family" | "friend" | "girlfriend") => void }) {
   const { family, friends, girlfriend } = player.relationships;
 
   const father = family.find((m) => m.role === "Pai");
@@ -43,24 +43,39 @@ export function RelationshipsModal({ player, onClose }: { player: Player; onClos
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {father && (
-                  <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
-                    <div className="font-bold text-slate-100">{father.name}</div>
-                    <div className="text-xs text-slate-500">Pai · {father.age} anos</div>
-                    <AffinityBar value={father.affinity} />
+                  <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+                    <div>
+                      <div className="font-bold text-slate-100">{father.name}</div>
+                      <div className="text-xs text-slate-500">Pai · {father.age} anos</div>
+                      <AffinityBar value={father.affinity} />
+                    </div>
+                    <button onClick={() => onSpendTime(father.id, "family")} className="mt-4 w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-bold transition-all">
+                      Passar tempo
+                    </button>
                   </div>
                 )}
                 {mother && (
-                  <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
-                    <div className="font-bold text-slate-100">{mother.name}</div>
-                    <div className="text-xs text-slate-500">Mãe · {mother.age} anos</div>
-                    <AffinityBar value={mother.affinity} />
+                  <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+                    <div>
+                      <div className="font-bold text-slate-100">{mother.name}</div>
+                      <div className="text-xs text-slate-500">Mãe · {mother.age} anos</div>
+                      <AffinityBar value={mother.affinity} />
+                    </div>
+                    <button onClick={() => onSpendTime(mother.id, "family")} className="mt-4 w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-bold transition-all">
+                      Passar tempo
+                    </button>
                   </div>
                 )}
                 {siblings.map((s) => (
-                  <div key={s.id} className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
-                    <div className="font-bold text-slate-100">{s.name}</div>
-                    <div className="text-xs text-slate-500">{s.role} · {s.age} anos</div>
-                    <AffinityBar value={s.affinity} />
+                  <div key={s.id} className="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+                    <div>
+                      <div className="font-bold text-slate-100">{s.name}</div>
+                      <div className="text-xs text-slate-500">{s.role} · {s.age} anos</div>
+                      <AffinityBar value={s.affinity} />
+                    </div>
+                    <button onClick={() => onSpendTime(s.id, "family")} className="mt-4 w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-bold transition-all">
+                      Passar tempo
+                    </button>
                   </div>
                 ))}
               </div>
@@ -71,17 +86,22 @@ export function RelationshipsModal({ player, onClose }: { player: Player; onClos
           <section>
             <h4 className="text-sm font-bold uppercase text-slate-500 mb-3 tracking-wide">Relacionamento</h4>
             {girlfriend ? (
-              <div className="bg-slate-950 border border-pink-500/20 rounded-2xl p-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-pink-500/10 flex items-center justify-center shrink-0">
-                    <Heart className="w-5 h-5 text-pink-400" />
+              <div className="bg-slate-950 border border-pink-500/20 rounded-2xl p-4 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-pink-500/10 flex items-center justify-center shrink-0">
+                      <Heart className="w-5 h-5 text-pink-400" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-slate-100">{girlfriend.name}</div>
+                      <div className="text-xs text-slate-500">Namorando desde os {girlfriend.sinceAge} anos</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="font-bold text-slate-100">{girlfriend.name}</div>
-                    <div className="text-xs text-slate-500">Namorando desde os {girlfriend.sinceAge} anos</div>
-                  </div>
+                  <AffinityBar value={girlfriend.affinity} />
                 </div>
-                <AffinityBar value={girlfriend.affinity} />
+                <button onClick={() => onSpendTime(girlfriend.id, "girlfriend")} className="mt-4 w-full py-2 bg-pink-500/10 hover:bg-pink-500/20 text-pink-400 rounded-lg text-sm font-bold border border-pink-500/20 transition-all">
+                  Passar tempo
+                </button>
               </div>
             ) : (
               <div className="bg-slate-950 border border-slate-800 rounded-2xl p-5 text-center text-slate-500 italic">
@@ -102,10 +122,15 @@ export function RelationshipsModal({ player, onClose }: { player: Player; onClos
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {friends.map((f) => (
-                  <div key={f.id} className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
-                    <div className="font-bold text-slate-100">{f.name}</div>
-                    <div className="text-xs text-slate-500">{f.relationTag}</div>
-                    <AffinityBar value={f.affinity} />
+                  <div key={f.id} className="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+                    <div>
+                      <div className="font-bold text-slate-100">{f.name}</div>
+                      <div className="text-xs text-slate-500">{f.relationTag}</div>
+                      <AffinityBar value={f.affinity} />
+                    </div>
+                    <button onClick={() => onSpendTime(f.id, "friend")} className="mt-4 w-full py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-lg text-sm font-bold transition-all">
+                      Passar tempo
+                    </button>
                   </div>
                 ))}
               </div>

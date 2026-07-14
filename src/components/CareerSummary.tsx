@@ -14,6 +14,9 @@ export function CareerSummary({ player, onRestart }: { player: Player; onRestart
         acc[f.type] = (acc[f.type] || 0) + 1;
       }
     });
+    if (stat.leaguePosition === 1 && stat.leagueName) {
+      acc[stat.leagueName] = (acc[stat.leagueName] || 0) + 1;
+    }
     return acc;
   }, {} as Record<string, number>);
 

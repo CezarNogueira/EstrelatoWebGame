@@ -1,6 +1,14 @@
 import { Attributes, Player, Position, SeasonStat, Team } from "./types";
 import { TEAMS, getNationalContinentalCup } from "./data";
 
+export const getRelativeLevel = (team: Team): number => {
+  if (!team.country) return team.level;
+  const sameCountryTeams = TEAMS.filter(t => t.country === team.country && t.division !== 2);
+  const maxLevel = sameCountryTeams.reduce((max, t) => Math.max(max, t.level), 1);
+  const levelDiff = maxLevel - team.level;
+  return Math.max(1, 5 - levelDiff);
+};
+
 export const calculateOverall = (attr: Attributes, pos: Position): number => {
   let weights = { pace: 1, shooting: 1, passing: 1, dribbling: 1, defending: 1, physical: 1 };
   
@@ -238,6 +246,15 @@ export const generatePressMessage = (
 ): string => {
   const messages: string[] = [];
 
+  // Mental Health
+  if (stat.depressed) {
+    messages.push(`"Tristeza profunda. ${player.name} foi diagnosticado com depressão e se afastou completamente do futebol nesta temporada."`);
+    messages.push(`"Momento delicado. Lutando contra a depressão, ${player.name} não entrou em campo neste ano."`);
+  } else if (stat.isolated) {
+    messages.push(`"Isolado! Fontes dizem que ${player.name} tem faltado aos treinos e se distanciado do elenco por problemas pessoais."`);
+    messages.push(`"Fase ruim mentalmente. ${player.name} tem evitado a mídia e companheiros, refletindo em menos jogos disputados."`);
+  }
+
   // Injury
   if (stat.injured) {
     messages.push(`"Temporada de lesões! ${player.name} passou boa parte do ano no departamento médico."`);
@@ -250,11 +267,38 @@ export const generatePressMessage = (
     messages.push(`"Não tem para ninguém! Temporada mágica coroa ${player.name} com a Bola de Ouro."`);
   }
 
-  // Titles
+  // Titles & Relegation/Promotion
   const wonFinals = stat.finals?.filter(f => f.won) || [];
-  if (wonFinals.length > 0) {
-    messages.push(`"${player.name} foi fundamental na conquista da ${wonFinals[0].type}!"`);
-    if (wonFinals.length > 1) {
+  const wonLeague = stat.leaguePosition === 1;
+
+  if (player.isPro && stat.leaguePosition) {
+    if (player.currentTeam.division === 2 && stat.leaguePosition <= 4) {
+      if (wonLeague) {
+        messages.push(`"Campeão e acesso garantido! ${player.name} lidera o time rumo à elite com o título da ${stat.leagueName}."`);
+      } else {
+        messages.push(`"Objetivo alcançado! A equipe de ${player.name} sobe para a primeira divisão."`);
+      }
+    } else if (player.currentTeam.division !== 2 && stat.leaguePosition >= 16 && stat.leaguePosition <= 20) {
+      messages.push(`"Decepção e rebaixamento. O time de ${player.name} teve uma péssima campanha e vai disputar a segunda divisão."`);
+    } else if (wonLeague || wonFinals.length > 0) {
+      if (wonLeague) {
+        messages.push(`"${player.name} comandou a equipe na brilhante conquista do ${stat.leagueName}!"`);
+      } else {
+        messages.push(`"${player.name} foi fundamental na conquista da ${wonFinals[0].type}!"`);
+      }
+      
+      if ((wonFinals.length >= 1 && wonLeague) || wonFinals.length > 1) {
+        messages.push(`"Temporada vitoriosa! ${player.name} empilha taças com atuações de gala."`);
+      }
+    }
+  } else if (wonLeague || wonFinals.length > 0) {
+    if (wonLeague) {
+      messages.push(`"${player.name} comandou a equipe na brilhante conquista do ${stat.leagueName}!"`);
+    } else {
+      messages.push(`"${player.name} foi fundamental na conquista da ${wonFinals[0].type}!"`);
+    }
+    
+    if ((wonFinals.length >= 1 && wonLeague) || wonFinals.length > 1) {
       messages.push(`"Temporada vitoriosa! ${player.name} empilha taças com atuações de gala."`);
     }
   }
@@ -287,7 +331,7 @@ export const generatePressMessage = (
 
   // Training/Attributes
   const attrTotal = Object.values(stat.attributeChanges || {}).reduce((a, b) => a + (b || 0), 0);
-  if (attrTotal > 5 && !proContractOffer && !transferOffer && wonFinals.length === 0 && stat.goals < 15) {
+  if (attrTotal > 5 && !proContractOffer && !transferOffer && !wonLeague && wonFinals.length === 0 && stat.goals < 15) {
      messages.push(`"Evolução visível! ${player.name} focou nos treinos e os resultados físicos e técnicos já aparecem."`);
   }
 
@@ -302,12 +346,19 @@ export const generatePressMessage = (
     }
   }
 
-  return messages[Math.floor(Math.random() * messages.length)];
+  let chosenMessage = messages[Math.floor(Math.random() * messages.length)];
+
+  if (stat.relationshipLosses && stat.relationshipLosses.length > 0) {
+    chosenMessage += "\\n\\n[Nota Extra Campo] " + stat.relationshipLosses.join(" ");
+  }
+
+  return chosenMessage;
 };
 
 export const getReachedFinals = (player: Player, currentOvr: number): string[] => {
   const finals: string[] = [];
-  const teamPower = player.currentTeam.level * 20 + currentOvr * 0.5;
+  const relLevel = player.currentTeam.division === 2 ? 1 : getRelativeLevel(player.currentTeam);
+  const teamPower = relLevel * 20 + currentOvr * 0.5;
 
   let cupName = "Copa Nacional";
   let leagueName = "Liga Nacional";
@@ -316,66 +367,66 @@ export const getReachedFinals = (player: Player, currentOvr: number): string[] =
 
   if (player.isPro) {
     const country = player.currentTeam.country;
+    const isDiv2 = player.currentTeam.division === 2;
     if (country === "BR") {
       cupName = "Copa do Brasil";
-      leagueName = "Brasileirão";
+      leagueName = isDiv2 ? "Série B" : "Brasileirão";
       continentalName = "Copa Libertadores";
     } else if (country === "EN") {
       cupName = "FA Cup";
-      leagueName = "Premier League";
+      leagueName = isDiv2 ? "Championship" : "Premier League";
       continentalName = "Champions League";
     } else if (country === "IT") {
       cupName = "Coppa Italia";
-      leagueName = "Serie A";
+      leagueName = isDiv2 ? "Serie B" : "Serie A";
       continentalName = "Champions League";
     } else if (country === "ES") {
       cupName = "Copa del Rey";
-      leagueName = "La Liga";
+      leagueName = isDiv2 ? "La Liga 2" : "La Liga";
       continentalName = "Champions League";
     } else if (country === "DE") {
       cupName = "DFB-Pokal";
-      leagueName = "Bundesliga";
+      leagueName = isDiv2 ? "2. Bundesliga" : "Bundesliga";
       continentalName = "Champions League";
     } else if (country === "FR") {
       cupName = "Coupe de France";
-      leagueName = "Ligue 1";
+      leagueName = isDiv2 ? "Ligue 2" : "Ligue 1";
       continentalName = "Champions League";
     } else if (country === "PT") {
       cupName = "Taça de Portugal";
-      leagueName = "Primeira Liga";
+      leagueName = isDiv2 ? "Liga Portugal 2" : "Primeira Liga";
       continentalName = "Champions League";
     } else if (country === "NL") {
       cupName = "KNVB Cup";
-      leagueName = "Eredivisie";
+      leagueName = isDiv2 ? "Eerste Divisie" : "Eredivisie";
       continentalName = "Champions League";
     } else if (country === "US") {
       cupName = "US Open Cup";
-      leagueName = "MLS";
+      leagueName = isDiv2 ? "USL Championship" : "MLS";
       continentalName = "Copa Libertadores";
     } else if (country === "SA") {
       cupName = "King\'s Cup";
-      leagueName = "Saudi Pro League";
+      leagueName = isDiv2 ? "First Division League" : "Saudi Pro League";
       continentalName = "AFC Champions League";
     } else if (country === "AR") {
       cupName = "Copa Argentina";
-      leagueName = "Liga Profesional Argentina";
+      leagueName = isDiv2 ? "Primera Nacional" : "Liga Profesional Argentina";
       continentalName = "Copa Libertadores";
     } else if (country === "UY") {
       cupName = "Copa Uruguay";
-      leagueName = "Primera División Uruguaya";
+      leagueName = isDiv2 ? "Segunda División" : "Primera División Uruguaya";
       continentalName = "Copa Libertadores";
     }
 
-    if (Math.random() * 100 < teamPower * 0.15) {
-      finals.push(cupName);
-    }
-    if (Math.random() * 100 < (teamPower - 50) * 0.2) {
-      finals.push(leagueName);
-    }
-    if (Math.random() * 100 < (teamPower - 70) * 0.25) {
-      finals.push(continentalName);
-      if (Math.random() > 0.5 && Math.random() > 0.3) {
-        finals.push(clubWCName);
+    if (!isDiv2) {
+      if (relLevel === 5 && Math.random() * 100 < teamPower * 0.15) {
+        finals.push(cupName);
+      }
+      if (relLevel === 5 && Math.random() * 100 < (teamPower - 70) * 0.25) {
+        finals.push(continentalName);
+        if (Math.random() > 0.5 && Math.random() > 0.3) {
+          finals.push(clubWCName);
+        }
       }
     }
   } else {
@@ -445,6 +496,21 @@ export const simulateSeason = (
   // O número de partidas disputadas é influenciado pela taxa de desempenho do jogador e por um fator aleatório, mas limitado a um intervalo de 0 a 50 partidas
   let matches = Math.min(50, Math.max(0, Math.round(randomInt(20, 45) * performanceRatio)));
 
+  let isolated = false;
+  let depressed = false;
+
+  if (player.personal.mood === 0) {
+    depressed = true;
+    matches = 0;
+    performanceRatio = 0;
+  } else if (player.personal.mood < 50) {
+    isolated = true;
+    // O jogador se isola e joga menos partidas
+    const moodFactor = player.personal.mood / 50;
+    matches = Math.round(matches * moodFactor);
+    performanceRatio = performanceRatio * (0.6 + moodFactor * 0.4);
+  }
+
   if (injured) {
     // A lesão custa uma parcela da temporada proporcional aos dias parado
     // (até 60 dias = pior caso), além de reduzir o rendimento no resto do ano.
@@ -483,54 +549,82 @@ export const simulateSeason = (
 
   if (player.isPro) {
     const country = player.currentTeam.country;
+    const isDiv2 = player.currentTeam.division === 2;
     if (country === "BR") {
       cupName = "Copa do Brasil";
-      leagueName = "Brasileirão";
+      leagueName = isDiv2 ? "Série B" : "Brasileirão";
       continentalName = "Copa Libertadores";
     } else if (country === "EN") {
       cupName = "FA Cup";
-      leagueName = "Premier League";
+      leagueName = isDiv2 ? "Championship" : "Premier League";
       continentalName = "Champions League";
     } else if (country === "IT") {
       cupName = "Coppa Italia";
-      leagueName = "Serie A";
+      leagueName = isDiv2 ? "Serie B" : "Serie A";
       continentalName = "Champions League";
     } else if (country === "ES") {
       cupName = "Copa del Rey";
-      leagueName = "La Liga";
+      leagueName = isDiv2 ? "La Liga 2" : "La Liga";
       continentalName = "Champions League";
     } else if (country === "DE") {
       cupName = "DFB-Pokal";
-      leagueName = "Bundesliga";
+      leagueName = isDiv2 ? "2. Bundesliga" : "Bundesliga";
       continentalName = "Champions League";
     } else if (country === "FR") {
       cupName = "Coupe de France";
-      leagueName = "Ligue 1";
+      leagueName = isDiv2 ? "Ligue 2" : "Ligue 1";
       continentalName = "Champions League";
     } else if (country === "PT") {
       cupName = "Taça de Portugal";
-      leagueName = "Primeira Liga";
+      leagueName = isDiv2 ? "Liga Portugal 2" : "Primeira Liga";
       continentalName = "Champions League";
     } else if (country === "NL") {
       cupName = "KNVB Cup";
-      leagueName = "Eredivisie";
+      leagueName = isDiv2 ? "Eerste Divisie" : "Eredivisie";
       continentalName = "Champions League";
     } else if (country === "US") {
       cupName = "US Open Cup";
-      leagueName = "MLS";
+      leagueName = isDiv2 ? "USL Championship" : "MLS";
       continentalName = "Copa Libertadores";
     } else if (country === "SA") {
       cupName = "King\'s Cup";
-      leagueName = "Saudi Pro League";
+      leagueName = isDiv2 ? "First Division League" : "Saudi Pro League";
       continentalName = "AFC Champions League";
     } else if (country === "AR") {
       cupName = "Copa Argentina";
-      leagueName = "Liga Profesional Argentina";
+      leagueName = isDiv2 ? "Primera Nacional" : "Liga Profesional Argentina";
       continentalName = "Copa Libertadores";
     } else if (country === "UY") {
       cupName = "Copa Uruguay";
-      leagueName = "Primera División Uruguaya";
+      leagueName = isDiv2 ? "Segunda División" : "Primera División Uruguaya";
       continentalName = "Copa Libertadores";
+    }
+  }
+
+  let leaguePosition: number | undefined;
+
+  if (player.isPro) {
+    let rand = Math.random();
+    // Factor in player performance. High performanceRatio (e.g. 1.2) decreases rand (better chance of winning)
+    // Low performanceRatio (e.g. 0.8) increases rand (worse chance)
+    rand -= (performanceRatio - 1) * 0.2;
+    rand = Math.max(0, Math.min(1, rand));
+
+    if (player.currentTeam.division === 2) {
+      leaguePosition = rand < 0.15 ? 1 : rand < 0.35 ? randomInt(2, 4) : rand < 0.7 ? randomInt(5, 12) : randomInt(13, 20);
+    } else {
+      const relLevel = getRelativeLevel(player.currentTeam);
+      if (relLevel === 5) {
+        leaguePosition = rand < 0.4 ? 1 : rand < 0.7 ? 2 : rand < 0.9 ? 3 : randomInt(4, 6);
+      } else if (relLevel === 4) {
+        leaguePosition = rand < 0.3 ? 2 : rand < 0.7 ? randomInt(3, 6) : randomInt(7, 10);
+      } else if (relLevel === 3) {
+        leaguePosition = rand < 0.2 ? randomInt(4, 7) : rand < 0.6 ? randomInt(8, 12) : randomInt(13, 16);
+      } else if (relLevel === 2) {
+        leaguePosition = rand < 0.1 ? randomInt(8, 12) : rand < 0.4 ? randomInt(13, 16) : randomInt(17, 20);
+      } else {
+        leaguePosition = rand < 0.1 ? randomInt(13, 16) : randomInt(17, 20);
+      }
     }
   }
 
@@ -582,7 +676,7 @@ export const simulateSeason = (
     const wcTopScorer = individualAwards.includes("Artilheiro da Copa do Mundo");
     const wonCL = finals.some(f => f.type === continentalName && f.won);
     const clTopScorer = individualAwards.includes(getArtilheiroString(continentalName));
-    const wonLeague = finals.some(f => f.type === leagueName && f.won);
+    const wonLeague = leaguePosition === 1;
 
     let wonBallonDor = false;
     
@@ -641,7 +735,58 @@ export const simulateSeason = (
   const points = basePoints + finalPoints;
 
   const newAttributes = applyGrowth(player.attributes, decline); // Only decline applied here
+
+  // Decrease relationships affinity over the season and handle breakups
+  let moodChange = 0;
+
+  for (const f of finals) {
+    if (f.won) {
+      moodChange += 10;
+    } else {
+      moodChange -= 5;
+    }
+  }
+
+  const relationshipLosses: string[] = [];
+
+  const newFamily = [];
+  for (const f of player.relationships.family) {
+    const newAffinity = Math.max(0, f.affinity - randomInt(5, 10));
+    if (newAffinity <= 30 && Math.random() < 0.3) {
+      relationshipLosses.push(`Você teve uma briga feia com seu(sua) ${f.role} ${f.name} e vocês cortaram relações temporariamente.`);
+      moodChange -= randomInt(15, 25);
+    } else {
+      newFamily.push({ ...f, affinity: newAffinity });
+    }
+  }
   
+  const newFriends = [];
+  for (const f of player.relationships.friends) {
+    const newAffinity = Math.max(0, f.affinity - randomInt(5, 15));
+    if (newAffinity <= 30 && Math.random() < 0.3) {
+      relationshipLosses.push(`Você discutiu gravemente com seu amigo ${f.name} e a amizade acabou.`);
+      moodChange -= randomInt(5, 15);
+    } else {
+      newFriends.push({ ...f, affinity: newAffinity });
+    }
+  }
+
+  let newGirlfriend = player.relationships.girlfriend ? { ...player.relationships.girlfriend } : null;
+  if (newGirlfriend) {
+    newGirlfriend.affinity = Math.max(0, newGirlfriend.affinity - randomInt(5, 10));
+    if (newGirlfriend.affinity <= 30 && Math.random() < 0.4) {
+      relationshipLosses.push(`Seu relacionamento com ${newGirlfriend.name} estava muito desgastado e vocês terminaram.`);
+      moodChange -= randomInt(20, 25);
+      newGirlfriend = null;
+    }
+  }
+  
+  const newRelationships = {
+    family: newFamily,
+    friends: newFriends,
+    girlfriend: newGirlfriend
+  };
+
   // Transfer Logic based on CURRENT OVR
   let transfer: Team | undefined;
   let proContractOffer = false;
@@ -680,18 +825,41 @@ export const simulateSeason = (
     injured,
     injuryDays: injured ? injuryDays : undefined,
     careerEndingInjury: careerEndingInjury || undefined,
+    relationshipLosses: relationshipLosses.length > 0 ? relationshipLosses : undefined,
+    isolated,
+    depressed,
+    leaguePosition,
+    leagueName: player.isPro ? leagueName : undefined,
   };
+
+  let updatedTeam = { ...player.currentTeam };
+  if (player.isPro && leaguePosition) {
+    if (updatedTeam.division === 2) {
+      if (leaguePosition >= 1 && leaguePosition <= 4) {
+        updatedTeam.division = 1;
+        updatedTeam.level = Math.min(5, updatedTeam.level + 1);
+      }
+    } else {
+      if (leaguePosition >= 16 && leaguePosition <= 20) {
+        updatedTeam.division = 2;
+        updatedTeam.level = Math.max(1, updatedTeam.level - 1);
+      }
+    }
+  }
 
   const baseUpdatedPlayer: Player = {
     ...player,
+    currentTeam: updatedTeam,
     age: player.age + 1,
     attributes: newAttributes,
+    relationships: newRelationships,
     history: player.history, // history is not updated yet, will be appended after point distribution
     retired: careerEndingInjury || player.age >= 38 || (player.age >= 34 && Math.random() > 0.7),
     contractYears: player.isPro ? Math.max(0, (player.contractYears || 0) - 1) : 0,
     personal: {
       ...player.personal,
       health: newHealth,
+      mood: Math.min(100, Math.max(0, player.personal.mood + moodChange)),
     },
   };
 

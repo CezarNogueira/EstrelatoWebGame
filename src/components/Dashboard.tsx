@@ -1,10 +1,12 @@
-import { Player, SeasonStat } from "../types";
+import { FamilyEvent, Player, SeasonStat } from "../types";
 import { calculateOverall, getPlayerTitle, formatCurrency } from "../utils";
 import { ArrowRight, Calendar, Goal, User, Users, Zap, FileSignature, ShoppingBag, Shield, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useState } from "react";
 import { StoreModal, STORE_ITEMS } from "./StoreModal";
 import { RelationshipsModal } from "./RelationshipsModal";
+import { FamilyEventModal } from "./FamilyEventModal";
+import { FAMILY_EVENTS } from "../data/familyEvents";
 
 function AttributeBar({ label, value }: { label: string; value: number }) {
   return (
@@ -34,6 +36,8 @@ export function Dashboard({
   const [showContractInfo, setShowContractInfo] = useState(false);
   const [showStore, setShowStore] = useState(false);
   const [showRelationships, setShowRelationships] = useState(false);
+  const [pendingFamilyEvent, setPendingFamilyEvent] = useState<{event: FamilyEvent, personId: string, personName: string, type: "family" | "friend" | "girlfriend"} | null>(null);
+
   const ovr = calculateOverall(player.attributes, player.position);
   const title = getPlayerTitle(player.age, ovr);
   const totalTackles = player.history.reduce((sum, stat) => sum + (stat.tackles || 0), 0);
@@ -49,9 +53,6 @@ export function Dashboard({
 
     const item = STORE_ITEMS.find(i => i.id === itemId);
 
-    // Trava de segurança: Preparador e Massagista só podem ser contratados
-    // uma vez por temporada (o botão já fica desabilitado na loja, mas
-    // reforçamos aqui para o caso de outro clique escapar).
     if (itemId === "Preparador" && player.hasPersonalTrainer) return;
     if (itemId === "Massagista" && player.hasMasseuse) return;
     if (itemId === "Festa Exclusiva" && player.usedExclusiveParty) return;
@@ -71,7 +72,6 @@ export function Dashboard({
       updatedPlayer.hasPersonalTrainer = true;
     } else if (itemId === "Massagista") {
       updatedPlayer.hasMasseuse = true;
-      // Cura 50% da Saúde que falta para o jogador chegar aos 100%.
       const missingHealth = 100 - updatedPlayer.personal.health;
       updatedPlayer.personal.health = Math.round(Math.min(100, updatedPlayer.personal.health + missingHealth * 0.5));
     } else if (itemId === "Festa Exclusiva") {
@@ -84,9 +84,105 @@ export function Dashboard({
     onUpdatePlayer(updatedPlayer);
   };
 
+  const handleSpendTime = (id: string, type: "family" | "friend" | "girlfriend") => {
+    const updatedPlayer = { ...player, relationships: { ...player.relationships }, personal: { ...player.personal } };
+    
+    let personName = "";
+    let role = "";
+    if (type === "family") {
+      const idx = updatedPlayer.relationships.family.findIndex(f => f.id === id);
+      if (idx !== -1) {
+        updatedPlayer.relationships.family[idx] = { ...updatedPlayer.relationships.family[idx], affinity: Math.min(100, updatedPlayer.relationships.family[idx].affinity + 15) };
+        personName = updatedPlayer.relationships.family[idx].name;
+        role = updatedPlayer.relationships.family[idx].role;
+      }
+    } else if (type === "friend") {
+      const idx = updatedPlayer.relationships.friends.findIndex(f => f.id === id);
+      if (idx !== -1) {
+        updatedPlayer.relationships.friends[idx] = { ...updatedPlayer.relationships.friends[idx], affinity: Math.min(100, updatedPlayer.relationships.friends[idx].affinity + 15) };
+        personName = updatedPlayer.relationships.friends[idx].name;
+        role = "Amigo";
+      }
+    } else if (type === "girlfriend" && updatedPlayer.relationships.girlfriend) {
+      updatedPlayer.relationships.girlfriend = { ...updatedPlayer.relationships.girlfriend, affinity: Math.min(100, updatedPlayer.relationships.girlfriend.affinity + 15) };
+      personName = updatedPlayer.relationships.girlfriend.name;
+      role = "Namorada"; // No family events configured for girlfriend yet, but handled gracefully
+    }
+
+    // Cost a little bit of health
+    updatedPlayer.personal.health = Math.max(0, updatedPlayer.personal.health - 2);
+    updatedPlayer.personal.mood = Math.min(100, updatedPlayer.personal.mood + 5);
+
+    onUpdatePlayer(updatedPlayer);
+
+    // Chance to trigger an event
+    if (Math.random() < 0.3) {
+      const possibleEvents = FAMILY_EVENTS.filter(e => e.role === role || (role.includes("Irmã") && e.role === "Irmã") || (role.includes("Irmão") && e.role === "Irmão"));
+      if (possibleEvents.length > 0) {
+        const event = possibleEvents[Math.floor(Math.random() * possibleEvents.length)];
+        setShowRelationships(false);
+        setPendingFamilyEvent({ event, personId: id, personName, type });
+      }
+    }
+  };
+
+  const handleFamilyEventChoice = (choiceId: string, event: FamilyEvent) => {
+    if (!pendingFamilyEvent) return;
+    
+    const choice = event.choices.find(c => c.id === choiceId);
+    if (!choice) return;
+
+    const updatedPlayer = { ...player, relationships: { ...player.relationships }, personal: { ...player.personal } };
+    
+    // Apply consequence based on tone
+    let affinityChange = 0;
+    switch(choice.tone) {
+      case "positive":
+        affinityChange = 15;
+        updatedPlayer.personal.mood = Math.min(100, updatedPlayer.personal.mood + 10);
+        break;
+      case "safe":
+        affinityChange = 5;
+        updatedPlayer.personal.mood = Math.min(100, updatedPlayer.personal.mood + 5);
+        break;
+      case "neutral":
+        affinityChange = 0;
+        break;
+      case "risky":
+        affinityChange = -15;
+        updatedPlayer.personal.mood = Math.max(0, updatedPlayer.personal.mood - 10);
+        break;
+    }
+
+    if (pendingFamilyEvent.type === "family") {
+      const idx = updatedPlayer.relationships.family.findIndex(f => f.id === pendingFamilyEvent.personId);
+      if (idx !== -1) {
+        updatedPlayer.relationships.family[idx] = { ...updatedPlayer.relationships.family[idx], affinity: Math.max(0, Math.min(100, updatedPlayer.relationships.family[idx].affinity + affinityChange)) };
+      }
+    } else {
+      const idx = updatedPlayer.relationships.friends.findIndex(f => f.id === pendingFamilyEvent.personId);
+      if (idx !== -1) {
+        updatedPlayer.relationships.friends[idx] = { ...updatedPlayer.relationships.friends[idx], affinity: Math.max(0, Math.min(100, updatedPlayer.relationships.friends[idx].affinity + affinityChange)) };
+      }
+    }
+
+    onUpdatePlayer(updatedPlayer);
+    setPendingFamilyEvent(null);
+    setShowRelationships(true); // show it back
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50 p-4 sm:p-8 font-sans">
+      {pendingFamilyEvent && (
+        <FamilyEventModal
+          event={pendingFamilyEvent.event}
+          personName={pendingFamilyEvent.personName}
+          onChoice={handleFamilyEventChoice}
+        />
+      )}
+
       {showContractInfo && (
+
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4">
           <div className="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center space-y-6">
             <FileSignature className="w-12 h-12 text-blue-400 mx-auto" />
@@ -141,6 +237,7 @@ export function Dashboard({
         <RelationshipsModal
           player={player}
           onClose={() => setShowRelationships(false)}
+          onSpendTime={handleSpendTime}
         />
       )}
 
@@ -154,10 +251,15 @@ export function Dashboard({
                 <User className="w-12 h-12 text-slate-600" />
               </div>
               <div 
-                className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full border-4 border-slate-900 shadow-md"
-                style={{ backgroundColor: player.currentTeam.color }}
+                className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full border-4 border-slate-900 shadow-md overflow-hidden bg-white flex items-center justify-center"
                 title={player.currentTeam.name}
-              />
+              >
+                {player.currentTeam.logo ? (
+                  <img src={player.currentTeam.logo} alt={player.currentTeam.name} className="w-full h-full object-contain p-0.5" />
+                ) : (
+                  <div className="w-full h-full" style={{ backgroundColor: player.currentTeam.color }} />
+                )}
+              </div>
             </div>
             
             <div>
@@ -318,15 +420,18 @@ export function Dashboard({
                             <span className="text-blue-400">{stat.tackles ?? 0} Desarmes</span>
                             <span className="text-emerald-400">{stat.cleanSheets ?? 0} Sem Sofrer</span>
                           </div>
-                          {stat.finals && stat.finals.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {stat.finals.map((final, fIdx) => (
-                                <div key={fIdx} className={`px-2 py-1 text-xs font-bold rounded-md ${final.won ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
-                                  {final.won ? '🏆 Campeão' : '🥈 Vice'} - {final.type.replace('Final ', '').replace('da ', '').replace('do ', '')}
-                                </div>
-                              ))}
-                            </div>
-                          )}
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {stat.leagueName && (
+                              <div className={`px-2 py-1 text-xs font-bold rounded-md border ${stat.leaguePosition === 1 ? 'bg-amber-500/10 text-amber-500 border-amber-500/20' : 'bg-slate-800 text-slate-300 border-slate-700'}`}>
+                                {stat.leaguePosition === 1 ? '🏆 Campeão' : `${stat.leaguePosition}º Lugar`} - {stat.leagueName}
+                              </div>
+                            )}
+                            {stat.finals && stat.finals.length > 0 && stat.finals.map((final, fIdx) => (
+                              <div key={fIdx} className={`px-2 py-1 text-xs font-bold rounded-md ${final.won ? 'bg-amber-500/10 text-amber-500 border border-amber-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                                {final.won ? '🏆 Campeão' : '🥈 Vice'} - {final.type.replace('Final ', '').replace('da ', '').replace('do ', '')}
+                              </div>
+                            ))}
+                          </div>
                           {stat.individualAwards && stat.individualAwards.length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-2">
                               {stat.individualAwards.map((award, aIdx) => (
@@ -351,7 +456,7 @@ export function Dashboard({
                           )}
                           {stat.pressMessage && (
                             <div className="mt-3 p-3 bg-slate-900 border-l-4 border-emerald-500 rounded-r-lg">
-                              <p className="text-sm text-slate-300 italic font-medium">
+                              <p className="text-sm text-slate-300 italic font-medium whitespace-pre-line">
                                 📰 {stat.pressMessage}
                               </p>
                             </div>
