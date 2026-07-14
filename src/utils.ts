@@ -55,7 +55,7 @@ type PositionStatWeights = {
 };
 
 export const POSITION_STAT_WEIGHTS: Record<Position, PositionStatWeights> = {
-  ATA: { goals: 1.45, assists: 0.55, tackles: 0.05, cleanSheets: 0.25 },
+  ATA: { goals: 1.20, assists: 0.55, tackles: 0.05, cleanSheets: 0.25 },
   PON: { goals: 1.15, assists: 0.85, tackles: 0.20, cleanSheets: 0.25 },
   MEI: { goals: 0.75, assists: 1.40, tackles: 0.25, cleanSheets: 0.35 },
   MC:  { goals: 0.30, assists: 0.75, tackles: 0.70, cleanSheets: 0.50 },
@@ -81,10 +81,10 @@ export const generateSeasonMatchStats = (
 
   // O número de gols e assistências é influenciado pelos atributos de finalização e passe do jogador, respectivamente, bem como pela taxa de desempenho e pelos pesos de posição.
   const goals = Math.max(0, Math.round(
-    randomInt(1, 20) * performanceRatio * (player.attributes.shooting / 30) * w.goals
+    randomInt(1, 20) * performanceRatio * (player.attributes.shooting / 35) * w.goals
   ));
   const assists = Math.max(0, Math.round(
-    randomInt(1, 20) * performanceRatio * (player.attributes.passing / 30) * w.assists
+    randomInt(1, 20) * performanceRatio * (player.attributes.passing / 35) * w.assists
   ));
 
   const tacklesPerMatch = (0.6 + (player.attributes.defending / 99) * 3.4) * w.tackles;
