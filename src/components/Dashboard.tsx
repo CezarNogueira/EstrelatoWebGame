@@ -236,7 +236,7 @@ export function Dashboard({
                 className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-700"
               >
                 <ShoppingBag className="w-4 h-4" />
-                Loja de Luxo
+                Loja
               </button>
             </div>
           </div>

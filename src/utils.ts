@@ -122,8 +122,8 @@ export const getPlayerTitle = (age: number, ovr: number): string => {
 export const getSeasonHealthDecline = (age: number): number => {
   if (age <= 18) return 1;
   if (age <= 23) return 4;
-  if (age <= 29) return 9;
-  return 15;
+  if (age <= 29) return 6;
+  return 14;
 };
 
 export const generateGrowthPoints = (age: number): { points: number, decline: Partial<Attributes> } => {
@@ -682,12 +682,13 @@ export const simulateSeason = (
     careerEndingInjury: careerEndingInjury || undefined,
   };
 
+  // Evolução de atributos com base nos pontos ganhos
   const baseUpdatedPlayer: Player = {
     ...player,
     age: player.age + 1,
     attributes: newAttributes,
-    history: player.history, // history is not updated yet, will be appended after point distribution
-    retired: careerEndingInjury || player.age >= 38 || (player.age >= 34 && Math.random() > 0.7),
+    history: player.history, // historico de temporadas
+    retired: careerEndingInjury || player.age >= 50 || (player.age >= 38 && Math.random() > 0.7), // Logica de aposentadoria: 38 anos ou 34+ com chance aleatória
     contractYears: player.isPro ? Math.max(0, (player.contractYears || 0) - 1) : 0,
     personal: {
       ...player.personal,
