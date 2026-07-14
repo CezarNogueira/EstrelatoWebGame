@@ -587,7 +587,7 @@ export function InteractiveMatchModal({
           </div>
           <div className="flex justify-center items-center gap-8 mt-4">
             <div className="text-right flex-1 overflow-hidden">
-              <h2 className="text-3xl font-black text-slate-100 truncate">{playerTeamName}</h2>
+              <h2 className="text-xl font-black text-slate-100">{playerTeamName}</h2>
               <span className="text-emerald-400 font-bold text-sm">Seu Time</span>
             </div>
             
@@ -603,7 +603,7 @@ export function InteractiveMatchModal({
             </div>
 
             <div className="text-left flex-1 overflow-hidden">
-              <h2 className="text-3xl font-black text-slate-100 truncate">{opponentName}</h2>
+              <h2 className="text-xl font-black text-slate-100">{opponentName}</h2>
               <span className="text-red-400 font-bold text-sm">Adversário</span>
             </div>
           </div>
