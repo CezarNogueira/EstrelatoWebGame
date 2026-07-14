@@ -79,11 +79,12 @@ export const generateSeasonMatchStats = (
 ): { goals: number; assists: number; tackles: number; cleanSheets: number } => {
   const w = POSITION_STAT_WEIGHTS[player.position];
 
+  // O número de gols e assistências é influenciado pelos atributos de finalização e passe do jogador, respectivamente, bem como pela taxa de desempenho e pelos pesos de posição.
   const goals = Math.max(0, Math.round(
-    randomInt(2, 20) * performanceRatio * (player.attributes.shooting / 55) * w.goals
+    randomInt(1, 20) * performanceRatio * (player.attributes.shooting / 30) * w.goals
   ));
   const assists = Math.max(0, Math.round(
-    randomInt(2, 14) * performanceRatio * (player.attributes.passing / 55) * w.assists
+    randomInt(1, 20) * performanceRatio * (player.attributes.passing / 30) * w.assists
   ));
 
   const tacklesPerMatch = (0.6 + (player.attributes.defending / 99) * 3.4) * w.tackles;
