@@ -417,15 +417,35 @@ export const simulateSeason = (
   const currentOvr = calculateOverall(player.attributes, player.position);
 
   // Health decline by age, plus injury roll: the lower the Saúde, the higher
-  // the chance of an injury hurting this season's matches/performance.
+  // the chance of an injury - but there's always a small baseline risk even
+  // at full health. If Saúde bottoms out at 0%, it's a career-ending injury.
   const healthDecline = getSeasonHealthDecline(player.age);
   let newHealth = Math.max(0, Math.min(100, player.personal.health - healthDecline));
 
-  const injuryChance = Math.min(70, Math.max(0, (100 - newHealth) * 0.5));
-  const injured = Math.random() * 100 < injuryChance;
+  const BASELINE_INJURY_CHANCE = 4; // risco mínimo mesmo com 100% de Saúde
+  const injuryChance = Math.min(85, BASELINE_INJURY_CHANCE + (100 - newHealth) * 0.65);
 
-  if (injured) {
+  let injured = false;
+  let injuryDays = 0;
+  let careerEndingInjury = false;
+
+  if (newHealth <= 0) {
+    // Saúde chegou a 0% - lesão gravíssima que encerra a carreira.
+    injured = true;
+    careerEndingInjury = true;
+    injuryDays = 60;
+  } else if (Math.random() * 100 < injuryChance) {
+    injured = true;
+    // Quanto pior a Saúde, mais longa a recuperação (4 a 60 dias).
+    const severity = (100 - newHealth) / 100; // 0 (saudável) a 1 (esgotado)
+    const maxDaysForSeverity = Math.round(12 + severity * 48); // até 60
+    injuryDays = randomInt(4, Math.max(4, maxDaysForSeverity));
+
     newHealth = Math.max(0, newHealth - randomInt(5, 15));
+    if (newHealth <= 0) {
+      careerEndingInjury = true;
+      injuryDays = 60;
+    }
   }
 
   // Match Stats Generation based on CURRENT OVR vs Team Level
@@ -435,8 +455,12 @@ export const simulateSeason = (
   let matches = Math.min(50, Math.max(0, Math.round(randomInt(20, 45) * performanceRatio)));
 
   if (injured) {
-    // An injury costs the player a chunk of the season and some sharpness.
-    matches = Math.max(0, matches - randomInt(10, 25));
+    // A lesão custa uma parcela da temporada proporcional aos dias parado
+    // (até 60 dias = pior caso), além de reduzir o rendimento no resto do ano.
+    const matchesLost = careerEndingInjury
+      ? matches
+      : Math.round(matches * Math.min(1, injuryDays / 60));
+    matches = Math.max(0, matches - matchesLost);
     performanceRatio = performanceRatio * (0.5 + Math.random() * 0.2);
   }
 
@@ -663,6 +687,8 @@ export const simulateSeason = (
     finals,
     individualAwards,
     injured,
+    injuryDays: injured ? injuryDays : undefined,
+    careerEndingInjury: careerEndingInjury || undefined,
   };
 
   const baseUpdatedPlayer: Player = {
@@ -670,7 +696,7 @@ export const simulateSeason = (
     age: player.age + 1,
     attributes: newAttributes,
     history: player.history, // history is not updated yet, will be appended after point distribution
-    retired: player.age >= 38 || (player.age >= 34 && Math.random() > 0.7),
+    retired: careerEndingInjury || player.age >= 38 || (player.age >= 34 && Math.random() > 0.7),
     contractYears: player.isPro ? Math.max(0, (player.contractYears || 0) - 1) : 0,
     personal: {
       ...player.personal,

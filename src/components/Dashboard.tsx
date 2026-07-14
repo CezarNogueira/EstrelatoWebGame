@@ -163,7 +163,15 @@ export function Dashboard({
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[10px] text-slate-500 font-bold uppercase">Saúde</span>
-                    <span className="text-sm font-bold text-emerald-400">{player.personal.health}%</span>
+                    <span className={`text-sm font-bold ${
+                      player.personal.health <= 25
+                        ? "text-red-400"
+                        : player.personal.health <= 50
+                          ? "text-orange-400"
+                          : "text-emerald-400"
+                    }`}>
+                      {player.personal.health}%
+                    </span>
                   </div>
                   <div className="flex flex-col">
                     <span className="text-[10px] text-slate-500 font-bold uppercase">Social</span>
@@ -291,6 +299,19 @@ export function Dashboard({
                                   ⭐ {award}
                                 </div>
                               ))}
+                            </div>
+                          )}
+                          {stat.injured && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              <div className={`px-2 py-1 text-xs font-bold rounded-md border ${
+                                stat.careerEndingInjury
+                                  ? "bg-red-500/10 text-red-400 border-red-500/20"
+                                  : "bg-orange-500/10 text-orange-400 border-orange-500/20"
+                              }`}>
+                                🤕 {stat.careerEndingInjury
+                                  ? "Lesão encerrou a carreira"
+                                  : `Lesionado por ${stat.injuryDays} dias`}
+                              </div>
                             </div>
                           )}
                           {stat.pressMessage && (

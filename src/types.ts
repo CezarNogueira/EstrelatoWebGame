@@ -35,6 +35,8 @@ export type SeasonStat = {
   individualAwards?: string[];
   pressMessage?: string;
   injured?: boolean;
+  injuryDays?: number; // duração da lesão em dias (4 a 60)
+  careerEndingInjury?: boolean; // lesão gravíssima que encerra a carreira (saúde chegou a 0%)
 };
 
 export type Position = "ATA" | "PON" | "MEI" | "MC" | "VOL" | "ZAG" | "LAT";

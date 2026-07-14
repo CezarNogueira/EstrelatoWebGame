@@ -10,6 +10,7 @@ import { FinalsModal } from "./components/FinalsModal";
 import { ProContractModal } from "./components/ProContractModal";
 import { CareerSummary } from "./components/CareerSummary";
 import { ContractNegotiationModal } from "./components/ContractNegotiationModal";
+import { InjuryModal } from "./components/InjuryModal";
 import { InteractiveMatchModal, resetOpponentMemory } from "./components/InteractiveMatchModal";
 import { simulateSeason, applyGrowth, autoDistributePoints, generatePressMessage, calculateMarketValue, calculateOverall, formatCurrency, getReachedFinals } from "./utils";
 
@@ -82,6 +83,7 @@ export default function App() {
   const [showTraining, setShowTraining] = useState(false);
   const [nationalTeamMsg, setNationalTeamMsg] = useState(false);
   const [pendingFinals, setPendingFinals] = useState<FinalResult[] | null>(null);
+  const [pendingInjury, setPendingInjury] = useState<{ days: number; careerEnding: boolean } | null>(null);
   const [pendingProContract, setPendingProContract] = useState<boolean>(false);
   
   const [pendingContractNegotiation, setPendingContractNegotiation] = useState<{
@@ -210,11 +212,36 @@ export default function App() {
       proContractOffer: proContractOffer || false,
     };
 
-    if (finalStat.finals && finalStat.finals.length > 0) {
-      setPendingFinals(finalStat.finals);
+    if (finalStat.injured) {
+      setPendingInjury({
+        days: finalStat.injuryDays || 0,
+        careerEnding: finalStat.careerEndingInjury || false,
+      });
+      setPendingSimulationPhase(stateToPass);
+    } else {
+      proceedAfterInjuryCheck(stateToPass);
+    }
+  };
+
+  const proceedAfterInjuryCheck = (stateToPass: any) => {
+    if (stateToPass.seasonStat.finals && stateToPass.seasonStat.finals.length > 0) {
+      setPendingFinals(stateToPass.seasonStat.finals);
       setPendingSimulationPhase(stateToPass);
     } else {
       proceedToProContract(stateToPass);
+    }
+  };
+
+  const handleContinueFromInjury = () => {
+    if (!pendingSimulationPhase) return;
+    const stateToPass = pendingSimulationPhase;
+    setPendingInjury(null);
+
+    if (stateToPass.baseUpdatedPlayer.retired) {
+      // Lesão gravíssima encerrou a carreira: pula direto para o fim de temporada.
+      finishSeason(stateToPass);
+    } else {
+      proceedAfterInjuryCheck(stateToPass);
     }
   };
 
@@ -497,6 +524,7 @@ export default function App() {
     setPlayerName("Você");
     setTransferOffer(null);
     setPendingFinals(null);
+    setPendingInjury(null);
     setPendingProContract(false);
     setPendingContractNegotiation(null);
     setPendingSimulationPhase(null);
@@ -515,6 +543,14 @@ export default function App() {
       {screen === "DASHBOARD" && player && !player.retired && (
         <div className="relative">
           {showTraining && <TrainingModal onTrain={handleTrain} />}
+
+          {pendingInjury && (
+            <InjuryModal
+              days={pendingInjury.days}
+              careerEnding={pendingInjury.careerEnding}
+              onContinue={handleContinueFromInjury}
+            />
+          )}
           
           {currentFinalType && (
             <InteractiveMatchModal 
