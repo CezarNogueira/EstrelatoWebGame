@@ -728,7 +728,7 @@ export const getContractEndOffers = (player: Player, currentOvr: number): Team[]
     // Quanto maior o OVR do jogador, mais forte é o perfil dos clubes
     // interessados (níveis mais altos entram no sorteio).
     let candidateLevels: number[];
-    if (currentOvr >= 88) candidateLevels = [4, 5];
+    if (currentOvr >= 84) candidateLevels = [4, 5];
     else if (currentOvr >= 78) candidateLevels = [3, 4, 5];
     else if (currentOvr >= 65) candidateLevels = [2, 3, 4];
     else candidateLevels = [1, 2, 3];
