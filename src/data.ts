@@ -118,7 +118,69 @@ export const TEAMS: Team[] = [
   { id: "sa2", name: "Al Nassr", level: 4, color: "#FFFF00", country: "SA" },
   { id: "sa3", name: "Al Ittihad", level: 3, color: "#FFFF00", country: "SA" },
   { id: "sa4", name: "Al Ahli", level: 3, color: "#008000", country: "SA" },
-  { id: "sa5", name: "Al Shabab", level: 2, color: "#FFFFFF", country: "SA" }
+  { id: "sa5", name: "Al Shabab", level: 2, color: "#FFFFFF", country: "SA" },
+
+  // ARGENTINA (AR) - Liga Profesional
+  { id: "ar1", name: "Boca Juniors", level: 4, color: "#003087", country: "AR" },
+  { id: "ar2", name: "River Plate", level: 4, color: "#FFFFFF", country: "AR" },
+  { id: "ar3", name: "Racing Club", level: 3, color: "#87CEEB", country: "AR" },
+  { id: "ar4", name: "Independiente", level: 3, color: "#FF0000", country: "AR" },
+  { id: "ar5", name: "San Lorenzo", level: 2, color: "#0000FF", country: "AR" },
+  { id: "ar6", name: "Estudiantes", level: 2, color: "#FF0000", country: "AR" },
+  { id: "ar7", name: "Vélez Sarsfield", level: 2, color: "#FFFFFF", country: "AR" },
+  { id: "ar8", name: "Talleres", level: 2, color: "#0000FF", country: "AR" },
+  { id: "ar9", name: "Newell's Old Boys", level: 2, color: "#FF0000", country: "AR" },
+  { id: "ar10", name: "Rosario Central", level: 2, color: "#FFFF00", country: "AR" },
+  { id: "ar11", name: "Argentinos Juniors", level: 1, color: "#FF0000", country: "AR" },
+  { id: "ar12", name: "Huracán", level: 1, color: "#FFFFFF", country: "AR" },
+  { id: "ar13", name: "Banfield", level: 1, color: "#008000", country: "AR" },
+  { id: "ar14", name: "Lanús", level: 1, color: "#800000", country: "AR" },
+  { id: "ar15", name: "Godoy Cruz", level: 1, color: "#0000FF", country: "AR" },
+
+  // URUGUAI (UY) - Primera División
+  { id: "uy1", name: "Peñarol", level: 4, color: "#FFD700", country: "UY" },
+  { id: "uy2", name: "Nacional", level: 4, color: "#FFFFFF", country: "UY" },
+  { id: "uy3", name: "Defensor Sporting", level: 2, color: "#800080", country: "UY" },
+  { id: "uy4", name: "Danubio", level: 2, color: "#0000FF", country: "UY" },
+  { id: "uy5", name: "Liverpool FC", level: 1, color: "#FF0000", country: "UY" },
+  { id: "uy6", name: "Montevideo Wanderers", level: 1, color: "#000000", country: "UY" },
+  { id: "uy7", name: "Cerro", level: 1, color: "#0000FF", country: "UY" },
+  { id: "uy8", name: "Rentistas", level: 1, color: "#FFFF00", country: "UY" }
 ];
 
 export const INITIAL_TEAMS = TEAMS.filter((t) => t.level <= 2);
+
+// Maps the Portuguese nationality labels shown in ChooseNationality to the
+// country codes used on Team.country, so the roulette can be restricted to
+// clubs from the player's chosen nationality.
+export const NATIONALITY_COUNTRY_MAP: Record<string, string> = {
+  "Brasil": "BR",
+  "Argentina": "AR",
+  "França": "FR",
+  "Inglaterra": "EN",
+  "Espanha": "ES",
+  "Itália": "IT",
+  "Alemanha": "DE",
+  "Portugal": "PT",
+  "Holanda": "NL",
+  "Uruguai": "UY",
+};
+
+// Builds the pool of clubs the Roulette should draw from for a given
+// nationality. Prefers lower-tier "youth academy" clubs (level <= 2) from
+// that country, since that's where a 14-year-old career normally starts.
+// Falls back to any club from that country if it has no low-tier clubs, and
+// falls back to the global INITIAL_TEAMS as a last resort so the roulette
+// never ends up with an empty pool.
+export function getInitialTeamsForNationality(nationality: string): Team[] {
+  const countryCode = NATIONALITY_COUNTRY_MAP[nationality];
+  if (!countryCode) return INITIAL_TEAMS;
+
+  const youthTeams = TEAMS.filter((t) => t.country === countryCode && t.level <= 2);
+  if (youthTeams.length > 0) return youthTeams;
+
+  const countryTeams = TEAMS.filter((t) => t.country === countryCode);
+  if (countryTeams.length > 0) return countryTeams;
+
+  return INITIAL_TEAMS;
+}

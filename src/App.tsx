@@ -498,7 +498,7 @@ export default function App() {
     <>
       {screen === "START" && <StartScreen onStart={handleStart} />}
       {screen === "CHOOSE_NATIONALITY" && <ChooseNationality onSelect={handleNationalitySelected} />}
-      {screen === "ROULETTE" && <Roulette onTeamSelected={handleTeamSelected} />}
+      {screen === "ROULETTE" && <Roulette nationality={playerNationality} onTeamSelected={handleTeamSelected} />}
       {screen === "CHOOSE_POSITION" && <ChoosePosition onPositionSelected={handlePositionSelected} />}
       {screen === "CAREER_SUMMARY" && player && <CareerSummary player={player} onRestart={handleRestart} />}
       {screen === "DASHBOARD" && player && !player.retired && (

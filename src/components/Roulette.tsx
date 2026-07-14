@@ -1,17 +1,20 @@
 import { useState, useEffect } from "react";
-import { INITIAL_TEAMS } from "../data";
+import { getInitialTeamsForNationality } from "../data";
 import { Team } from "../types";
 import { motion, useAnimation } from "motion/react";
 import { Dices } from "lucide-react";
 
 const ITEM_WIDTH = 140;
 
-export function Roulette({ onTeamSelected }: { onTeamSelected: (team: Team) => void }) {
+export function Roulette({ nationality, onTeamSelected }: { nationality: string; onTeamSelected: (team: Team) => void }) {
   const [rerollsLeft, setRerollsLeft] = useState(3);
   const [isSpinning, setIsSpinning] = useState(false);
   const [strip, setStrip] = useState<Team[]>([]);
   const [winner, setWinner] = useState<Team | null>(null);
-  
+
+  // Only clubs from the player's chosen nationality enter the roulette.
+  const eligibleTeams = getInitialTeamsForNationality(nationality);
+
   const controls = useAnimation();
   const [completed, setCompleted] = useState(false);
 
@@ -27,7 +30,7 @@ export function Roulette({ onTeamSelected }: { onTeamSelected: (team: Team) => v
     
     const newStrip: Team[] = [];
     for(let i=0; i<45; i++) {
-      newStrip.push(INITIAL_TEAMS[Math.floor(Math.random() * INITIAL_TEAMS.length)]);
+      newStrip.push(eligibleTeams[Math.floor(Math.random() * eligibleTeams.length)]);
     }
     const winnerIndex = 38;
     const finalTeam = newStrip[winnerIndex];
