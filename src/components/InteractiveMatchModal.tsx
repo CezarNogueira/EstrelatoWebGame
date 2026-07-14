@@ -1,11 +1,208 @@
 import { useState, useEffect, useRef } from "react";
-import { Player } from "../types";
+import { Player, Position } from "../types";
 import { calculateOverall } from "../utils";
-import { Trophy, Goal, Activity, FastForward, Play, AlertCircle } from "lucide-react";
+import { Trophy, Goal, Activity, FastForward, Play, AlertCircle, Shield, UserCheck, Rocket, MoveRight } from "lucide-react";
 import { TEAMS, EUROPEAN_NATIONALITIES, AMERICAN_NATIONALITIES } from "../data";
 
-type Action = "Chutar pro gol" | "Tocar a bola" | "Driblar" | "Correr pela Lateral";
+// -----------------------------------------------------------------------------
+// Cenários de jogada
+// -----------------------------------------------------------------------------
+// Para ATA, PON e MEI: o jogador vive momentos mais ofensivos (recebe a bola
+// na frente do gol, na lateral, na entrada da área, ou toma a bola no meio).
+// Para MC, VOL, ZAG e LAT: os momentos são mais ligados à marcação/transição
+// (tomar a bola no meio de campo ou desarmar uma infiltração adversária).
+type Scenario =
+  | "FRENTE_GOL"   // Receber a bola na frente do gol -> Chutar ou Passe
+  | "LATERAL"      // Receber a bola na lateral -> Cruzar ou Passe
+  | "MEIO_CAMPO"   // Tomou a bola no meio de campo -> Correr pra área ou Passe
+  | "ENTRADA_AREA" // Bola sobrou na entrada da área -> Chutar, Driblar ou Passe
+  | "INFILTRACAO"; // Atacante tentando infiltrar -> Desarmar ou Marcar outro atacante
+
 type MatchStatus = "INTRO" | "SIMULATING" | "WAITING_ACTION" | "FINISHED";
+
+const ATTACKING_POSITIONS: Position[] = ["ATA", "PON", "MEI"];
+// MC, VOL, ZAG, LAT caem no grupo defensivo/transição.
+
+const ATTACKING_SCENARIOS: Scenario[] = ["FRENTE_GOL", "LATERAL", "MEIO_CAMPO", "ENTRADA_AREA"];
+const DEFENSIVE_SCENARIOS: Scenario[] = ["MEIO_CAMPO", "INFILTRACAO"];
+
+// Ações defensivas (INFILTRACAO) não geram gol do próprio jogador quando dão
+// certo — elas evitam o gol do adversário. Quando falham, é o adversário que
+// marca. Todos os outros cenários são "ofensivos": sucesso = gol da sua
+// equipe, falha = perde a jogada.
+const DEFENSIVE_SCENARIO_SET = new Set<Scenario>(["INFILTRACAO"]);
+
+interface ActionDef {
+  id: string;
+  label: string;
+  icon: typeof Goal;
+  classes: string;
+}
+
+interface ScenarioConfig {
+  chanceText: (playerName: string, opponentName: string) => string;
+  actions: ActionDef[];
+  computeChance: (actionId: string, player: Player, difficultyMod: number) => number;
+  successText: (actionId: string, playerName: string, opponentName: string) => string;
+  failText: (actionId: string, playerName: string, opponentName: string) => string;
+}
+
+const SCENARIOS: Record<Scenario, ScenarioConfig> = {
+  FRENTE_GOL: {
+    chanceText: (name) => `${name} recebe a bola na frente do gol! O que ele vai fazer?`,
+    actions: [
+      { id: "chutar", label: "Chutar", icon: Goal, classes: "bg-red-900/50 hover:bg-red-800/80 border border-red-700 text-red-200" },
+      { id: "passe", label: "Passe", icon: MoveRight, classes: "bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-200" },
+    ],
+    computeChance: (actionId, player, difficultyMod) => {
+      const { attributes: attrs, position } = player;
+      let chance = 50;
+      if (actionId === "chutar") {
+        chance = 35 + attrs.shooting * 0.6 + attrs.physical * 0.1 - difficultyMod;
+        if (position === "ATA" || position === "PON") chance += 10;
+      } else {
+        chance = 30 + attrs.passing * 0.6 + attrs.dribbling * 0.1 - difficultyMod;
+        if (position === "MEI") chance += 10;
+      }
+      return chance;
+    },
+    successText: (actionId, name) =>
+      actionId === "chutar"
+        ? `GOLAÇO DE ${name.toUpperCase()}! Chute certeiro que morre no fundo das redes!`
+        : `PASSE DE MESTRE DE ${name.toUpperCase()}! Encontra o companheiro livre e é GOL!`,
+    failText: (actionId, name, opponentName) =>
+      actionId === "chutar"
+        ? `Para fora! ${name} chuta torto e a bola passa longe da meta do ${opponentName}.`
+        : `Passe errado de ${name}! A zaga do ${opponentName} intercepta com tranquilidade.`,
+  },
+
+  LATERAL: {
+    chanceText: (name) => `${name} recebe a bola na lateral do campo! O que ele vai fazer?`,
+    actions: [
+      { id: "cruzar", label: "Cruzar", icon: Activity, classes: "bg-amber-900/50 hover:bg-amber-800/80 border border-amber-700 text-amber-200" },
+      { id: "passe", label: "Passe", icon: MoveRight, classes: "bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-200" },
+    ],
+    computeChance: (actionId, player, difficultyMod) => {
+      const { attributes: attrs, position } = player;
+      let chance = 50;
+      if (actionId === "cruzar") {
+        chance = 35 + attrs.passing * 0.4 + attrs.pace * 0.3 - difficultyMod;
+        if (position === "PON") chance += 10;
+      } else {
+        chance = 40 + attrs.passing * 0.6 + attrs.dribbling * 0.1 - difficultyMod;
+        if (position === "MEI") chance += 10;
+      }
+      return chance;
+    },
+    successText: (actionId, name) =>
+      actionId === "cruzar"
+        ? `CRUZAMENTO PERFEITO DE ${name.toUpperCase()}! O companheiro cabeceia e é GOL!`
+        : `Bom passe de ${name}! A jogada termina em GOL!`,
+    failText: (actionId, name, opponentName) =>
+      actionId === "cruzar"
+        ? `Cruzamento errado de ${name}, a bola sai sem perigo pela linha de fundo.`
+        : `Passe cortado! A defesa do ${opponentName} afasta o perigo.`,
+  },
+
+  MEIO_CAMPO: {
+    chanceText: (name) => `${name} toma a bola no meio de campo! O que ele vai fazer?`,
+    actions: [
+      { id: "correr", label: "Correr pra Área", icon: Rocket, classes: "bg-purple-900/50 hover:bg-purple-800/80 border border-purple-700 text-purple-200" },
+      { id: "passe", label: "Passe", icon: MoveRight, classes: "bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-200" },
+    ],
+    computeChance: (actionId, player, difficultyMod) => {
+      const { attributes: attrs, position } = player;
+      let chance = 50;
+      if (actionId === "correr") {
+        chance = 35 + attrs.pace * 0.5 + attrs.dribbling * 0.2 - difficultyMod;
+        if (position === "ATA" || position === "PON") chance += 10;
+        if (position === "VOL" || position === "LAT") chance += 5;
+      } else {
+        chance = 40 + attrs.passing * 0.6 + attrs.dribbling * 0.1 - difficultyMod;
+        if (position === "MC" || position === "MEI") chance += 10;
+      }
+      return chance;
+    },
+    successText: (actionId, name) =>
+      actionId === "correr"
+        ? `${name.toUpperCase()} ARRANCA EM VELOCIDADE, entra na área e é GOL!`
+        : `LANÇAMENTO PERFEITO DE ${name.toUpperCase()}! O companheiro só empurra pra rede. GOL!`,
+    failText: (actionId, name, opponentName) =>
+      actionId === "correr"
+        ? `${name} tenta avançar mas é travado antes de chegar na área.`
+        : `Passe mal calculado de ${name}, a bola sobra fácil para o ${opponentName}.`,
+  },
+
+  ENTRADA_AREA: {
+    chanceText: (name) => `A bola sobra para ${name} na entrada da área! O que ele vai fazer?`,
+    actions: [
+      { id: "chutar", label: "Chutar", icon: Goal, classes: "bg-red-900/50 hover:bg-red-800/80 border border-red-700 text-red-200" },
+      { id: "driblar", label: "Driblar", icon: FastForward, classes: "bg-purple-900/50 hover:bg-purple-800/80 border border-purple-700 text-purple-200" },
+      { id: "passe", label: "Passe", icon: MoveRight, classes: "bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-200" },
+    ],
+    computeChance: (actionId, player, difficultyMod) => {
+      const { attributes: attrs, position } = player;
+      let chance = 50;
+      if (actionId === "chutar") {
+        chance = 30 + attrs.shooting * 0.6 + attrs.physical * 0.1 - difficultyMod;
+        if (position === "ATA") chance += 10;
+      } else if (actionId === "driblar") {
+        chance = 30 + attrs.dribbling * 0.6 + attrs.pace * 0.1 - difficultyMod;
+        if (position === "PON") chance += 10;
+      } else {
+        chance = 35 + attrs.passing * 0.6 + attrs.dribbling * 0.1 - difficultyMod;
+        if (position === "MEI") chance += 10;
+      }
+      return chance;
+    },
+    successText: (actionId, name) => {
+      if (actionId === "chutar") return `QUE PANCADA DE ${name.toUpperCase()}! Bate de primeira e é GOL!`;
+      if (actionId === "driblar") return `${name.toUpperCase()} DRIBLA MAIS UM e finaliza! GOL!`;
+      return `${name.toUpperCase()} VÊ O COMPANHEIRO LIVRE e serve na medida. GOL!`;
+    },
+    failText: (actionId, name, opponentName) => {
+      if (actionId === "chutar") return `Chute travado de ${name}, a bola desvia para escanteio.`;
+      if (actionId === "driblar") return `${name} tenta o drible mas é desarmado na entrada da área.`;
+      return `Passe muito forte de ${name}, ninguém alcança e a bola sai pela linha de fundo.`;
+    },
+  },
+
+  INFILTRACAO: {
+    chanceText: (_name, opponentName) => `O atacante do ${opponentName} tenta infiltrar a linha defensiva! O que fazer?`,
+    actions: [
+      { id: "desarmar", label: "Desarmar", icon: Shield, classes: "bg-emerald-900/50 hover:bg-emerald-800/80 border border-emerald-700 text-emerald-200" },
+      { id: "marcar", label: "Marcar Outro Atacante", icon: UserCheck, classes: "bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-200" },
+    ],
+    computeChance: (actionId, player, difficultyMod) => {
+      const { attributes: attrs, position } = player;
+      let chance = 50;
+      if (actionId === "desarmar") {
+        chance = 35 + attrs.defending * 0.6 + attrs.physical * 0.1 - difficultyMod;
+        if (position === "ZAG" || position === "VOL") chance += 10;
+      } else {
+        chance = 35 + attrs.defending * 0.4 + attrs.pace * 0.3 - difficultyMod;
+        if (position === "LAT" || position === "VOL") chance += 10;
+      }
+      return chance;
+    },
+    // Aqui "sucesso" = evitar o gol adversário (não é gol do próprio jogador).
+    successText: (actionId, name, opponentName) =>
+      actionId === "desarmar"
+        ? `GRANDE DESARME DE ${name.toUpperCase()}! Corta a jogada de perigo do ${opponentName}.`
+        : `${name.toUpperCase()} NÃO SAI DA MARCAÇÃO um segundo sequer. Jogada anulada!`,
+    // "Falha" aqui = o adversário marca o gol.
+    failText: (actionId, name, opponentName) =>
+      actionId === "desarmar"
+        ? `Não chegou a tempo! ${name} falha no desarme e é GOL DO ${opponentName.toUpperCase()}!`
+        : `${name} perde a referência da marcação e é GOL DO ${opponentName.toUpperCase()}!`,
+  },
+};
+
+function getScenarioPool(position: Position): Scenario[] {
+  return ATTACKING_POSITIONS.includes(position) ? ATTACKING_SCENARIOS : DEFENSIVE_SCENARIOS;
+}
+
+// -----------------------------------------------------------------------------
 
 // Lives at module scope (not component state) so it persists across finals and
 // seasons for as long as the app is open, but resets on a full page reload.
@@ -39,6 +236,7 @@ export function InteractiveMatchModal({
   const [scoreThem, setScoreThem] = useState(0);
   const [events, setEvents] = useState<MatchEvent[]>([]);
   const [opponentName, setOpponentName] = useState("Adversário");
+  const [currentScenario, setCurrentScenario] = useState<Scenario | null>(null);
   
   // To track player chances
   const [chancesHad, setChancesHad] = useState(0);
@@ -126,6 +324,7 @@ export function InteractiveMatchModal({
     setScoreThem(0);
     setEvents([]);
     setChancesHad(0);
+    setCurrentScenario(null);
     // Cada final agora sorteia entre 1 e 6 chances de o jogador participar
     // ativamente da jogada, em vez de sempre uma única oportunidade.
     setTotalChances(Math.floor(Math.random() * 6) + 1);
@@ -186,10 +385,16 @@ export function InteractiveMatchModal({
 
           // Player chance! (probabilidade um pouco maior que antes para que
           // seja realmente possível emplacar as até 6 chances sorteadas
-          // dentro dos 90 minutos, e não só na teoria)
+          // dentro dos 90 minutos, e não só na teoria). O cenário sorteado
+          // depende da posição do jogador: ATA/PON/MEI vivem momentos mais
+          // ofensivos, enquanto MC/VOL/ZAG/LAT vivem momentos de recuperação
+          // de bola e marcação.
           if (chancesHad < totalChances && Math.random() < 0.035) {
+            const pool = getScenarioPool(player.position);
+            const scenario = pool[Math.floor(Math.random() * pool.length)];
+            setCurrentScenario(scenario);
             setStatus("WAITING_ACTION");
-            addEvent(`${player.name} recebe a bola em ótima posição contra a zaga do ${opponentName}! O que ele vai fazer?`, "chance", nextMin);
+            addEvent(SCENARIOS[scenario].chanceText(player.name, opponentName), "chance", nextMin);
           }
 
           return nextMin;
@@ -198,60 +403,43 @@ export function InteractiveMatchModal({
     }
     
     return () => clearInterval(timer);
-  }, [status, chancesHad, totalChances, player.name, opponentName]);
+  }, [status, chancesHad, totalChances, player.name, player.position, opponentName]);
 
-  const handleAction = (action: Action) => {
+  const handleAction = (actionId: string) => {
+    if (!currentScenario) return;
     setChancesHad(c => c + 1);
-    
-    let chance = 50;
-    const attrs = player.attributes;
-    const ovr = calculateOverall(attrs, player.position);
-    const difficultyMod = player.currentTeam.level * 5; 
-    
-    switch (action) {
-      case "Chutar pro gol":
-        chance = 30 + attrs.shooting * 0.6 + attrs.physical * 0.1 - difficultyMod;
-        break;
-      case "Tocar a bola":
-        chance = 40 + attrs.passing * 0.6 + attrs.dribbling * 0.1 - difficultyMod;
-        break;
-      case "Driblar":
-        chance = 35 + attrs.dribbling * 0.6 + attrs.pace * 0.1 - difficultyMod;
-        break;
-      case "Correr pela Lateral":
-        chance = 40 + attrs.pace * 0.6 + attrs.physical * 0.1 - difficultyMod;
-        break;
-    }
-    
-    if (action === "Chutar pro gol" && (player.position === "ATA" || player.position === "PON")) chance += 10;
-    if (action === "Tocar a bola" && (player.position === "MEI" || player.position === "MC")) chance += 10;
-    if (action === "Driblar" && player.position === "PON") chance += 10;
-    if (action === "Correr pela Lateral" && player.position === "LAT") chance += 10;
 
+    const config = SCENARIOS[currentScenario];
+    const difficultyMod = player.currentTeam.level * 5;
+    // calculateOverall segue disponível caso seja útil para futuros ajustes
+    // de dificuldade (ex.: comparar overall do jogador com o nível do rival).
+    void calculateOverall(player.attributes, player.position);
+
+    let chance = config.computeChance(actionId, player, difficultyMod);
     chance = Math.max(10, Math.min(90, chance));
     const isSuccess = (Math.random() * 100) <= chance;
-    
+
+    const isDefensiveScenario = DEFENSIVE_SCENARIO_SET.has(currentScenario);
+
     if (isSuccess) {
-      if (action === "Chutar pro gol") {
+      if (isDefensiveScenario) {
+        // Sucesso defensivo: evita o gol do adversário, ninguém marca.
+        addEvent(config.successText(actionId, player.name, opponentName), "chance");
+      } else {
         setScoreUs(s => s + 1);
-        addEvent("GOLAÇO DE " + player.name.toUpperCase() + "! Chute espetacular que morre no fundo das redes!", "goal_us");
-      } else if (action === "Tocar a bola") {
-        setScoreUs(s => s + 1);
-        addEvent("ASSISTÊNCIA GENIAL DE " + player.name.toUpperCase() + "! Ele deixa o companheiro livre para marcar! GOL!", "goal_us");
-      } else if (action === "Driblar") {
-        setScoreUs(s => s + 1);
-        addEvent("QUE DRIBLE! " + player.name + " passa por dois, invade a área e o time completa pro GOL!", "goal_us");
-      } else if (action === "Correr pela Lateral") {
-        setScoreUs(s => s + 1);
-        addEvent("VELOCIDADE INCRÍVEL! " + player.name + " ganha na corrida, cruza na medida e é GOL!", "goal_us");
+        addEvent(config.successText(actionId, player.name, opponentName), "goal_us");
       }
     } else {
-      if (action === "Chutar pro gol") addEvent(`Para fora! O chute foi muito torto e passou longe do gol do ${opponentName}.`, "miss");
-      if (action === "Tocar a bola") addEvent(`Passe ruim... A defesa do ${opponentName} intercepta a jogada facilmente.`, "miss");
-      if (action === "Driblar") addEvent(`Desarmado! Tentou fazer graça e perdeu a bola para o zagueiro do ${opponentName}.`, "miss");
-      if (action === "Correr pela Lateral") addEvent("Ficou sem campo! A bola escapa pela linha de fundo em tiro de meta.", "miss");
+      if (isDefensiveScenario) {
+        // Falha defensiva: o adversário marca o gol.
+        setScoreThem(s => s + 1);
+        addEvent(config.failText(actionId, player.name, opponentName), "goal_them");
+      } else {
+        addEvent(config.failText(actionId, player.name, opponentName), "miss");
+      }
     }
 
+    setCurrentScenario(null);
     setStatus("SIMULATING");
   };
 
@@ -291,6 +479,8 @@ export function InteractiveMatchModal({
     let won = scoreUs > scoreThem;
     onComplete(won);
   };
+
+  const currentActions = currentScenario ? SCENARIOS[currentScenario].actions : [];
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/95 p-4 backdrop-blur-sm">
@@ -361,37 +551,25 @@ export function InteractiveMatchModal({
             </button>
           )}
 
-          {status === "WAITING_ACTION" && (
+          {status === "WAITING_ACTION" && currentScenario && (
             <div className="space-y-4 animate-in slide-in-from-bottom-4">
               <div className="flex items-center gap-2 text-blue-400 font-bold justify-center mb-2">
                 <AlertCircle className="w-5 h-5 animate-bounce" />
                 Sua chance de brilhar! Escolha uma jogada:
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <button 
-                  onClick={() => handleAction("Chutar pro gol")}
-                  className="p-4 bg-red-900/50 hover:bg-red-800/80 border border-red-700 rounded-xl text-red-200 font-bold flex items-center gap-3 transition-all"
-                >
-                  <Goal className="w-6 h-6" /> Chutar
-                </button>
-                <button 
-                  onClick={() => handleAction("Tocar a bola")}
-                  className="p-4 bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 rounded-xl text-blue-200 font-bold flex items-center gap-3 transition-all"
-                >
-                  <Activity className="w-6 h-6" /> Tocar
-                </button>
-                <button 
-                  onClick={() => handleAction("Driblar")}
-                  className="p-4 bg-purple-900/50 hover:bg-purple-800/80 border border-purple-700 rounded-xl text-purple-200 font-bold flex items-center gap-3 transition-all"
-                >
-                  <FastForward className="w-6 h-6" /> Driblar
-                </button>
-                <button 
-                  onClick={() => handleAction("Correr pela Lateral")}
-                  className="p-4 bg-amber-900/50 hover:bg-amber-800/80 border border-amber-700 rounded-xl text-amber-200 font-bold flex items-center gap-3 transition-all"
-                >
-                  <Activity className="w-6 h-6" /> Correr Lateral
-                </button>
+              <div className={`grid gap-4 ${currentActions.length === 3 ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2"}`}>
+                {currentActions.map((action) => {
+                  const Icon = action.icon;
+                  return (
+                    <button
+                      key={action.id}
+                      onClick={() => handleAction(action.id)}
+                      className={`p-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-all ${action.classes}`}
+                    >
+                      <Icon className="w-6 h-6" /> {action.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
