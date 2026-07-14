@@ -121,6 +121,16 @@ export const getPlayerTitle = (age: number, ovr: number): string => {
   return "Padrão";
 };
 
+// How much Saúde (health) a player naturally loses each season just from
+// wear and tear, based on age: young players recover fast, older players
+// accumulate much more physical toll.
+export const getSeasonHealthDecline = (age: number): number => {
+  if (age <= 18) return 1;
+  if (age <= 23) return 4;
+  if (age <= 29) return 9;
+  return 15;
+};
+
 export const generateGrowthPoints = (age: number): { points: number, decline: Partial<Attributes> } => {
   let points = 0;
   const decline: Partial<Attributes> = {};
@@ -232,6 +242,12 @@ export const generatePressMessage = (
   proContractOffer: boolean
 ): string => {
   const messages: string[] = [];
+
+  // Injury
+  if (stat.injured) {
+    messages.push(`"Temporada de lesões! ${player.name} passou boa parte do ano no departamento médico."`);
+    messages.push(`"Fora de combate! Uma lesão tirou ${player.name} de vários jogos importantes nesta temporada."`);
+  }
 
   // Awards
   if (stat.individualAwards && stat.individualAwards.includes("Bola de Ouro")) {
@@ -399,12 +415,31 @@ export const simulateSeason = (
   prePlayedFinals?: { type: string; won: boolean }[]
 ): { baseUpdatedPlayer: Player; seasonStat: SeasonStat; transfer?: Team; earnedPoints: number; proContractOffer?: boolean } => {
   const currentOvr = calculateOverall(player.attributes, player.position);
-  
+
+  // Health decline by age, plus injury roll: the lower the Saúde, the higher
+  // the chance of an injury hurting this season's matches/performance.
+  const healthDecline = getSeasonHealthDecline(player.age);
+  let newHealth = Math.max(0, Math.min(100, player.personal.health - healthDecline));
+
+  const injuryChance = Math.min(70, Math.max(0, (100 - newHealth) * 0.5));
+  const injured = Math.random() * 100 < injuryChance;
+
+  if (injured) {
+    newHealth = Math.max(0, newHealth - randomInt(5, 15));
+  }
+
   // Match Stats Generation based on CURRENT OVR vs Team Level
   const expectedOvr = player.currentTeam.level * 15 + 35; 
-  const performanceRatio = Math.min(1.5, Math.max(0.5, currentOvr / expectedOvr));
-  
-  const matches = Math.min(50, Math.max(0, Math.round(randomInt(20, 45) * performanceRatio)));
+  let performanceRatio = Math.min(1.5, Math.max(0.5, currentOvr / expectedOvr));
+
+  let matches = Math.min(50, Math.max(0, Math.round(randomInt(20, 45) * performanceRatio)));
+
+  if (injured) {
+    // An injury costs the player a chunk of the season and some sharpness.
+    matches = Math.max(0, matches - randomInt(10, 25));
+    performanceRatio = performanceRatio * (0.5 + Math.random() * 0.2);
+  }
+
   const { goals, assists, tackles, cleanSheets } = generateSeasonMatchStats(player, matches, performanceRatio);
   const cleanSheetRateThisSeason = matches > 0 ? cleanSheets / matches : 0;
 
@@ -627,6 +662,7 @@ export const simulateSeason = (
     nationalTeamCall,
     finals,
     individualAwards,
+    injured,
   };
 
   const baseUpdatedPlayer: Player = {
@@ -636,6 +672,10 @@ export const simulateSeason = (
     history: player.history, // history is not updated yet, will be appended after point distribution
     retired: player.age >= 38 || (player.age >= 34 && Math.random() > 0.7),
     contractYears: player.isPro ? Math.max(0, (player.contractYears || 0) - 1) : 0,
+    personal: {
+      ...player.personal,
+      health: newHealth,
+    },
   };
 
   return { baseUpdatedPlayer, seasonStat, transfer, earnedPoints: points, proContractOffer };

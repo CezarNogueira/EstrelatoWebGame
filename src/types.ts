@@ -34,6 +34,7 @@ export type SeasonStat = {
   finals?: FinalResult[];
   individualAwards?: string[];
   pressMessage?: string;
+  injured?: boolean;
 };
 
 export type Position = "ATA" | "PON" | "MEI" | "MC" | "VOL" | "ZAG" | "LAT";
