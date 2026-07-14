@@ -253,6 +253,18 @@ export const NATIONALITY_COUNTRY_MAP: Record<string, string> = {
   "Uruguai": "UY",
 };
 
+// Nationalities grouped by continent, so the national-team continental cup
+// (played between World Cups) can be named correctly: Eurocopa for European
+// nations, Copa América for the Americas.
+export const EUROPEAN_NATIONALITIES = ["França", "Inglaterra", "Espanha", "Itália", "Alemanha", "Portugal", "Holanda"];
+export const AMERICAN_NATIONALITIES = ["Brasil", "Argentina", "Uruguai"];
+
+export function getNationalContinentalCup(nationality: string): string {
+  if (EUROPEAN_NATIONALITIES.includes(nationality)) return "Eurocopa";
+  if (AMERICAN_NATIONALITIES.includes(nationality)) return "Copa América";
+  return "Copa Continental (Seleção)"; // fallback for any nationality outside the two groups
+}
+
 // Weight used to make the roulette draw from a country's clubs with a
 // realistic bias: small/mid clubs (low level) are common outcomes, while
 // giants (level 4-5) are rare - a 14-year-old should only very occasionally

@@ -1,5 +1,5 @@
 import { Attributes, Player, Position, SeasonStat, Team } from "./types";
-import { TEAMS } from "./data";
+import { TEAMS, getNationalContinentalCup } from "./data";
 
 export const calculateOverall = (attr: Attributes, pos: Position): number => {
   let weights = { pace: 1, shooting: 1, passing: 1, dribbling: 1, defending: 1, physical: 1 };
@@ -387,7 +387,7 @@ export const getReachedFinals = (player: Player, currentOvr: number): string[] =
     if (player.age % 4 === 0 && Math.random() > 0.7) {
       finals.push("Copa do Mundo");
     } else if (player.age % 4 === 2 && Math.random() > 0.6) {
-      finals.push("Copa Continental (Seleção)");
+      finals.push(getNationalContinentalCup(player.nationality));
     }
   }
 

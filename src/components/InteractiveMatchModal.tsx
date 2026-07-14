@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Player } from "../types";
 import { calculateOverall } from "../utils";
 import { Trophy, Goal, Activity, FastForward, Play, AlertCircle } from "lucide-react";
-import { TEAMS } from "../data";
+import { TEAMS, EUROPEAN_NATIONALITIES, AMERICAN_NATIONALITIES } from "../data";
 
 type Action = "Chutar pro gol" | "Tocar a bola" | "Driblar" | "Correr pela Lateral";
 type MatchStatus = "INTRO" | "SIMULATING" | "WAITING_ACTION" | "FINISHED";
@@ -45,7 +45,7 @@ export function InteractiveMatchModal({
   const [totalChances, setTotalChances] = useState(1);
   const [resolvingPenalties, setResolvingPenalties] = useState(false);
 
-  const isNational = finalType.includes("Copa do Mundo") || finalType.includes("Copa Continental (Seleção)");
+  const isNational = finalType.includes("Copa do Mundo") || finalType.includes("Eurocopa") || finalType.includes("Copa América") || finalType.includes("Copa Continental (Seleção)");
   const playerTeamName = isNational ? player.nationality : player.currentTeam.name;
 
   useEffect(() => {
@@ -57,7 +57,16 @@ export function InteractiveMatchModal({
     if (finalType.includes("Mundial")) {
       category = "mundial";
       ops = ["Real Madrid", "Manchester City", "Bayern de Munique", "Liverpool", "Barcelona", "Chelsea", "Inter de Milão", "Boca Juniors"];
+    } else if (finalType.includes("Eurocopa")) {
+      // Eurocopa - só seleções europeias disputam.
+      category = `selecao-${finalType}`;
+      ops = EUROPEAN_NATIONALITIES.filter(c => c !== player.nationality);
+    } else if (finalType.includes("Copa América")) {
+      // Copa América - só seleções americanas disputam.
+      category = `selecao-${finalType}`;
+      ops = AMERICAN_NATIONALITIES.filter(c => c !== player.nationality);
     } else if (isNational) {
+      // Copa do Mundo (ou fallback genérico) - qualquer seleção pode aparecer.
       category = `selecao-${finalType}`;
       ops = ["França", "Alemanha", "Argentina", "Espanha", "Inglaterra", "Itália", "Portugal", "Holanda", "Uruguai", "Brasil"];
       ops = ops.filter(c => c !== player.nationality); // simple avoidance
