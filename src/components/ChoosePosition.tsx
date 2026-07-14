@@ -20,9 +20,6 @@ export function ChoosePosition({ onPositionSelected }: { onPositionSelected: (po
             <User className="text-emerald-500 w-8 h-8" />
             Qual a sua Posição?
           </h2>
-          <p className="text-slate-400">
-            Sua posição define como seu Overall é calculado.
-          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
