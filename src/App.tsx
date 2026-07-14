@@ -15,6 +15,7 @@ import { InjuryModal } from "./components/InjuryModal";
 import { InteractiveMatchModal, resetOpponentMemory } from "./components/InteractiveMatchModal";
 import { RomanceEventModal, ROMANCE_EVENTS } from "./components/RomanceEventModal";
 import { HeartCrack } from "lucide-react";
+import { generateRelationships } from "./data";
 import { simulateSeason, applyGrowth, autoDistributePoints, generatePressMessage, calculateMarketValue, calculateOverall, formatCurrency, getReachedFinals, getContractEndOffers } from "./utils";
 
 // Abaixo deste valor de Social, os encontros da temporada tendem a terminar
@@ -79,6 +80,7 @@ export default function App() {
       usedExclusiveParty: false,
       usedInternationalTrip: false,
       bootSponsor: null,
+      relationships: generateRelationships(playerNationality),
       personal: {
         mood: 100,
         health: 100,
@@ -391,7 +393,8 @@ export default function App() {
 
     const stateToPass = { ...pendingSimulationPhase };
     const p = stateToPass.baseUpdatedPlayer;
-    const choice = pendingRomanceEvent.choices.find((c) => c.id === choiceId);
+    const event = pendingRomanceEvent;
+    const choice = event.choices.find((c) => c.id === choiceId);
 
     if (choice) {
       switch (choice.tone) {
@@ -399,15 +402,49 @@ export default function App() {
           p.personal.social = Math.min(100, p.personal.social + 5);
           p.personal.mood = Math.min(100, p.personal.mood + 5);
           break;
-        case "positive":
+        case "positive": {
           p.personal.social = Math.min(100, p.personal.social + 10);
           p.personal.mood = Math.min(100, p.personal.mood + 5);
+
+          if (!p.relationships.girlfriend && Math.random() < 0.5) {
+            // A escolha "positiva" pode evoluir para um namoro de verdade.
+            p.relationships = {
+              ...p.relationships,
+              girlfriend: {
+                id: `gf_${Date.now()}`,
+                name: event.personName,
+                relationTag: "Namorada",
+                affinity: event.attraction,
+                sinceAge: p.age,
+              },
+            };
+            if (p.history.length > 0) {
+              p.history[0].pressMessage = `"Romance confirmado! ${p.name} está namorando ${event.personName}."`;
+            }
+          } else if (!p.relationships.girlfriend) {
+            // Não virou namoro dessa vez, mas rende uma nova amizade.
+            p.relationships = {
+              ...p.relationships,
+              friends: [
+                ...p.relationships.friends,
+                { id: `friend_${Date.now()}`, name: event.personName, relationTag: event.relationTag, affinity: event.attraction },
+              ],
+            };
+          }
           break;
+        }
         case "risky":
           p.personal.mood = Math.min(100, p.personal.mood + 10);
           p.personal.social = Math.max(0, p.personal.social - 15);
           p.personal.health = Math.max(0, p.personal.health - 5);
-          if (p.history.length > 0) {
+
+          if (p.relationships.girlfriend) {
+            const exGirlfriendName = p.relationships.girlfriend.name;
+            p.relationships = { ...p.relationships, girlfriend: null };
+            if (p.history.length > 0) {
+              p.history[0].pressMessage = `"Escândalo! ${p.name} é flagrado em um affair e o namoro com ${exGirlfriendName} chega ao fim."`;
+            }
+          } else if (p.history.length > 0) {
             p.history[0].pressMessage = `"Escândalo! ${p.name} é flagrado em um affair e vira manchete da imprensa marrom."`;
           }
           break;

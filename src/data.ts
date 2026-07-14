@@ -1,4 +1,4 @@
-import { Team } from "./types";
+import { Team, FamilyMember, Friend, Relationships } from "./types";
 
 export const NATIONALITIES = [
   "Brasil",
@@ -298,4 +298,185 @@ export function getInitialTeamsForNationality(nationality: string): Team[] {
   });
 
   return weighted;
+}
+
+// ---------------------------------------------------------------------
+// Família, amigos e relacionamento amoroso
+// ---------------------------------------------------------------------
+// Cada carreira sorteia, de forma independente, quem compõe a família do
+// jogador (pais e irmãos) e um pequeno grupo de amigos. Os nomes usam um
+// pool de nomes/sobrenomes por nacionalidade para dar um toque de sabor
+// local, caindo no pool do Brasil como padrão quando a nacionalidade não
+// tiver um pool específico cadastrado.
+
+type NamePool = { male: string[]; female: string[]; surnames: string[] };
+
+const NAME_POOLS: Record<string, NamePool> = {
+  "Brasil": {
+    male: ["João", "Pedro", "Carlos", "Marcos", "Rafael", "Lucas", "Antônio", "Paulo"],
+    female: ["Maria", "Ana", "Juliana", "Fernanda", "Camila", "Patrícia", "Beatriz", "Larissa"],
+    surnames: ["Silva", "Souza", "Oliveira", "Santos", "Pereira", "Costa", "Almeida", "Ribeiro"],
+  },
+  "Argentina": {
+    male: ["Diego", "Mateo", "Facundo", "Nicolás", "Franco", "Santiago", "Ezequiel", "Agustín"],
+    female: ["Sofía", "Valentina", "Camila", "Martina", "Julieta", "Lucía", "Florencia", "Milagros"],
+    surnames: ["González", "Fernández", "Rodríguez", "Romero", "Díaz", "Torres", "Álvarez", "Molina"],
+  },
+  "França": {
+    male: ["Jean", "Pierre", "Louis", "Antoine", "Nicolas", "Julien", "Mathieu", "Olivier"],
+    female: ["Marie", "Camille", "Sophie", "Claire", "Julie", "Émilie", "Charlotte", "Léa"],
+    surnames: ["Martin", "Bernard", "Dubois", "Thomas", "Robert", "Petit", "Moreau", "Simon"],
+  },
+  "Inglaterra": {
+    male: ["James", "Oliver", "George", "Harry", "Jack", "Thomas", "William", "Charlie"],
+    female: ["Emma", "Olivia", "Amelia", "Sophie", "Charlotte", "Grace", "Isla", "Emily"],
+    surnames: ["Smith", "Jones", "Taylor", "Brown", "Wilson", "Evans", "Thomas", "Roberts"],
+  },
+  "Espanha": {
+    male: ["Javier", "Pablo", "Alejandro", "Manuel", "Sergio", "Daniel", "Diego", "Álvaro"],
+    female: ["Lucía", "María", "Paula", "Carmen", "Laura", "Elena", "Sara", "Marta"],
+    surnames: ["García", "Martínez", "López", "Sánchez", "Pérez", "Gómez", "Fernández", "Díaz"],
+  },
+  "Itália": {
+    male: ["Marco", "Luca", "Matteo", "Andrea", "Francesco", "Alessandro", "Davide", "Simone"],
+    female: ["Giulia", "Sofia", "Chiara", "Francesca", "Martina", "Alessia", "Valentina", "Elisa"],
+    surnames: ["Rossi", "Russo", "Ferrari", "Esposito", "Bianchi", "Romano", "Colombo", "Ricci"],
+  },
+  "Alemanha": {
+    male: ["Lukas", "Maximilian", "Felix", "Jonas", "Paul", "Leon", "Finn", "Niklas"],
+    female: ["Anna", "Laura", "Lena", "Julia", "Sophie", "Marie", "Hannah", "Emilia"],
+    surnames: ["Müller", "Schmidt", "Schneider", "Fischer", "Weber", "Wagner", "Becker", "Hoffmann"],
+  },
+  "Portugal": {
+    male: ["João", "Miguel", "Tiago", "Rui", "André", "Bruno", "Diogo", "Gonçalo"],
+    female: ["Beatriz", "Inês", "Mariana", "Catarina", "Sofia", "Rita", "Carolina", "Matilde"],
+    surnames: ["Ferreira", "Costa", "Rodrigues", "Martins", "Alves", "Carvalho", "Gomes", "Lopes"],
+  },
+  "Holanda": {
+    male: ["Daan", "Sem", "Lucas", "Bram", "Milan", "Thijs", "Levi", "Finn"],
+    female: ["Emma", "Julia", "Sophie", "Lisa", "Anna", "Sara", "Zoë", "Fenna"],
+    surnames: ["De Jong", "Jansen", "De Vries", "Bakker", "Visser", "Smit", "Meijer", "Bos"],
+  },
+  "Uruguai": {
+    male: ["Nicolás", "Federico", "Agustín", "Diego", "Bruno", "Gonzalo", "Matías", "Sebastián"],
+    female: ["Valentina", "Camila", "Florencia", "Martina", "Sofía", "Lucía", "Agustina", "Victoria"],
+    surnames: ["Pereira", "Rodríguez", "Fernández", "Silva", "González", "Núñez", "Correa", "Suárez"],
+  },
+};
+
+const DEFAULT_NAME_POOL: NamePool = NAME_POOLS["Brasil"];
+
+let relationshipIdCounter = 0;
+function nextRelationshipId(prefix: string): string {
+  relationshipIdCounter += 1;
+  return `${prefix}_${Date.now()}_${relationshipIdCounter}`;
+}
+
+function pickRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function randomIntBetween(min: number, max: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function generatePersonName(nationality: string, gender: "male" | "female"): string {
+  const pool = NAME_POOLS[nationality] || DEFAULT_NAME_POOL;
+  const first = pickRandom(pool[gender]);
+  const last = pickRandom(pool.surnames);
+  return `${first} ${last}`;
+}
+
+// Sorteia a composição familiar do jogador para a carreira. Cinco cenários
+// possíveis: pais e irmãos, apenas pais (sem irmãos), apenas pai, apenas
+// mãe, ou completamente órfão (sem nenhum familiar).
+function generateFamily(nationality: string): FamilyMember[] {
+  const roll = Math.random() * 100;
+  const members: FamilyMember[] = [];
+
+  let hasFather = false;
+  let hasMother = false;
+  let hasSiblings = false;
+
+  if (roll < 35) {
+    // Pais e irmãos
+    hasFather = true;
+    hasMother = true;
+    hasSiblings = true;
+  } else if (roll < 60) {
+    // Apenas os pais, sem irmãos
+    hasFather = true;
+    hasMother = true;
+  } else if (roll < 72) {
+    // Apenas o pai
+    hasFather = true;
+  } else if (roll < 90) {
+    // Apenas a mãe
+    hasMother = true;
+  }
+  // roll >= 90: completamente órfão, sem nenhum familiar
+
+  if (hasFather) {
+    members.push({
+      id: nextRelationshipId("fam"),
+      name: generatePersonName(nationality, "male"),
+      role: "Pai",
+      age: randomIntBetween(38, 60),
+      affinity: randomIntBetween(40, 100),
+    });
+  }
+
+  if (hasMother) {
+    members.push({
+      id: nextRelationshipId("fam"),
+      name: generatePersonName(nationality, "female"),
+      role: "Mãe",
+      age: randomIntBetween(36, 58),
+      affinity: randomIntBetween(45, 100),
+    });
+  }
+
+  if (hasSiblings) {
+    const siblingCount = randomIntBetween(1, 3);
+    for (let i = 0; i < siblingCount; i++) {
+      const isBrother = Math.random() < 0.5;
+      members.push({
+        id: nextRelationshipId("fam"),
+        name: generatePersonName(nationality, isBrother ? "male" : "female"),
+        role: isBrother ? "Irmão" : "Irmã",
+        age: randomIntBetween(6, 32),
+        affinity: randomIntBetween(50, 100),
+      });
+    }
+  }
+
+  return members;
+}
+
+const FRIEND_TAGS = ["Amigo de Infância", "Companheiro de Time", "Vizinho", "Amigo da Escola", "Melhor Amigo"];
+
+function generateFriends(nationality: string): Friend[] {
+  const count = randomIntBetween(2, 4);
+  const friends: Friend[] = [];
+  for (let i = 0; i < count; i++) {
+    const isMale = Math.random() < 0.6;
+    friends.push({
+      id: nextRelationshipId("friend"),
+      name: generatePersonName(nationality, isMale ? "male" : "female"),
+      relationTag: pickRandom(FRIEND_TAGS),
+      affinity: randomIntBetween(50, 100),
+    });
+  }
+  return friends;
+}
+
+// Ponto de entrada usado ao criar o jogador: sorteia a família e os amigos
+// da carreira. A namorada começa sempre nula - só existe se surgir de um
+// RomanceEvent durante a carreira.
+export function generateRelationships(nationality: string): Relationships {
+  return {
+    family: generateFamily(nationality),
+    friends: generateFriends(nationality),
+    girlfriend: null,
+  };
 }

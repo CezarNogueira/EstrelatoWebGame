@@ -59,6 +59,37 @@ export type RomanceEvent = {
   choices: RomanceChoice[];
 };
 
+export type FamilyRole = "Pai" | "Mãe" | "Irmão" | "Irmã";
+
+export type FamilyMember = {
+  id: string;
+  name: string;
+  role: FamilyRole;
+  age: number;
+  affinity: number; // 0 a 100, o quão próxima é a relação
+};
+
+export type Friend = {
+  id: string;
+  name: string;
+  relationTag: string; // ex: "Amigo de Infância", "Companheiro de Time"
+  affinity: number; // 0 a 100
+};
+
+export type Girlfriend = {
+  id: string;
+  name: string;
+  relationTag: string;
+  affinity: number; // 0 a 100
+  sinceAge: number;
+};
+
+export type Relationships = {
+  family: FamilyMember[];
+  friends: Friend[];
+  girlfriend: Girlfriend | null;
+};
+
 export type Player = {
   name: string;
   age: number;
@@ -81,6 +112,7 @@ export type Player = {
   usedInternationalTrip?: boolean;
   bootSponsor?: string | null;
   bootSponsorSeasonsLeft?: number; // temporadas restantes do contrato de chuteira (dura 5 temporadas)
+  relationships: Relationships;
   personal: {
     mood: number;
     health: number;

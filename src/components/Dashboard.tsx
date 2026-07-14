@@ -1,9 +1,10 @@
 import { Player, SeasonStat } from "../types";
 import { calculateOverall, getPlayerTitle, formatCurrency } from "../utils";
-import { ArrowRight, Calendar, Goal, User, Zap, FileSignature, ShoppingBag, Shield, ShieldCheck } from "lucide-react";
+import { ArrowRight, Calendar, Goal, User, Users, Zap, FileSignature, ShoppingBag, Shield, ShieldCheck } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useState } from "react";
 import { StoreModal, STORE_ITEMS } from "./StoreModal";
+import { RelationshipsModal } from "./RelationshipsModal";
 
 function AttributeBar({ label, value }: { label: string; value: number }) {
   return (
@@ -32,6 +33,7 @@ export function Dashboard({
   const [showEvent, setShowEvent] = useState(false);
   const [showContractInfo, setShowContractInfo] = useState(false);
   const [showStore, setShowStore] = useState(false);
+  const [showRelationships, setShowRelationships] = useState(false);
   const ovr = calculateOverall(player.attributes, player.position);
   const title = getPlayerTitle(player.age, ovr);
   const totalTackles = player.history.reduce((sum, stat) => sum + (stat.tackles || 0), 0);
@@ -132,6 +134,13 @@ export function Dashboard({
           player={player}
           onBuy={handleBuyItem}
           onClose={() => setShowStore(false)}
+        />
+      )}
+
+      {showRelationships && (
+        <RelationshipsModal
+          player={player}
+          onClose={() => setShowRelationships(false)}
         />
       )}
 
@@ -255,6 +264,14 @@ export function Dashboard({
               >
                 <ShoppingBag className="w-4 h-4" />
                 Loja
+              </button>
+
+              <button
+                onClick={() => setShowRelationships(true)}
+                className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-700"
+              >
+                <Users className="w-4 h-4" />
+                Relações
               </button>
             </div>
           </div>
