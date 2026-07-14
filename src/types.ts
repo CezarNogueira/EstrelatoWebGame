@@ -41,6 +41,24 @@ export type SeasonStat = {
 
 export type Position = "ATA" | "PON" | "MEI" | "MC" | "VOL" | "ZAG" | "LAT";
 
+export type RomanceChoiceTone = "safe" | "risky" | "neutral" | "positive";
+
+export type RomanceChoice = {
+  id: string;
+  label: string;
+  tone: RomanceChoiceTone;
+};
+
+export type RomanceEvent = {
+  id: string;
+  personName: string;
+  relationTag: string; // ex: "Melhor Amigo", "Fã", "Conhecida"
+  title: string;
+  description: string;
+  attraction: number; // 0 a 100, exibido como barra
+  choices: RomanceChoice[];
+};
+
 export type Player = {
   name: string;
   age: number;
