@@ -14,7 +14,6 @@ import AtleticoMineiroLogo from "./assets/teams/AtleticoMineiro.png";
 import BahiaLogo from "./assets/teams/Bahia.png";
 import FortalezaLogo from "./assets/teams/Fortaleza.png";
 import CearaLogo from "./assets/teams/Ceara.png";
-import SportRecifeLogo from "./assets/teams/SportRecife.png";
 import VitoriaLogo from "./assets/teams/Vitoria.png";
 import JuventudeLogo from "./assets/teams/Juventude.png";
 import VascoDaGamaLogo from "./assets/teams/VascoDaGama.png";
@@ -54,7 +53,7 @@ export const TEAMS: Team[] = [
   { id: "br14", name: "Santos", level: 2, color: "#FFFF00", country: "BR", logo: SantosLogo },
   { id: "br15", name: "Fortaleza", level: 2, color: "#800080", country: "BR", logo: FortalezaLogo },
   { id: "br16", name: "Ceará", level: 1, color: "#FFA500", country: "BR", logo: CearaLogo },
-  { id: "br17", name: "Sport Recife", level: 1, color: "#FF0000", country: "BR", logo: SportRecifeLogo },
+  { id: "br17", name: "Sport Recife", level: 1, color: "#FF0000", country: "BR" },
   { id: "br18", name: "Vitória", level: 1, color: "#0000FF", country: "BR", logo: VitoriaLogo },
   { id: "br19", name: "Juventude", level: 1, color: "#008000", country: "BR", logo: JuventudeLogo },
   { id: "br20", name: "Goiás", level: 1, color: "#FFFFFF", country: "BR", logo: GoiasLogo },
