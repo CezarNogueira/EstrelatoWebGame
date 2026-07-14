@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Player, Position } from "../types";
 import { calculateOverall } from "../utils";
-import { Trophy, Goal, Activity, FastForward, Play, AlertCircle, Shield, UserCheck, Rocket, MoveRight } from "lucide-react";
+import { Trophy, Goal, Activity, FastForward, Play, AlertCircle, Shield, UserCheck, Rocket, MoveRight, Target, Crosshair } from "lucide-react";
 import { TEAMS, EUROPEAN_NATIONALITIES, AMERICAN_NATIONALITIES } from "../data";
 
 // -----------------------------------------------------------------------------
@@ -16,7 +16,9 @@ type Scenario =
   | "LATERAL"      // Receber a bola na lateral -> Cruzar ou Passe
   | "MEIO_CAMPO"   // Tomou a bola no meio de campo -> Correr pra área ou Passe
   | "ENTRADA_AREA" // Bola sobrou na entrada da área -> Chutar, Driblar ou Passe
-  | "INFILTRACAO"; // Atacante tentando infiltrar -> Desarmar ou Marcar outro atacante
+  | "INFILTRACAO"  // Atacante tentando infiltrar -> Desarmar ou Marcar outro atacante
+  | "PENALTI"      // Cobrador oficial do time bate um pênalti
+  | "FALTA";       // Cobrador oficial do time bate uma falta perigosa
 
 type MatchStatus = "INTRO" | "SIMULATING" | "WAITING_ACTION" | "FINISHED";
 
@@ -25,6 +27,19 @@ const ATTACKING_POSITIONS: Position[] = ["ATA", "PON", "MEI"];
 
 const ATTACKING_SCENARIOS: Scenario[] = ["FRENTE_GOL", "LATERAL", "MEIO_CAMPO", "ENTRADA_AREA"];
 const DEFENSIVE_SCENARIOS: Scenario[] = ["MEIO_CAMPO", "INFILTRACAO"];
+const SET_PIECE_SCENARIOS: Scenario[] = ["PENALTI", "FALTA"];
+
+// OVR mínimo (por nível do time) para o jogador ser o cobrador oficial de
+// faltas e pênaltis da equipe. Times mais fracos (nível 1) têm um padrão de
+// qualidade menor, então basta um OVR mais baixo para ser o cobrador; nos
+// times de elite (nível 5) só um jogador de altíssimo nível assume a cobrança.
+const SET_PIECE_OVR_THRESHOLD: Record<number, number> = {
+  1: 69,
+  2: 74,
+  3: 79,
+  4: 84,
+  5: 90,
+};
 
 // Ações defensivas (INFILTRACAO) não geram gol do próprio jogador quando dão
 // certo — elas evitam o gol do adversário. Quando falham, é o adversário que
@@ -196,10 +211,65 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
         ? `Não chegou a tempo! ${name} falha no desarme e é GOL DO ${opponentName.toUpperCase()}!`
         : `${name} perde a referência da marcação e é GOL DO ${opponentName.toUpperCase()}!`,
   },
+
+  PENALTI: {
+    chanceText: (name) => `PÊNALTI para o seu time! Como cobrador oficial, ${name} se prepara para bater. Como vai cobrar?`,
+    actions: [
+      { id: "canto", label: "Canto do Gol", icon: Target, classes: "bg-red-900/50 hover:bg-red-800/80 border border-red-700 text-red-200" },
+      { id: "cavadinha", label: "Cavadinha", icon: FastForward, classes: "bg-purple-900/50 hover:bg-purple-800/80 border border-purple-700 text-purple-200" },
+    ],
+    computeChance: (actionId, player, difficultyMod) => {
+      const { attributes: attrs } = player;
+      let chance = 50;
+      if (actionId === "canto") {
+        // Cobrança mais segura, alto índice de acerto para bons finalizadores.
+        chance = 60 + attrs.shooting * 0.3 - difficultyMod * 0.5;
+      } else {
+        // Cavadinha: mais arriscada, mas quase imparável quando dá certo.
+        chance = 40 + attrs.shooting * 0.25 + attrs.dribbling * 0.15 - difficultyMod;
+      }
+      return chance;
+    },
+    successText: (actionId, name) =>
+      actionId === "canto"
+        ? `PÊNALTI CONVERTIDO! ${name.toUpperCase()} bate no canto e não dá chance ao goleiro. GOL!`
+        : `QUE CAVADINHA DE ${name.toUpperCase()}! Rouba o tempo do goleiro com categoria. GOL!`,
+    failText: (actionId, name) =>
+      actionId === "canto"
+        ? `O goleiro adivinha o canto! Pênalti defendido por ${name}, seguimos no jogo.`
+        : `Cavadinha mal calculada de ${name}, o goleiro não sai do lugar e defende!`,
+  },
+
+  FALTA: {
+    chanceText: (name) => `Falta perigosa na entrada da área! ${name}, o cobrador oficial do time, vai bater. O que fazer?`,
+    actions: [
+      { id: "cobrar", label: "Cobrar no Ângulo", icon: Crosshair, classes: "bg-red-900/50 hover:bg-red-800/80 border border-red-700 text-red-200" },
+      { id: "cruzar", label: "Cruzar na Área", icon: MoveRight, classes: "bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-200" },
+    ],
+    computeChance: (actionId, player, difficultyMod) => {
+      const { attributes: attrs } = player;
+      let chance = 50;
+      if (actionId === "cobrar") {
+        chance = 30 + attrs.shooting * 0.6 - difficultyMod;
+      } else {
+        chance = 35 + attrs.passing * 0.6 - difficultyMod;
+      }
+      return chance;
+    },
+    successText: (actionId, name) =>
+      actionId === "cobrar"
+        ? `QUE COBRANÇA DE FALTA DE ${name.toUpperCase()}! Acerta o ângulo! GOLAÇO!`
+        : `Cruzamento perfeito na cobrança de falta de ${name}! O companheiro cabeceia. GOL!`,
+    failText: (actionId, name, opponentName) =>
+      actionId === "cobrar"
+        ? `Na barreira! A cobrança de falta de ${name} desvia e sai pela linha de fundo.`
+        : `Falta cobrada errada por ${name}, a defesa do ${opponentName} afasta sem problemas.`,
+  },
 };
 
-function getScenarioPool(position: Position): Scenario[] {
-  return ATTACKING_POSITIONS.includes(position) ? ATTACKING_SCENARIOS : DEFENSIVE_SCENARIOS;
+function getScenarioPool(position: Position, includeSetPieces: boolean): Scenario[] {
+  const base = ATTACKING_POSITIONS.includes(position) ? ATTACKING_SCENARIOS : DEFENSIVE_SCENARIOS;
+  return includeSetPieces ? [...base, ...SET_PIECE_SCENARIOS] : base;
 }
 
 // -----------------------------------------------------------------------------
@@ -390,7 +460,10 @@ export function InteractiveMatchModal({
           // ofensivos, enquanto MC/VOL/ZAG/LAT vivem momentos de recuperação
           // de bola e marcação.
           if (chancesHad < totalChances && Math.random() < 0.035) {
-            const pool = getScenarioPool(player.position);
+            const playerOvr = calculateOverall(player.attributes, player.position);
+            const threshold = SET_PIECE_OVR_THRESHOLD[player.currentTeam.level] ?? Infinity;
+            const isSetPieceTaker = playerOvr >= threshold;
+            const pool = getScenarioPool(player.position, isSetPieceTaker);
             const scenario = pool[Math.floor(Math.random() * pool.length)];
             setCurrentScenario(scenario);
             setStatus("WAITING_ACTION");
@@ -403,7 +476,7 @@ export function InteractiveMatchModal({
     }
     
     return () => clearInterval(timer);
-  }, [status, chancesHad, totalChances, player.name, player.position, opponentName]);
+  }, [status, chancesHad, totalChances, player.name, player.position, player.currentTeam.level, opponentName]);
 
   const handleAction = (actionId: string) => {
     if (!currentScenario) return;
@@ -411,9 +484,6 @@ export function InteractiveMatchModal({
 
     const config = SCENARIOS[currentScenario];
     const difficultyMod = player.currentTeam.level * 5;
-    // calculateOverall segue disponível caso seja útil para futuros ajustes
-    // de dificuldade (ex.: comparar overall do jogador com o nível do rival).
-    void calculateOverall(player.attributes, player.position);
 
     let chance = config.computeChance(actionId, player, difficultyMod);
     chance = Math.max(10, Math.min(90, chance));
