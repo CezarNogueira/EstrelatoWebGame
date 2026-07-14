@@ -222,27 +222,6 @@ export function Dashboard({
               </div>
             </div>
 
-            {isDefensivePlayer && (
-              <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-lg">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
-                  <Shield className="w-5 h-5 text-blue-400" />
-                  Estatísticas Defensivas
-                </h2>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col items-center gap-1">
-                    <Shield className="w-6 h-6 text-blue-400" />
-                    <span className="text-2xl font-black text-slate-100">{totalTackles}</span>
-                    <span className="text-slate-500 font-bold uppercase text-[10px]">Desarmes</span>
-                  </div>
-                  <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col items-center gap-1">
-                    <ShieldCheck className="w-6 h-6 text-emerald-400" />
-                    <span className="text-2xl font-black text-slate-100">{totalCleanSheets}</span>
-                    <span className="text-slate-500 font-bold uppercase text-[10px]">Sem Sofrer</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
             <div className="space-y-3">
               <button
                 onClick={handleSimulate}
