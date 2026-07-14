@@ -253,21 +253,37 @@ export const NATIONALITY_COUNTRY_MAP: Record<string, string> = {
   "Uruguai": "UY",
 };
 
+// Weight used to make the roulette draw from a country's clubs with a
+// realistic bias: small/mid clubs (low level) are common outcomes, while
+// giants (level 4-5) are rare - a 14-year-old should only very occasionally
+// start their career at a club like Real Madrid or Flamengo.
+function getRouletteWeight(level: number): number {
+  switch (level) {
+    case 1: return 100;
+    case 2: return 40;
+    case 3: return 8;
+    case 4: return 2;
+    default: return 1; // level 5 - extremely rare
+  }
+}
+
 // Builds the pool of clubs the Roulette should draw from for a given
-// nationality. Prefers lower-tier "youth academy" clubs (level <= 2) from
-// that country, since that's where a 14-year-old career normally starts.
-// Falls back to any club from that country if it has no low-tier clubs, and
-// falls back to the global INITIAL_TEAMS as a last resort so the roulette
-// never ends up with an empty pool.
+// nationality. Returns every club from that country, but repeated
+// proportionally to getRouletteWeight, so a plain uniform pick over the
+// returned array (as Roulette.tsx does) still lands on big clubs only very
+// rarely, while any team - including the giants - remains possible.
 export function getInitialTeamsForNationality(nationality: string): Team[] {
   const countryCode = NATIONALITY_COUNTRY_MAP[nationality];
-  if (!countryCode) return INITIAL_TEAMS;
+  const pool = countryCode ? TEAMS.filter((t) => t.country === countryCode) : TEAMS;
+  const finalPool = pool.length > 0 ? pool : TEAMS;
 
-  const youthTeams = TEAMS.filter((t) => t.country === countryCode && t.level <= 2);
-  if (youthTeams.length > 0) return youthTeams;
+  const weighted: Team[] = [];
+  finalPool.forEach((team) => {
+    const weight = getRouletteWeight(team.level);
+    for (let i = 0; i < weight; i++) {
+      weighted.push(team);
+    }
+  });
 
-  const countryTeams = TEAMS.filter((t) => t.country === countryCode);
-  if (countryTeams.length > 0) return countryTeams;
-
-  return INITIAL_TEAMS;
+  return weighted;
 }
