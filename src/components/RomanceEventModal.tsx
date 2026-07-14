@@ -14,11 +14,9 @@ const TONE_STYLES: Record<RomanceChoiceTone, string> = {
 export function RomanceEventModal({
   event,
   onChoice,
-  onSurpriseMe,
 }: {
   event: RomanceEvent;
   onChoice: (choiceId: string) => void;
-  onSurpriseMe?: () => void;
 }) {
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/90 p-4">
@@ -67,16 +65,6 @@ export function RomanceEventModal({
             </button>
           ))}
         </div>
-
-        {onSurpriseMe && (
-          <button
-            onClick={onSurpriseMe}
-            className="w-full text-center text-xs text-slate-500 hover:text-slate-300 font-medium flex items-center justify-center gap-1.5 transition-colors"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            Surpreenda-me!
-          </button>
-        )}
       </div>
     </div>
   );
