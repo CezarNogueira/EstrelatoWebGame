@@ -29,8 +29,8 @@ export const STORE_ITEMS = [
   { id: "Marca Própria", name: "Marca de Roupas Própria", price: 2000000, icon: StoreIcon, description: "Custo: 100k/ano", socialGain: 20 },
 
   // Consumíveis: efeito imediato, podem ser comprados quantas vezes o jogador quiser
-  { id: "Festa Exclusiva", name: "Festa Exclusiva", price: 40000, icon: PartyPopper, description: "Consumível: eleva seu status social na hora", socialGain: 14, consumable: true },
-  { id: "Viagem Internacional", name: "Viagem Internacional", price: 25000, icon: Globe, description: "Consumível: eleva seu status social na hora", socialGain: 7, consumable: true },
+  { id: "Festa Exclusiva", name: "Festa Exclusiva", price: 40000, icon: PartyPopper, description: "Consumível: eleva seu status social na hora (1x por temporada)", socialGain: 14, consumable: true },
+  { id: "Viagem Internacional", name: "Viagem Internacional", price: 25000, icon: Globe, description: "Consumível: eleva seu status social na hora (1x por temporada)", socialGain: 7, consumable: true },
 
   // Consumíveis limitados a 1 vez por temporada
   { id: "Preparador", name: "Preparador Físico", price: 150000, icon: Dumbbell, description: "+50% de ganho de Físico (dura 1 temporada)", socialGain: 2 },
@@ -71,6 +71,10 @@ export function StoreModal({
               owned = player.hasPersonalTrainer;
             } else if (item.id === "Massagista") {
               owned = !!player.hasMasseuse;
+            } else if (item.id === "Festa Exclusiva") {
+              owned = !!player.usedExclusiveParty;
+            } else if (item.id === "Viagem Internacional") {
+              owned = !!player.usedInternationalTrip;
             } else if (item.consumable) {
               owned = false; // Consumível: pode ser comprado repetidas vezes
             } else {

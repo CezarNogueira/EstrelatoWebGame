@@ -52,6 +52,8 @@ export function Dashboard({
     // reforçamos aqui para o caso de outro clique escapar).
     if (itemId === "Preparador" && player.hasPersonalTrainer) return;
     if (itemId === "Massagista" && player.hasMasseuse) return;
+    if (itemId === "Festa Exclusiva" && player.usedExclusiveParty) return;
+    if (itemId === "Viagem Internacional" && player.usedInternationalTrip) return;
 
     const updatedPlayer = { 
       ...player, 
@@ -70,6 +72,10 @@ export function Dashboard({
       // Cura 50% da Saúde que falta para o jogador chegar aos 100%.
       const missingHealth = 100 - updatedPlayer.personal.health;
       updatedPlayer.personal.health = Math.min(100, updatedPlayer.personal.health + missingHealth * 0.5);
+    } else if (itemId === "Festa Exclusiva") {
+      updatedPlayer.usedExclusiveParty = true;
+    } else if (itemId === "Viagem Internacional") {
+      updatedPlayer.usedInternationalTrip = true;
     } else if (!item?.consumable) {
       updatedPlayer.assets = [...player.assets, itemId];
     }

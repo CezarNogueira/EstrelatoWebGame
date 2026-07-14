@@ -70,6 +70,8 @@ export default function App() {
       assets: [],
       hasPersonalTrainer: false,
       hasMasseuse: false,
+      usedExclusiveParty: false,
+      usedInternationalTrip: false,
       bootSponsor: null,
       personal: {
         mood: 100,
@@ -220,6 +222,8 @@ export default function App() {
       money: player.money + (player.salary || 0),
       hasPersonalTrainer: false,
       hasMasseuse: false,
+      usedExclusiveParty: false,
+      usedInternationalTrip: false,
     };
 
     if (finalStat.nationalTeamCall) {
