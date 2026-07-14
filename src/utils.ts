@@ -55,13 +55,13 @@ type PositionStatWeights = {
 };
 
 export const POSITION_STAT_WEIGHTS: Record<Position, PositionStatWeights> = {
-  ATA: { goals: 1.00, assists: 0.55, tackles: 0.15, cleanSheets: 0.25 },
-  PON: { goals: 0.75, assists: 0.85, tackles: 0.20, cleanSheets: 0.25 },
-  MEI: { goals: 0.55, assists: 1.00, tackles: 0.35, cleanSheets: 0.35 },
+  ATA: { goals: 1.45, assists: 0.55, tackles: 0.05, cleanSheets: 0.25 },
+  PON: { goals: 1.15, assists: 0.85, tackles: 0.20, cleanSheets: 0.25 },
+  MEI: { goals: 0.75, assists: 1.40, tackles: 0.25, cleanSheets: 0.35 },
   MC:  { goals: 0.30, assists: 0.75, tackles: 0.70, cleanSheets: 0.50 },
   VOL: { goals: 0.12, assists: 0.45, tackles: 1.00, cleanSheets: 0.75 },
   LAT: { goals: 0.10, assists: 0.60, tackles: 0.85, cleanSheets: 0.75 },
-  ZAG: { goals: 0.06, assists: 0.30, tackles: 0.95, cleanSheets: 1.00 },
+  ZAG: { goals: 0.04, assists: 0.30, tackles: 1.25, cleanSheets: 1.00 },
 };
 
 // Positions whose value is primarily defensive - used to gate defensive-only
