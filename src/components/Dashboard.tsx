@@ -40,9 +40,6 @@ export function Dashboard({
 
   const ovr = calculateOverall(player.attributes, player.position);
   const title = getPlayerTitle(player.age, ovr);
-  const totalTackles = player.history.reduce((sum, stat) => sum + (stat.tackles || 0), 0);
-  const totalCleanSheets = player.history.reduce((sum, stat) => sum + (stat.cleanSheets || 0), 0);
-  const isDefensivePlayer = player.position === "ZAG" || player.position === "LAT" || player.position === "VOL";
 
   const handleSimulate = () => {
     onSimulate();
@@ -255,7 +252,7 @@ export function Dashboard({
                 title={player.currentTeam.name}
               >
                 {player.currentTeam.logo ? (
-                  <img src={player.currentTeam.logo} alt={player.currentTeam.name} className="w-full h-full object-contain p-0.5" />
+                  <img src={player.currentTeam.logo} alt={player.currentTeam.name} className="w-full h-full object-cover p-0.5" />
                 ) : (
                   <div className="w-full h-full" style={{ backgroundColor: player.currentTeam.color }} />
                 )}

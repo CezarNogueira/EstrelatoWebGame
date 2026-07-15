@@ -90,7 +90,7 @@ export function Roulette({ nationality, onTeamSelected }: { nationality: string;
                   <img 
                     src={team.logo} 
                     alt="Logo do time"
-                    className="w-16 h-16 rounded-full border-4 border-slate-950 shadow-inner mb-2 object-cover" 
+                    className="w-16 h-16 mb-2 object-cover" 
                   />
                 ) : (
                   <div 
