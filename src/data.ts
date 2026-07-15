@@ -22,6 +22,47 @@ import GoiasLogo from "./assets/teamsBR/Goias.png";
 import ChapecoenseLogo from "./assets/teamsBR/Chapecoense.png";
 import BragantinoLogo from "./assets/teamsBR/Bragantino.png";
 import CoritibaLogo from "./assets/teamsBR/Coritiba.png";
+import ArsenalLogo from "./assets/teamsEN/Arsenal.png";
+import ManchesterCityLogo from "./assets/teamsEN/ManchesterCity.png";
+import LiverpoolLogo from "./assets/teamsEN/Liverpool.png";
+import ManchesterUnitedLogo from "./assets/teamsEN/ManchesterUnited.png";
+import ChelseaLogo from "./assets/teamsEN/Chelsea.png";
+import TottenhamLogo from "./assets/teamsEN/Tottenham.png";
+import NewcastleLogo from "./assets/teamsEN/NewCastle.png";
+import AstonVillaLogo from "./assets/teamsEN/AstonVilla.png";
+import WestHamLogo from "./assets/teamsEN/WestHam.png";
+import BrightonLogo from "./assets/teamsEN/Brighton.png";
+import BristolCityLogo from "./assets/teamsEN/Bristol.png";
+import CrystalPalaceLogo from "./assets/teamsEN/CrystalPalace.png";
+import FulhamLogo from "./assets/teamsEN/Fulham.png";
+import BrentfordLogo from "./assets/teamsEN/Brentford.png";
+import EvertonLogo from "./assets/teamsEN/Everton.png";
+import NottinghamForestLogo from "./assets/teamsEN/NottinghamForest.png";
+import BournemouthLogo from "./assets/teamsEN/Bournemouth.png";
+import WolvesLogo from "./assets/teamsEN/Wolves.png";
+import LeedsLogo from "./assets/teamsEN/Leeds.png";
+import BlackburnRoversLogo from "./assets/teamsEN/BlackburnRovers.png";
+import BoltonWanderersLogo from "./assets/teamsEN/BoltonWanderers.png";
+import CardiffCityLogo from "./assets/teamsEN/CardiffCity.png";
+import BurnleyLogo from "./assets/teamsEN/Burnley.png";
+import SouthamptonLogo from "./assets/teamsEN/Southampton.png";
+import IpswichTownLogo from "./assets/teamsEN/IpswichTown.png";
+import QPRLogo from "./assets/teamsEN/QueensPark.png";
+import LeicesterCityLogo from "./assets/teamsEN/LeicesterCity.png";
+import HullCityLogo from "./assets/teamsEN/HullCity.png";
+import StokeCityLogo from "./assets/teamsEN/StokeCity.png";
+import MillwallLogo from "./assets/teamsEN/Millwall.png";
+import MiddlesbroughLogo from "./assets/teamsEN/Middlesbrough.png";
+import LincolnCityLogo from "./assets/teamsEN/LincolnCity.png";
+import SunderlandLogo from "./assets/teamsEN/Sunderland.png";
+import WestBromwichLogo from "./assets/teamsEN/WestBromwich.png";
+import NorwichLogo from "./assets/teamsEN/Norwich.png";
+import CoventryLogo from "./assets/teamsEN/Coventry.png";
+import PrestonLogo from "./assets/teamsEN/Preston.png";
+import WatfordLogo from "./assets/teamsEN/Watford.png";
+import SheffieldLogo from "./assets/teamsEN/Sheffield.png";
+import SwanseaCityLogo from "./assets/teamsEN/SwanseaCity.png";
+
 
 export const NATIONALITIES = [
   "Brasil",
@@ -80,47 +121,47 @@ export const TEAMS: Team[] = [
   { id: "br39", name: "Tombense", level: 1, color: "#008000", country: "BR", division: 2 },
   { id: "br40", name: "Sampaio Corrêa", level: 1, color: "#FFFFFF", country: "BR", division: 2 },
   // INGLATERRA (EN) - Div 1
-  { id: "en41", name: "Manchester City", level: 5, color: "#FF0000", country: "EN", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/0/02/Manchester_City_Football_Club.png/120px-Manchester_City_Football_Club.png" },
-  { id: "en42", name: "Arsenal", level: 5, color: "#0000FF", country: "EN", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/5/53/Arsenal_FC.svg/120px-Arsenal_FC.svg.png" },
-  { id: "en43", name: "Liverpool", level: 5, color: "#008000", country: "EN", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Liverpool-Montage.jpg/330px-Liverpool-Montage.jpg" },
-  { id: "en44", name: "Manchester United", level: 4, color: "#FFFFFF", country: "EN", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/b/b6/Manchester_United_FC_logo.png/120px-Manchester_United_FC_logo.png" },
-  { id: "en45", name: "Chelsea", level: 4, color: "#000000", country: "EN", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/London_%2C_Chelsea_-_Gunter_Grove_-_geograph.org.uk_-_2408961.jpg/250px-London_%2C_Chelsea_-_Gunter_Grove_-_geograph.org.uk_-_2408961.jpg" },
-  { id: "en46", name: "Tottenham", level: 4, color: "#FFFF00", country: "EN", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Tesco_South_Tottenham_%287664380178%29_%282%29.jpg/250px-Tesco_South_Tottenham_%287664380178%29_%282%29.jpg" },
-  { id: "en47", name: "Newcastle", level: 4, color: "#800080", country: "EN", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/2/25/Newcastle_United_Logo.png/120px-Newcastle_United_Logo.png" },
-  { id: "en48", name: "Aston Villa", level: 4, color: "#FFA500", country: "EN", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/1/15/Aston_Villa.svg/120px-Aston_Villa.svg.png" },
-  { id: "en49", name: "West Ham", level: 3, color: "#FF0000", country: "EN", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/1/1d/West_Ham_United_FC_logo.png/120px-West_Ham_United_FC_logo.png" },
-  { id: "en50", name: "Brighton", level: 3, color: "#0000FF", country: "EN", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/77/Brighton.UK.JPG/330px-Brighton.UK.JPG" },
-  { id: "en51", name: "Crystal Palace", level: 3, color: "#008000", country: "EN", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/c/c1/Crystal_Palace_FC_logo.png/250px-Crystal_Palace_FC_logo.png" },
-  { id: "en52", name: "Fulham", level: 3, color: "#FFFFFF", country: "EN", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Fulham_Palace_courtyard_-_geograph.org.uk_-_835758.jpg/250px-Fulham_Palace_courtyard_-_geograph.org.uk_-_835758.jpg" },
-  { id: "en53", name: "Brentford", level: 3, color: "#000000", country: "EN", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/42/USA_South_Dakota_location_map.svg/330px-USA_South_Dakota_location_map.svg.png" },
-  { id: "en54", name: "Everton", level: 3, color: "#FFFF00", country: "EN", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/a/ae/Everton_FC_logo_2014.png/120px-Everton_FC_logo_2014.png" },
-  { id: "en55", name: "Nottingham Forest", level: 3, color: "#800080", country: "EN", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/a/a2/Nottingham_Forest.png/120px-Nottingham_Forest.png" },
-  { id: "en56", name: "Bournemouth", level: 2, color: "#FFA500", country: "EN", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Bournemouth_-_Seafront_-_geograph.org.uk_-_838983.jpg/250px-Bournemouth_-_Seafront_-_geograph.org.uk_-_838983.jpg" },
-  { id: "en57", name: "Wolverhampton", level: 2, color: "#FF0000", country: "EN", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8b/Wolverhampton.jpg/250px-Wolverhampton.jpg" },
-  { id: "en58", name: "Leicester City", level: 2, color: "#0000FF", country: "EN", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/0/0e/LeicesterCity_logo2014.png/120px-LeicesterCity_logo2014.png" },
-  { id: "en59", name: "Southampton", level: 2, color: "#008000", country: "EN", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Southampton_from_Aurora_01.JPG/330px-Southampton_from_Aurora_01.JPG" },
-  { id: "en60", name: "Ipswich Town", level: 2, color: "#FFFFFF", country: "EN", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/2/2a/Ipswich_Town_FC.png/120px-Ipswich_Town_FC.png" },
+  { id: "en41", name: "Manchester City", level: 5, color: "#FF0000", country: "EN", logo: ManchesterCityLogo },
+  { id: "en42", name: "Arsenal", level: 5, color: "#0000FF", country: "EN", logo: ArsenalLogo },
+  { id: "en43", name: "Liverpool", level: 5, color: "#008000", country: "EN", logo: LiverpoolLogo },
+  { id: "en44", name: "Manchester United", level: 4, color: "#FFFFFF", country: "EN", logo: ManchesterUnitedLogo },
+  { id: "en45", name: "Chelsea", level: 4, color: "#000000", country: "EN", logo: ChelseaLogo },
+  { id: "en46", name: "Tottenham", level: 4, color: "#FFFF00", country: "EN", logo: TottenhamLogo },
+  { id: "en47", name: "Newcastle", level: 4, color: "#800080", country: "EN", logo: NewcastleLogo },
+  { id: "en48", name: "Aston Villa", level: 4, color: "#FFA500", country: "EN", logo: AstonVillaLogo },
+  { id: "en49", name: "West Ham", level: 3, color: "#FF0000", country: "EN", logo: WestHamLogo },
+  { id: "en50", name: "Brighton", level: 3, color: "#0000FF", country: "EN", logo: BrightonLogo },
+  { id: "en51", name: "Crystal Palace", level: 3, color: "#008000", country: "EN", logo: CrystalPalaceLogo },
+  { id: "en52", name: "Fulham", level: 3, color: "#FFFFFF", country: "EN", logo: FulhamLogo },
+  { id: "en53", name: "Brentford", level: 3, color: "#000000", country: "EN", logo: BrentfordLogo },
+  { id: "en54", name: "Everton", level: 3, color: "#FFFF00", country: "EN", logo: EvertonLogo },
+  { id: "en55", name: "Nottingham Forest", level: 3, color: "#800080", country: "EN", logo: NottinghamForestLogo },
+  { id: "en56", name: "Bournemouth", level: 2, color: "#FFA500", country: "EN", logo: BournemouthLogo },
+  { id: "en57", name: "Wolves", level: 2, color: "#FF0000", country: "EN", logo: WolvesLogo },
+  { id: "en58", name: "Leicester City", level: 2, color: "#0000FF", country: "EN", logo: LeicesterCityLogo },
+  { id: "en59", name: "Southampton", level: 2, color: "#008000", country: "EN", logo: SouthamptonLogo },
+  { id: "en60", name: "Ipswich Town", level: 2, color: "#FFFFFF", country: "EN", logo: IpswichTownLogo },
   // INGLATERRA (EN) - Div 2
-  { id: "en61", name: "Leeds United", level: 1, color: "#FF0000", country: "EN", division: 2 },
-  { id: "en62", name: "Sunderland", level: 1, color: "#0000FF", country: "EN", division: 2 },
-  { id: "en63", name: "Sheffield United", level: 1, color: "#008000", country: "EN", division: 2 },
-  { id: "en64", name: "West Bromwich", level: 1, color: "#FFFFFF", country: "EN", division: 2 },
-  { id: "en65", name: "Norwich City", level: 1, color: "#000000", country: "EN", division: 2 },
-  { id: "en66", name: "Burnley", level: 1, color: "#FFFF00", country: "EN", division: 2 },
-  { id: "en67", name: "Luton Town", level: 1, color: "#800080", country: "EN", division: 2 },
-  { id: "en68", name: "Middlesbrough", level: 1, color: "#FFA500", country: "EN", division: 2 },
-  { id: "en69", name: "Coventry City", level: 1, color: "#FF0000", country: "EN", division: 2 },
-  { id: "en70", name: "Preston North End", level: 1, color: "#0000FF", country: "EN", division: 2 },
-  { id: "en71", name: "Hull City", level: 1, color: "#008000", country: "EN", division: 2 },
-  { id: "en72", name: "Cardiff City", level: 1, color: "#FFFFFF", country: "EN", division: 2 },
-  { id: "en73", name: "Bristol City", level: 1, color: "#000000", country: "EN", division: 2 },
-  { id: "en74", name: "Swansea City", level: 1, color: "#FFFF00", country: "EN", division: 2 },
-  { id: "en75", name: "Watford", level: 1, color: "#800080", country: "EN", division: 2 },
-  { id: "en76", name: "Stoke City", level: 1, color: "#FFA500", country: "EN", division: 2 },
-  { id: "en77", name: "QPR", level: 1, color: "#FF0000", country: "EN", division: 2 },
-  { id: "en78", name: "Blackburn Rovers", level: 1, color: "#0000FF", country: "EN", division: 2 },
-  { id: "en79", name: "Sheffield Wednesday", level: 1, color: "#008000", country: "EN", division: 2 },
-  { id: "en80", name: "Millwall", level: 1, color: "#FFFFFF", country: "EN", division: 2 },
+  { id: "en61", name: "Leeds United", level: 1, color: "#FF0000", country: "EN", division: 2, logo: LeedsLogo },
+  { id: "en62", name: "Sunderland", level: 1, color: "#0000FF", country: "EN", division: 2, logo: SunderlandLogo },
+  { id: "en63", name: "Sheffield United", level: 1, color: "#008000", country: "EN", division: 2, logo: SheffieldLogo },
+  { id: "en64", name: "West Bromwich", level: 1, color: "#FFFFFF", country: "EN", division: 2, logo: WestBromwichLogo },
+  { id: "en65", name: "Norwich City", level: 1, color: "#000000", country: "EN", division: 2, logo: NorwichLogo },
+  { id: "en66", name: "Burnley", level: 1, color: "#FFFF00", country: "EN", division: 2, logo: BurnleyLogo },
+  { id: "en67", name: "Bolton Wanderers", level: 1, color: "#800080", country: "EN", division: 2, logo: BoltonWanderersLogo },
+  { id: "en68", name: "Middlesbrough", level: 1, color: "#FFA500", country: "EN", division: 2, logo: MiddlesbroughLogo },
+  { id: "en69", name: "Coventry City", level: 1, color: "#FF0000", country: "EN", division: 2, logo: CoventryLogo },
+  { id: "en70", name: "Preston North End", level: 1, color: "#0000FF", country: "EN", division: 2, logo: PrestonLogo },
+  { id: "en71", name: "Hull City", level: 1, color: "#008000", country: "EN", division: 2, logo: HullCityLogo },
+  { id: "en72", name: "Cardiff City", level: 1, color: "#FFFFFF", country: "EN", division: 2, logo: CardiffCityLogo },
+  { id: "en73", name: "Bristol City", level: 1, color: "#000000", country: "EN", division: 2, logo: BristolCityLogo },
+  { id: "en74", name: "Swansea City", level: 1, color: "#FFFF00", country: "EN", division: 2, logo: SwanseaCityLogo },
+  { id: "en75", name: "Watford", level: 1, color: "#800080", country: "EN", division: 2, logo: WatfordLogo },
+  { id: "en76", name: "Stoke City", level: 1, color: "#FFA500", country: "EN", division: 2, logo: StokeCityLogo },
+  { id: "en77", name: "QPR", level: 1, color: "#FF0000", country: "EN", division: 2, logo: QPRLogo },
+  { id: "en78", name: "Blackburn Rovers", level: 1, color: "#0000FF", country: "EN", division: 2, logo: BlackburnRoversLogo },
+  { id: "en79", name: "Lincoln City", level: 1, color: "#008000", country: "EN", division: 2, logo: LincolnCityLogo },
+  { id: "en80", name: "Millwall", level: 1, color: "#FFFFFF", country: "EN", division: 2, logo: MillwallLogo },
   // ITÁLIA (IT) - Div 1
   { id: "it81", name: "Inter", level: 4, color: "#FF0000", country: "IT", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/FC_Internazionale_Milano_2021.svg/250px-FC_Internazionale_Milano_2021.svg.png" },
   { id: "it82", name: "Milan", level: 4, color: "#0000FF", country: "IT", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Logo_of_AC_Milan.svg/120px-Logo_of_AC_Milan.svg.png" },
