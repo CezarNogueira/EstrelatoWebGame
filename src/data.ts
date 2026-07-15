@@ -158,6 +158,23 @@ import MalagaLogo from "./assets/teamsES/malaga.png";
 import CastellonLogo from "./assets/teamsES/castellon.png";
 import CordobaLogo from "./assets/teamsES/cordoba.png";
 import LasPalmasLogo from "./assets/teamsES/udlaspalmas.png";
+// Logos dos Times da Alemanha
+import BayerLeverkusenLogo from "./assets/teamsDE/bayerleverkusen.png";
+import BayernMunchenLogo from "./assets/teamsDE/bayernmunchen.png";
+import BmonchengladbachLogo from "./assets/teamsDE/bmonchengladbach.png";
+import BorussiaDortmundLogo from "./assets/teamsDE/borussiadortmund.png";
+import AugsburgoLogo from "./assets/teamsDE/augsburgo.png";
+import FrankfurtLogo from "./assets/teamsDE/eintrachtfrankfurt.png";
+import ElverbergLogo from "./assets/teamsDE/elversberg.png";
+import FreiburgLogo from "./assets/teamsDE/freiburg.png";
+import HoffenheimLogo from "./assets/teamsDE/hoffenheim.png";
+import KolnLogo from "./assets/teamsDE/koln.png";
+import Mainz05Logo from "./assets/teamsDE/mainz05.png";
+import RBLeipzigLogo from "./assets/teamsDE/rbleipzig.png";
+import Schalke04Logo from "./assets/teamsDE/schalke04.png";
+import StuttgartLogo from "./assets/teamsDE/stuttgart.png";
+import UnionBerlinLogo from "./assets/teamsDE/unionberlin.png";
+import WerderBremenLogo from "./assets/teamsDE/werderbremen.png";
 
 
 export const NATIONALITIES = [
@@ -343,28 +360,28 @@ export const TEAMS: Team[] = [
   { id: "es159", name: "Castellón", level: 1, color: "#008000", country: "ES", division: 2, logo: CastellonLogo },
   { id: "es160", name: "Córdoba", level: 1, color: "#FFFFFF", country: "ES", division: 2, logo: CordobaLogo },
   // ALEMANHA (DE) - Div 1
-  { id: "de161", name: "B. de Munique", level: 5, color: "#FF0000", country: "DE", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/FC_Bayern_M%C3%BCnchen_logo_%282024%29.svg/250px-FC_Bayern_M%C3%BCnchen_logo_%282024%29.svg.png" },
-  { id: "de162", name: "B. Dortmund", level: 5, color: "#0000FF", country: "DE", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Borussia_Dortmund_logo.svg/120px-Borussia_Dortmund_logo.svg.png" },
-  { id: "de163", name: "RB Leipzig", level: 4, color: "#008000", country: "DE", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/6/65/RB_Leipzig_2020_Logo.png/250px-RB_Leipzig_2020_Logo.png" },
-  { id: "de164", name: "B. Leverkusen", level: 4, color: "#FFFFFF", country: "DE", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/a/a2/Bayer_Leverkusen.png/250px-Bayer_Leverkusen.png" },
-  { id: "de165", name: "E. Frankfurt", level: 4, color: "#000000", country: "DE", logo: "https://upload.wikimedia.org/wikipedia/commons/2/29/Logo_Eintracht_Frankfurt_1970_-_1977.gif" },
-  { id: "de166", name: "Stuttgart", level: 4, color: "#FFFF00", country: "DE", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/eb/VfB_Stuttgart_1893_Logo.svg/120px-VfB_Stuttgart_1893_Logo.svg.png" },
-  { id: "de167", name: "Wolfsburg", level: 3, color: "#800080", country: "DE", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ac/Wolfsburgskyline2-2.jpg/330px-Wolfsburgskyline2-2.jpg" },
-  { id: "de168", name: "Borussia M.", level: 3, color: "#FFA500", country: "DE", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Borussia_M%C3%B6nchengladbach_logo.svg/120px-Borussia_M%C3%B6nchengladbach_logo.svg.png" },
-  { id: "de169", name: "Freiburg", level: 3, color: "#FF0000", country: "DE", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/53/Freiburg_im_Breisgau_M%C3%BCnster.jpg/250px-Freiburg_im_Breisgau_M%C3%BCnster.jpg" },
-  { id: "de170", name: "W. Bremen", level: 3, color: "#0000FF", country: "DE", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/be/SV-Werder-Bremen-Logo.svg/120px-SV-Werder-Bremen-Logo.svg.png" },
-  { id: "de171", name: "Hoffenheim", level: 3, color: "#008000", country: "DE", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Hoffenheim-waibst-str-web.jpg/250px-Hoffenheim-waibst-str-web.jpg" },
-  { id: "de172", name: "Mainz 05", level: 2, color: "#FFFFFF", country: "DE", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Logo_Mainz_05.svg/250px-Logo_Mainz_05.svg.png" },
-  { id: "de173", name: "Augsburg", level: 2, color: "#000000", country: "DE", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d3/Augsburg_-_Markt.jpg/330px-Augsburg_-_Markt.jpg" },
-  { id: "de174", name: "Union Berlin", level: 2, color: "#FFFF00", country: "DE", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/1._FC_Union_Berlin_Logo.svg/250px-1._FC_Union_Berlin_Logo.svg.png" },
-  { id: "de175", name: "Bochum", level: 2, color: "#800080", country: "DE", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/98/Bochum_080814_023_30.jpg/330px-Bochum_080814_023_30.jpg" },
+  { id: "de161", name: "B. de Munique", level: 5, country: "DE", logo: BayernMunchenLogo },
+  { id: "de162", name: "B. Dortmund", level: 5, country: "DE", logo: BorussiaDortmundLogo },
+  { id: "de163", name: "RB Leipzig", level: 4, color: "#008000", country: "DE", logo: RBLeipzigLogo },
+  { id: "de164", name: "B. Leverkusen", level: 4, country: "DE", logo: BayerLeverkusenLogo },
+  { id: "de165", name: "E. Frankfurt", level: 4, color: "#000000", country: "DE", logo: FrankfurtLogo },
+  { id: "de166", name: "Stuttgart", level: 4, color: "#FFFF00", country: "DE", logo: StuttgartLogo },
+  { id: "de167", name: "Wolfsburg", level: 3, color: "#800080", country: "DE" },
+  { id: "de168", name: "Borussia M.", level: 3, country: "DE", logo: BmonchengladbachLogo },
+  { id: "de169", name: "Freiburg", level: 3, color: "#FF0000", country: "DE", logo: FreiburgLogo },
+  { id: "de170", name: "W. Bremen", level: 3, color: "#0000FF", country: "DE", logo: WerderBremenLogo },
+  { id: "de171", name: "Hoffenheim", level: 3, color: "#008000", country: "DE", logo: HoffenheimLogo },
+  { id: "de172", name: "Mainz 05", level: 2, color: "#FFFFFF", country: "DE", logo: Mainz05Logo },
+  { id: "de173", name: "Augsburg", level: 2, color: "#000000", country: "DE", logo: AugsburgoLogo },
+  { id: "de174", name: "Union Berlin", level: 2, color: "#FFFF00", country: "DE", logo: UnionBerlinLogo },
+  { id: "de175", name: "Bochum", level: 2, color: "#800080", country: "DE" },
   { id: "de176", name: "Heidenheim", level: 2, color: "#FFA500", country: "DE" },
-  { id: "de177", name: "St. Pauli", level: 2, color: "#FF0000", country: "DE", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/Hamburg%2C_Landungsbr%C3%BCcken_--_2016_--_3131-7.jpg/250px-Hamburg%2C_Landungsbr%C3%BCcken_--_2016_--_3131-7.jpg" },
-  { id: "de178", name: "H. Kiel", level: 2, color: "#0000FF", country: "DE", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Holstein_Kiel_Logo.svg/250px-Holstein_Kiel_Logo.svg.png" },
-  { id: "de179", name: "Köln", level: 2, color: "#008000", country: "DE" },
-  { id: "de180", name: "Schalke 04", level: 2, color: "#FFFFFF", country: "DE", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6d/FC_Schalke_04_Logo.svg/250px-FC_Schalke_04_Logo.svg.png" },
+  { id: "de177", name: "St. Pauli", level: 2, color: "#FF0000", country: "DE" },
+  { id: "de178", name: "H. Kiel", level: 2, color: "#0000FF", country: "DE" },
+  { id: "de179", name: "Köln", level: 2, color: "#008000", country: "DE", logo: KolnLogo },
+  { id: "de180", name: "Schalke 04", level: 2, color: "#FFFFFF", country: "DE", logo: Schalke04Logo },
   // ALEMANHA (DE) - Div 2
-  { id: "de181", name: "Hamburg", level: 1, color: "#FF0000", country: "DE", division: 2 },
+  { id: "de181", name: "Hamburg", level: 1, color: "#0004ff", country: "DE", division: 2 },
   { id: "de182", name: "H. Berlin", level: 1, color: "#0000FF", country: "DE", division: 2 },
   { id: "de183", name: "Düsseldorf", level: 1, color: "#008000", country: "DE", division: 2 },
   { id: "de184", name: "Karlsruher", level: 1, color: "#FFFFFF", country: "DE", division: 2 },
@@ -376,14 +393,13 @@ export const TEAMS: Team[] = [
   { id: "de190", name: "Magdeburg", level: 1, color: "#0000FF", country: "DE", division: 2 },
   { id: "de191", name: "Elversberg", level: 1, color: "#008000", country: "DE", division: 2 },
   { id: "de192", name: "E. Braunschweig", level: 1, color: "#FFFFFF", country: "DE", division: 2 },
-  { id: "de193", name: "Schalke 04", level: 1, color: "#000000", country: "DE", division: 2 },
-  { id: "de194", name: "Osnabrück", level: 1, color: "#FFFF00", country: "DE", division: 2 },
-  { id: "de195", name: "W. Wiesbaden", level: 1, color: "#800080", country: "DE", division: 2 },
-  { id: "de196", name: "H. Rostock", level: 1, color: "#FFA500", country: "DE", division: 2 },
-  { id: "de197", name: "P. Münster", level: 1, color: "#FF0000", country: "DE", division: 2 },
-  { id: "de198", name: "J. Regensburg", level: 1, color: "#0000FF", country: "DE", division: 2 },
-  { id: "de199", name: "Ulm", level: 1, color: "#008000", country: "DE", division: 2 },
-  { id: "de200", name: "Darmstadt", level: 1, color: "#FFFFFF", country: "DE", division: 2 },
+  { id: "de193", name: "Osnabrück", level: 1, color: "#FFFF00", country: "DE", division: 2 },
+  { id: "de194", name: "W. Wiesbaden", level: 1, color: "#800080", country: "DE", division: 2 },
+  { id: "de195", name: "H. Rostock", level: 1, color: "#FFA500", country: "DE", division: 2 },
+  { id: "de196", name: "P. Münster", level: 1, color: "#FF0000", country: "DE", division: 2 },
+  { id: "de197", name: "J. Regensburg", level: 1, color: "#0000FF", country: "DE", division: 2 },
+  { id: "de198", name: "Ulm", level: 1, color: "#008000", country: "DE", division: 2 },
+  { id: "de199", name: "Darmstadt", level: 1, color: "#FFFFFF", country: "DE", division: 2 },
   // FRANÇA (FR) - Div 1
   { id: "fr201", name: "PSG", level: 4, color: "#FF0000", country: "FR" },
   { id: "fr202", name: "Marseille", level: 3, color: "#0000FF", country: "FR", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/View_of_Marseille_from_Notre-Dame_de_la_Garde_4.jpg/330px-View_of_Marseille_from_Notre-Dame_de_la_Garde_4.jpg" },
