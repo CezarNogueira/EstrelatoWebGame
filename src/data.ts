@@ -175,7 +175,21 @@ import Schalke04Logo from "./assets/teamsDE/schalke04.png";
 import StuttgartLogo from "./assets/teamsDE/stuttgart.png";
 import UnionBerlinLogo from "./assets/teamsDE/unionberlin.png";
 import WerderBremenLogo from "./assets/teamsDE/werderbremen.png";
-
+// Logos dos Times da França
+import AngersLogo from "./assets/teamsFR/angers.png";
+import LilieLogo from "./assets/teamsFR/lille.png";
+import LorientLogo from "./assets/teamsFR/lorient.png";
+import LyonLogo from "./assets/teamsFR/lyon.png";
+import MonacoLogo from "./assets/teamsFR/monaco.png";
+import NiceLogo from "./assets/teamsFR/niza.png";
+import MarsellaLogo from "./assets/teamsFR/olimpiquemarsella.png";
+import ParisFcLogo from "./assets/teamsFR/parisfc.png";
+import PSGLogo from "./assets/teamsFR/psg.png";
+import LensLogo from "./assets/teamsFR/racinglens.png";
+import RennaisLogo from "./assets/teamsFR/rennais.png";
+import StadebretoisLogo from "./assets/teamsFR/stadebretois.png";
+import ToulouseLogo from "./assets/teamsFR/toulouse.png";
+import AuxerreLogo from "./assets/teamsFR/auxerre.png";
 
 export const NATIONALITIES = [
   "Brasil",
@@ -401,29 +415,29 @@ export const TEAMS: Team[] = [
   { id: "de198", name: "Ulm", level: 1, color: "#008000", country: "DE", division: 2 },
   { id: "de199", name: "Darmstadt", level: 1, color: "#FFFFFF", country: "DE", division: 2 },
   // FRANÇA (FR) - Div 1
-  { id: "fr201", name: "PSG", level: 4, color: "#FF0000", country: "FR" },
-  { id: "fr202", name: "Marseille", level: 3, color: "#0000FF", country: "FR", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/View_of_Marseille_from_Notre-Dame_de_la_Garde_4.jpg/330px-View_of_Marseille_from_Notre-Dame_de_la_Garde_4.jpg" },
-  { id: "fr203", name: "Monaco", level: 3, color: "#008000", country: "FR", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Flag_of_Monaco.svg/120px-Flag_of_Monaco.svg.png" },
-  { id: "fr204", name: "Lille", level: 3, color: "#FFFFFF", country: "FR", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Lille_Collage.jpg/330px-Lille_Collage.jpg" },
-  { id: "fr205", name: "Lyon", level: 3, color: "#000000", country: "FR", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/Lyon-part-dieu-2023.jpg/330px-Lyon-part-dieu-2023.jpg" },
-  { id: "fr206", name: "Rennes", level: 3, color: "#FFFF00", country: "FR" },
-  { id: "fr207", name: "Lens", level: 3, color: "#800080", country: "FR" },
-  { id: "fr208", name: "Nice", level: 2, color: "#FFA500", country: "FR", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Nice_from_Castle_Hill_01.jpg/330px-Nice_from_Castle_Hill_01.jpg" },
-  { id: "fr209", name: "Reims", level: 2, color: "#FF0000", country: "FR", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/fd/Sub%C3%A9_Fountain%2C_Reims%2C_France.jpg/330px-Sub%C3%A9_Fountain%2C_Reims%2C_France.jpg" },
-  { id: "fr210", name: "Strasbourg", level: 2, color: "#0000FF", country: "FR", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ea/Strasbourg_Cathedral.jpg/330px-Strasbourg_Cathedral.jpg" },
-  { id: "fr211", name: "Montpellier", level: 2, color: "#008000", country: "FR", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c4/Montpellier_Place_de_la_Com%C3%A9die.jpg/250px-Montpellier_Place_de_la_Com%C3%A9die.jpg" },
-  { id: "fr212", name: "Toulouse", level: 2, color: "#FFFFFF", country: "FR", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Toulouse_-_vue_du_Vieux_Toulouse_depuis_St_Sernin_06.jpg/250px-Toulouse_-_vue_du_Vieux_Toulouse_depuis_St_Sernin_06.jpg" },
-  { id: "fr213", name: "Nantes", level: 2, color: "#000000", country: "FR", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3c/Panorama_depuis_Butte_Sainte-Anne.jpg/330px-Panorama_depuis_Butte_Sainte-Anne.jpg" },
-  { id: "fr214", name: "Brest", level: 2, color: "#FFFF00", country: "FR" },
-  { id: "fr215", name: "Le Havre", level: 2, color: "#800080", country: "FR", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/81/Panorama_of_Le_Havre%2C_September_2019.jpg/330px-Panorama_of_Le_Havre%2C_September_2019.jpg" },
-  { id: "fr216", name: "Auxerre", level: 1, color: "#FFA500", country: "FR", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Auxerre_-_Yonne_-_1.jpg/250px-Auxerre_-_Yonne_-_1.jpg" },
-  { id: "fr217", name: "Angers", level: 1, color: "#FF0000", country: "FR", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Flag_of_France.svg/40px-Flag_of_France.svg.png" },
-  { id: "fr218", name: "Saint-Étienne", level: 1, color: "#0000FF", country: "FR", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Saint_Etienne_views.png/250px-Saint_Etienne_views.png" },
-  { id: "fr219", name: "Lorient", level: 1, color: "#008000", country: "FR", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/Lorient.jpg/250px-Lorient.jpg" },
-  { id: "fr220", name: "Metz", level: 1, color: "#FFFFFF", country: "FR", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9c/Metz_centre_ville.jpg/330px-Metz_centre_ville.jpg" },
+  { id: "fr201", name: "PSG", level: 5, country: "FR", logo: PSGLogo },
+  { id: "fr202", name: "Marseille", level: 3, country: "FR", logo: MarsellaLogo },
+  { id: "fr203", name: "Monaco", level: 3, color: "#008000", country: "FR", logo: MonacoLogo },
+  { id: "fr204", name: "Lille", level: 3, color: "#FFFFFF", country: "FR", logo: LilieLogo },
+  { id: "fr205", name: "Lyon", level: 3, color: "#000000", country: "FR", logo: LyonLogo },
+  { id: "fr206", name: "St. Rennais", level: 3, color: "#FFFF00", country: "FR", logo: RennaisLogo },
+  { id: "fr207", name: "Lens", level: 3, color: "#800080", country: "FR", logo: LensLogo },
+  { id: "fr208", name: "Nice", level: 2, color: "#FFA500", country: "FR", logo: NiceLogo },
+  { id: "fr209", name: "Reims", level: 2, color: "#FF0000", country: "FR" },
+  { id: "fr210", name: "Strasbourg", level: 2, color: "#0000FF", country: "FR" },
+  { id: "fr211", name: "Montpellier", level: 2, color: "#008000", country: "FR" },
+  { id: "fr212", name: "Toulouse", level: 2, color: "#FFFFFF", country: "FR", logo: ToulouseLogo },
+  { id: "fr213", name: "Nantes", level: 2, color: "#000000", country: "FR" },
+  { id: "fr214", name: "St. Brestois", level: 2, color: "#FFFF00", country: "FR", logo: StadebretoisLogo },
+  { id: "fr215", name: "Le Havre", level: 2, color: "#800080", country: "FR" },
+  { id: "fr216", name: "Auxerre", level: 1, color: "#FFA500", country: "FR", logo: AuxerreLogo },
+  { id: "fr217", name: "Angers", level: 1, color: "#FF0000", country: "FR", logo: AngersLogo },
+  { id: "fr218", name: "Saint-Étienne", level: 1, color: "#0000FF", country: "FR" },
+  { id: "fr219", name: "Lorient", level: 1, color: "#008000", country: "FR", logo: LorientLogo },
+  { id: "fr220", name: "Metz", level: 1, color: "#FFFFFF", country: "FR" },
   // FRANÇA (FR) - Div 2
   { id: "fr221", name: "Bordeaux", level: 1, color: "#FF0000", country: "FR", division: 2 },
-  { id: "fr222", name: "Paris FC", level: 1, color: "#0000FF", country: "FR", division: 2 },
+  { id: "fr222", name: "Paris FC", level: 1, color: "#0000FF", country: "FR", division: 2, logo: ParisFcLogo },
   { id: "fr223", name: "Guingamp", level: 1, color: "#008000", country: "FR", division: 2 },
   { id: "fr224", name: "Amiens", level: 1, color: "#FFFFFF", country: "FR", division: 2 },
   { id: "fr225", name: "Caen", level: 1, color: "#000000", country: "FR", division: 2 },
