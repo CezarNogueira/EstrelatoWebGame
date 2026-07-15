@@ -23,6 +23,23 @@ import GoiasLogo from "./assets/teamsBR/Goias.png";
 import ChapecoenseLogo from "./assets/teamsBR/Chapecoense.png";
 import BragantinoLogo from "./assets/teamsBR/Bragantino.png";
 import CoritibaLogo from "./assets/teamsBR/Coritiba.png";
+import AtleticoGoianienseLogo from "./assets/teamsBR/AtleticoGoianiense.png";
+import AvaiLogo from "./assets/teamsBR/Avai.png";
+import AmericaMineiroLogo from "./assets/teamsBR/AmericaMineiro.png";
+import BotafogoSPLogo from "./assets/teamsBR/BotafogoSP.png";
+import CRBLogo from "./assets/teamsBR/CRB.png";
+import CriciumaLogo from "./assets/teamsBR/Criciuma.png";
+import CuiabaLogo from "./assets/teamsBR/Cuiaba.png";
+import LondrinaLogo from "./assets/teamsBR/Londrina.png";
+import NauticoLogo from "./assets/teamsBR/Nautico.png";
+import NovorizontinoLogo from "./assets/teamsBR/Novorizontino.png";
+import OperarioLogo from "./assets/teamsBR/Operario.png";
+import PontePretaLogo from "./assets/teamsBR/PontePreta.png";
+import SaoBernardoLogo from "./assets/teamsBR/SaoBernardo.png";
+import SportRecifeLogo from "./assets/teamsBR/SportRecife.png";
+import VilaNovaLogo from "./assets/teamsBR/VilaNova.png";
+import AthleticClubLogo from "./assets/teamsBR/Athletic.png";
+import MirassolLogo from "./assets/teamsBR/Mirassol.png";
 // Logos dos times ingleses
 import ArsenalLogo from "./assets/teamsEN/Arsenal.png";
 import ManchesterCityLogo from "./assets/teamsEN/ManchesterCity.png";
@@ -120,47 +137,47 @@ export const NATIONALITIES = [
 
 export const TEAMS: Team[] = [
   // BRASIL (BR) - Div 1
-  { id: "br1", name: "Flamengo", level: 3, country: "BR", logo: FlamengoLogo },
-  { id: "br2", name: "Palmeiras", level: 3, country: "BR", logo: PalmeirasLogo },
+  { id: "br1", name: "Flamengo", level: 4, country: "BR", logo: FlamengoLogo },
+  { id: "br2", name: "Palmeiras", level: 4, country: "BR", logo: PalmeirasLogo },
   { id: "br3", name: "São Paulo", level: 3, country: "BR", logo: SaoPauloLogo },
   { id: "br4", name: "Atlético Mineiro", level: 2, country: "BR", logo: AtleticoMineiroLogo },
   { id: "br5", name: "Fluminense", level: 3, country: "BR", logo: FluminenseLogo },
-  { id: "br6", name: "Internacional", level: 3, country: "BR", logo: InternacionalLogo },
+  { id: "br6", name: "Internacional", level: 2, country: "BR", logo: InternacionalLogo },
   { id: "br7", name: "Grêmio", level: 2, country: "BR", logo: GremioLogo },
   { id: "br8", name: "Corinthians", level: 3, country: "BR", logo: CorinthiansLogo },
   { id: "br9", name: "Cruzeiro", level: 3, country: "BR", logo: CruzeiroLogo },
-  { id: "br10", name: "Botafogo", level: 3, country: "BR", logo: BotafogoLogo },
-  { id: "br11", name: "Athletico Paranaense", level: 2, country: "BR", logo: AthleticoParanaenseLogo },
+  { id: "br10", name: "Botafogo", level: 2, country: "BR", logo: BotafogoLogo },
+  { id: "br11", name: "Athletico Paranaense", level: 3, country: "BR", logo: AthleticoParanaenseLogo },
   { id: "br12", name: "Vasco da Gama", level: 2, country: "BR", logo: VascodaGamaLogo },
   { id: "br13", name: "Bahia", level: 2, country: "BR", logo: BahiaLogo },
   { id: "br14", name: "Santos", level: 2, country: "BR", logo: SantosLogo },
-  { id: "br15", name: "Fortaleza", level: 2, country: "BR", logo: FortalezaLogo },
+  { id: "br15", name: "Remo", level: 1, country: "BR", logo: RemoLogo },
   { id: "br16", name: "Ceará", level: 1, country: "BR", logo: CearaLogo },
-  { id: "br17", name: "Sport Recife", level: 1, color: "#FF0000", country: "BR" },
+  { id: "br17", name: "Mirassol", level: 1, color: "#008000", country: "BR", logo: MirassolLogo },
   { id: "br18", name: "Vitória", level: 1, country: "BR", logo: VitoriaLogo },
-  { id: "br19", name: "Juventude", level: 1, country: "BR", logo: JuventudeLogo },
-  { id: "br20", name: "Goiás", level: 1, country: "BR", logo: GoiasLogo },
+  { id: "br35", name: "Bragantino", level: 3, country: "BR", logo: BragantinoLogo },
+  { id: "br20", name: "Coritiba", level: 1, country: "BR", logo: CoritibaLogo },
   // BRASIL (BR) - Div 2
   { id: "br21", name: "Guarani", level: 1, color: "#FF0000", country: "BR", division: 2 },
-  { id: "br22", name: "Ponte Preta", level: 1, color: "#0000FF", country: "BR", division: 2 },
-  { id: "br23", name: "Vila Nova", level: 1, color: "#008000", country: "BR", division: 2 },
-  { id: "br24", name: "Coritiba", level: 1, country: "BR", division: 2, logo: CoritibaLogo },
-  { id: "br25", name: "América Mineiro", level: 1, color: "#000000", country: "BR", division: 2 },
-  { id: "br26", name: "Criciúma", level: 1, color: "#FFFF00", country: "BR", division: 2 },
-  { id: "br27", name: "Avaí", level: 1, color: "#800080", country: "BR", division: 2 },
+  { id: "br22", name: "Ponte Preta", level: 1, color: "#0000FF", country: "BR", division: 2, logo: PontePretaLogo },
+  { id: "br23", name: "Vila Nova", level: 1, color: "#008000", country: "BR", division: 2, logo: VilaNovaLogo },
+  { id: "br24", name: "Goiás", level: 1, country: "BR", division: 2, logo: GoiasLogo },
+  { id: "br25", name: "América Mineiro", level: 1, color: "#000000", country: "BR", division: 2, logo: AmericaMineiroLogo },
+  { id: "br26", name: "Criciúma", level: 1, color: "#FFFF00", country: "BR", division: 2, logo: CriciumaLogo },
+  { id: "br27", name: "Avaí", level: 1, color: "#800080", country: "BR", division: 2, logo: AvaiLogo },
   { id: "br28", name: "Chapecoense", level: 1, country: "BR", division: 2, logo: ChapecoenseLogo },
-  { id: "br29", name: "CRB", level: 1, color: "#FF0000", country: "BR", division: 2 },
-  { id: "br30", name: "Novorizontino", level: 1, color: "#0000FF", country: "BR", division: 2 },
-  { id: "br31", name: "Mirassol", level: 1, color: "#008000", country: "BR", division: 2 },
-  { id: "br32", name: "Paysandu", level: 1, color: "#FFFFFF", country: "BR", division: 2 },
-  { id: "br33", name: "Remo", level: 1, country: "BR", division: 2, logo: RemoLogo },
-  { id: "br34", name: "Ituano", level: 1, color: "#FFFF00", country: "BR", division: 2 },
-  { id: "br35", name: "Bragantino", level: 1, country: "BR", division: 2, logo: BragantinoLogo },
-  { id: "br36", name: "Operário", level: 1, color: "#FFA500", country: "BR", division: 2 },
-  { id: "br37", name: "Amazonas", level: 1, color: "#FF0000", country: "BR", division: 2 },
-  { id: "br38", name: "Botafogo-SP", level: 1, color: "#0000FF", country: "BR", division: 2 },
-  { id: "br39", name: "Tombense", level: 1, color: "#008000", country: "BR", division: 2 },
-  { id: "br40", name: "Sampaio Corrêa", level: 1, color: "#FFFFFF", country: "BR", division: 2 },
+  { id: "br29", name: "CRB", level: 1, color: "#FF0000", country: "BR", division: 2, logo: CRBLogo },
+  { id: "br30", name: "Novorizontino", level: 1, color: "#0000FF", country: "BR", division: 2, logo: NovorizontinoLogo },
+  { id: "br31", name: "Sport Recife", level: 1, country: "BR", division: 2, logo: SportRecifeLogo },
+  { id: "br32", name: "Athletic Club", level: 1, color: "#FFFFFF", country: "BR", division: 2, logo: AthleticClubLogo },
+  { id: "br33", name: "Fortaleza", level: 2, country: "BR", division: 2, logo: FortalezaLogo },
+  { id: "br34", name: "Cuiaba", level: 1, color: "#FFFF00", country: "BR", division: 2, logo: CuiabaLogo },
+  { id: "br35", name: "Juventude", level: 1, country: "BR", division: 2, logo: JuventudeLogo },
+  { id: "br36", name: "Operário", level: 1, color: "#FFA500", country: "BR", division: 2, logo: OperarioLogo },
+  { id: "br37", name: "Londrina", level: 1, color: "#FF0000", country: "BR", division: 2, logo: LondrinaLogo },
+  { id: "br38", name: "Botafogo-SP", level: 1, color: "#0000FF", country: "BR", division: 2, logo: BotafogoSPLogo },
+  { id: "br39", name: "Nautico", level: 1, color: "#008000", country: "BR", division: 2, logo: NauticoLogo },
+  { id: "br40", name: "São Bernardo", level: 1, color: "#FFFFFF", country: "BR", division: 2, logo: SaoBernardoLogo },
   // INGLATERRA (EN) - Div 1
   { id: "en41", name: "Manchester City", level: 5, color: "#FF0000", country: "EN", logo: ManchesterCityLogo },
   { id: "en42", name: "Arsenal", level: 5, color: "#0000FF", country: "EN", logo: ArsenalLogo },
@@ -250,9 +267,9 @@ export const TEAMS: Team[] = [
   { id: "es121", name: "Real Madrid", level: 5, color: "#FF0000", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/9/98/Real_Madrid.png/120px-Real_Madrid.png" },
   { id: "es122", name: "Barcelona", level: 5, color: "#0000FF", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Aerial_view_of_Barcelona%2C_Spain_%2851227309370%29_edited.jpg/330px-Aerial_view_of_Barcelona%2C_Spain_%2851227309370%29_edited.jpg" },
   { id: "es123", name: "Atlético de Madrid", level: 4, color: "#008000", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/c/c1/Atletico_Madrid_logo.svg/120px-Atletico_Madrid_logo.svg.png" },
-  { id: "es124", name: "Sevilla", level: 4, color: "#FFFFFF", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Collage_de_la_ciudad_de_Sevilla%2C_capital_de_Andaluc%C3%ADa%2C_Espa%C3%B1a.png/330px-Collage_de_la_ciudad_de_Sevilla%2C_capital_de_Andaluc%C3%ADa%2C_Espa%C3%B1a.png" },
-  { id: "es125", name: "Real Sociedad", level: 4, color: "#000000", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/c/c2/Real_Sociedad_de_Futbol.png/120px-Real_Sociedad_de_Futbol.png" },
-  { id: "es126", name: "Villarreal", level: 4, color: "#FFFF00", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Pra%C3%A7a_Vila_Real.jpg/330px-Pra%C3%A7a_Vila_Real.jpg" },
+  { id: "es124", name: "Sevilla", level: 3, color: "#FFFFFF", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Collage_de_la_ciudad_de_Sevilla%2C_capital_de_Andaluc%C3%ADa%2C_Espa%C3%B1a.png/330px-Collage_de_la_ciudad_de_Sevilla%2C_capital_de_Andaluc%C3%ADa%2C_Espa%C3%B1a.png" },
+  { id: "es125", name: "Real Sociedad", level: 3, color: "#000000", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/c/c2/Real_Sociedad_de_Futbol.png/120px-Real_Sociedad_de_Futbol.png" },
+  { id: "es126", name: "Villarreal", level: 3, color: "#FFFF00", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Pra%C3%A7a_Vila_Real.jpg/330px-Pra%C3%A7a_Vila_Real.jpg" },
   { id: "es127", name: "Athletic Bilbao", level: 3, color: "#800080", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/9/90/Athletic_Club_de_Bilbao.png/120px-Athletic_Club_de_Bilbao.png" },
   { id: "es128", name: "Real Betis", level: 3, color: "#FFA500", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/1/17/Real_Betis_Balompi%C3%A9.png/250px-Real_Betis_Balompi%C3%A9.png" },
   { id: "es129", name: "Valencia", level: 3, color: "#FF0000", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Collage_de_la_ciudad_de_Valencia%2C_capital_de_la_Comunidad_Valenciana%2C_Espa%C3%B1a.png/330px-Collage_de_la_ciudad_de_Valencia%2C_capital_de_la_Comunidad_Valenciana%2C_Espa%C3%B1a.png" },
