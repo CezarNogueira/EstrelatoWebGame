@@ -255,11 +255,11 @@ export function Dashboard({
                   <img 
                     src={player.currentTeam.logo} 
                     alt="Logo do time"
-                    className="w-16 h-16 object-cover" 
+                    className="w-full h-full object-cover" 
                   />
                 ) : (
                   <div 
-                    className="w-16 h-16 rounded-full border-4 border-slate-950"
+                    className="w-20 h-20 rounded-full border-4 border-slate-950"
                     style={{ backgroundColor: player.currentTeam.color }}
                   />
                 )}
