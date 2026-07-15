@@ -16,7 +16,7 @@ import FortalezaLogo from "./assets/teams/Fortaleza.png";
 import CearaLogo from "./assets/teams/Ceara.png";
 import VitoriaLogo from "./assets/teams/Vitoria.png";
 import JuventudeLogo from "./assets/teams/Juventude.png";
-import VascoDaGamaLogo from "./assets/teams/VascoDaGama.png";
+import VascodaGamaLogo from "./assets/teams/VascodaGama.png";
 import SantosLogo from "./assets/teams/Santos.png";
 import GoiasLogo from "./assets/teams/Goias.png";
 import ChapecoenseLogo from "./assets/teams/Chapecoense.png";
@@ -48,7 +48,7 @@ export const TEAMS: Team[] = [
   { id: "br9", name: "Cruzeiro", level: 3, color: "#FF0000", country: "BR", logo: CruzeiroLogo },
   { id: "br10", name: "Botafogo", level: 3, color: "#0000FF", country: "BR", logo: BotafogoLogo },
   { id: "br11", name: "Athletico Paranaense", level: 2, color: "#008000", country: "BR", logo: AthleticoParanaenseLogo },
-  { id: "br12", name: "Vasco da Gama", level: 2, color: "#FFFFFF", country: "BR", logo: VascoDaGamaLogo },
+  { id: "br12", name: "Vasco da Gama", level: 2, color: "#FFFFFF", country: "BR", logo: VascodaGamaLogo },
   { id: "br13", name: "Bahia", level: 2, color: "#000000", country: "BR", logo: BahiaLogo },
   { id: "br14", name: "Santos", level: 2, color: "#FFFF00", country: "BR", logo: SantosLogo },
   { id: "br15", name: "Fortaleza", level: 2, color: "#800080", country: "BR", logo: FortalezaLogo },
