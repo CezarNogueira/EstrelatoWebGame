@@ -64,7 +64,46 @@ import PrestonLogo from "./assets/teamsEN/Preston.png";
 import WatfordLogo from "./assets/teamsEN/Watford.png";
 import SheffieldLogo from "./assets/teamsEN/Sheffield.png";
 import SwanseaCityLogo from "./assets/teamsEN/SwanseaCity.png";
-
+// Logos dos times italianos
+import AscoliLogo from "./assets/teamsIT/Ascoli.png";
+import AtalantaLogo from "./assets/teamsIT/Atalanta.png";
+import AvellinoLogo from "./assets/teamsIT/Avellino.png";
+import BariLogo from "./assets/teamsIT/Bari.png";
+import BolognaLogo from "./assets/teamsIT/Bologna.png";
+import CagliariLogo from "./assets/teamsIT/Cagliari.png";
+import CarrareseLogo from "./assets/teamsIT/Carrarese.png";
+import CatanzaroLogo from "./assets/teamsIT/Catanzaro.png";
+import CesenaLogo from "./assets/teamsIT/Cesena.png";
+import ComoLogo from "./assets/teamsIT/Como.png";
+import EmpoliLogo from "./assets/teamsIT/Empoli.png";
+import FiorentinaLogo from "./assets/teamsIT/Fiorentina.png";
+import FrosinoneLogo from "./assets/teamsIT/Frosinone.png";
+import GenoaLogo from "./assets/teamsIT/Genoa.png";
+import InterLogo from "./assets/teamsIT/Inter.png";
+import JuventusLogo from "./assets/teamsIT/Juventus.png";
+import JuveStabiaLogo from "./assets/teamsIT/JuveStabia.png";
+import LazioLogo from "./assets/teamsIT/Lazio.png";
+import LecceLogo from "./assets/teamsIT/Lecce.png";
+import MantovaLogo from "./assets/teamsIT/Mantova.png";
+import MilanLogo from "./assets/teamsIT/Milan.png";
+import ModenaLogo from "./assets/teamsIT/Modena.png";
+import MonzaLogo from "./assets/teamsIT/Monza.png";
+import NapoliLogo from "./assets/teamsIT/Napoli.png";
+import PadovaLogo from "./assets/teamsIT/Padova.png";
+import PalermoLogo from "./assets/teamsIT/Palermo.png";
+import ParmaLogo from "./assets/teamsIT/Parma.png";
+import PescaraLogo from "./assets/teamsIT/Pescara.png";
+import ReggianaLogo from "./assets/teamsIT/Reggiana.png";
+import RomaLogo from "./assets/teamsIT/Roma.png";
+import SampdoriaLogo from "./assets/teamsIT/Sampdoria.png";
+import SassuoloLogo from "./assets/teamsIT/Sassuolo.png";
+import SpeziaLogo from "./assets/teamsIT/Spezia.png";
+import SudtirolLogo from "./assets/teamsIT/Sudtirol.png";
+import TorinoLogo from "./assets/teamsIT/Torino.png";
+import UdineseLogo from "./assets/teamsIT/Udinese.png";
+import VeneziaLogo from "./assets/teamsIT/Venezia.png";
+import VirtusEntellaLogo from "./assets/teamsIT/VirtusEntella.png";
+import CremoneseLogo from "./assets/teamsIT/Cremonese.png";
 
 export const NATIONALITIES = [
   "Brasil",
@@ -164,48 +203,49 @@ export const TEAMS: Team[] = [
   { id: "en78", name: "Blackburn Rovers", level: 1, color: "#0000FF", country: "EN", division: 2, logo: BlackburnRoversLogo },
   { id: "en79", name: "Lincoln City", level: 1, color: "#008000", country: "EN", division: 2, logo: LincolnCityLogo },
   { id: "en80", name: "Millwall", level: 1, color: "#FFFFFF", country: "EN", division: 2, logo: MillwallLogo },
-  // ITÁLIA (IT) - Div 1
-  { id: "it81", name: "Inter", level: 4, color: "#FF0000", country: "IT", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/FC_Internazionale_Milano_2021.svg/250px-FC_Internazionale_Milano_2021.svg.png" },
-  { id: "it82", name: "Milan", level: 4, color: "#0000FF", country: "IT", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d0/Logo_of_AC_Milan.svg/120px-Logo_of_AC_Milan.svg.png" },
-  { id: "it83", name: "Juventus", level: 4, color: "#008000", country: "IT", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/Juventus_FC_-_logo_black_%28Italy%2C_2020%29.svg/250px-Juventus_FC_-_logo_black_%28Italy%2C_2020%29.svg.png" },
-  { id: "it84", name: "Napoli", level: 4, color: "#FFFFFF", country: "IT", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Napoli-Montaggio.jpg/330px-Napoli-Montaggio.jpg" },
-  { id: "it85", name: "Roma", level: 4, color: "#000000", country: "IT", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0b/Rome_skyline_panorama.jpg/330px-Rome_skyline_panorama.jpg" },
-  { id: "it86", name: "Lazio", level: 3, color: "#FFFF00", country: "IT", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Flag_of_Lazio.svg/120px-Flag_of_Lazio.svg.png" },
-  { id: "it87", name: "Atalanta", level: 3, color: "#800080", country: "IT", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Parque_Mata_Atl%C3%A2ntica.jpg/330px-Parque_Mata_Atl%C3%A2ntica.jpg" },
-  { id: "it88", name: "Fiorentina", level: 3, color: "#FFA500", country: "IT", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/ACF_Fiorentina_-_logo_%28Italy%2C_2022%29.svg/250px-ACF_Fiorentina_-_logo_%28Italy%2C_2022%29.svg.png" },
-  { id: "it89", name: "Torino", level: 3, color: "#FF0000", country: "IT", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a9/Turin_Montage.png/330px-Turin_Montage.png" },
-  { id: "it90", name: "Bologna", level: 3, color: "#0000FF", country: "IT", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/Bologna_F.C._1909_logo.svg/120px-Bologna_F.C._1909_logo.svg.png" },
-  { id: "it91", name: "Sassuolo", level: 3, color: "#008000", country: "IT", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Sassuolo_Via_Menotti.jpg/330px-Sassuolo_Via_Menotti.jpg" },
-  { id: "it92", name: "Genoa", level: 3, color: "#FFFFFF", country: "IT", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/86/Genova_panorama_centro_storico_da_villetta_Di_Negro.jpg/330px-Genova_panorama_centro_storico_da_villetta_Di_Negro.jpg" },
-  { id: "it93", name: "Udinese", level: 3, color: "#000000", country: "IT", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/1/19/Udinese_Calcio.png/120px-Udinese_Calcio.png" },
-  { id: "it94", name: "Verona", level: 2, color: "#FFFF00", country: "IT", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Collage_Verona.jpg/330px-Collage_Verona.jpg" },
-  { id: "it95", name: "Empoli", level: 2, color: "#800080", country: "IT", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Empoli_central_square.jpg/330px-Empoli_central_square.jpg" },
-  { id: "it96", name: "Monza", level: 2, color: "#FFA500", country: "IT", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9e/Reggia_di_Monza.jpg/330px-Reggia_di_Monza.jpg" },
-  { id: "it97", name: "Lecce", level: 2, color: "#FF0000", country: "IT", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/a6/Square_in_Lecce.jpg/330px-Square_in_Lecce.jpg" },
-  { id: "it98", name: "Cagliari", level: 2, color: "#0000FF", country: "IT", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Collage_Cagliari.jpg/330px-Collage_Cagliari.jpg" },
-  { id: "it99", name: "Como", level: 2, color: "#008000", country: "IT", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/73/BrunateComo1.jpg/330px-BrunateComo1.jpg" },
-  { id: "it100", name: "Venezia", level: 2, color: "#FFFFFF", country: "IT", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4f/Venezia_aerial_view.jpg/330px-Venezia_aerial_view.jpg" },
+ // ITÁLIA (IT) - Div 1
+  { id: "it81", name: "Inter", level: 4, color: "#FF0000", country: "IT", logo: InterLogo },
+  { id: "it82", name: "Milan", level: 4, color: "#0000FF", country: "IT", logo: MilanLogo },
+  { id: "it83", name: "Juventus", level: 4, color: "#008000", country: "IT", logo: JuventusLogo },
+  { id: "it84", name: "Napoli", level: 4, color: "#FFFFFF", country: "IT", logo: NapoliLogo },
+  { id: "it85", name: "Roma", level: 4, color: "#000000", country: "IT", logo: RomaLogo },
+  { id: "it86", name: "Lazio", level: 3, color: "#FFFF00", country: "IT", logo: LazioLogo },
+  { id: "it87", name: "Atalanta", level: 3, color: "#800080", country: "IT", logo: AtalantaLogo },
+  { id: "it88", name: "Fiorentina", level: 3, color: "#FFA500", country: "IT", logo: FiorentinaLogo },
+  { id: "it89", name: "Torino", level: 3, color: "#FF0000", country: "IT", logo: TorinoLogo },
+  { id: "it90", name: "Bologna", level: 3, color: "#0000FF", country: "IT", logo: BolognaLogo },
+  { id: "it91", name: "Sassuolo", level: 3, color: "#008000", country: "IT", logo: SassuoloLogo },
+  { id: "it92", name: "Genoa", level: 3, color: "#FFFFFF", country: "IT", logo: GenoaLogo },
+  { id: "it93", name: "Udinese", level: 3, color: "#000000", country: "IT", logo: UdineseLogo },
+  { id: "it94", name: "Verona", level: 2, color: "#FFFF00", country: "IT" }, // Sem import de logo
+  { id: "it95", name: "Empoli", level: 2, color: "#800080", country: "IT", logo: EmpoliLogo },
+  { id: "it96", name: "Monza", level: 2, color: "#FFA500", country: "IT", logo: MonzaLogo },
+  { id: "it97", name: "Lecce", level: 2, color: "#FF0000", country: "IT", logo: LecceLogo },
+  { id: "it98", name: "Cagliari", level: 2, color: "#0000FF", country: "IT", logo: CagliariLogo },
+  { id: "it99", name: "Como", level: 2, color: "#008000", country: "IT", logo: ComoLogo },
+  { id: "it100", name: "Venezia", level: 2, color: "#FFFFFF", country: "IT", logo: VeneziaLogo },
+  
   // ITÁLIA (IT) - Div 2
-  { id: "it101", name: "Sampdoria", level: 1, color: "#FF0000", country: "IT", division: 2 },
-  { id: "it102", name: "Palermo", level: 1, color: "#0000FF", country: "IT", division: 2 },
-  { id: "it103", name: "Bari", level: 1, color: "#008000", country: "IT", division: 2 },
-  { id: "it104", name: "Brescia", level: 1, color: "#FFFFFF", country: "IT", division: 2 },
-  { id: "it105", name: "Cremonese", level: 1, color: "#000000", country: "IT", division: 2 },
-  { id: "it106", name: "Frosinone", level: 1, color: "#FFFF00", country: "IT", division: 2 },
-  { id: "it107", name: "Salernitana", level: 1, color: "#800080", country: "IT", division: 2 },
-  { id: "it108", name: "Pisa", level: 1, color: "#FFA500", country: "IT", division: 2 },
-  { id: "it109", name: "Catanzaro", level: 1, color: "#FF0000", country: "IT", division: 2 },
-  { id: "it110", name: "Modena", level: 1, color: "#0000FF", country: "IT", division: 2 },
-  { id: "it111", name: "Reggiana", level: 1, color: "#008000", country: "IT", division: 2 },
-  { id: "it112", name: "Sudtirol", level: 1, color: "#FFFFFF", country: "IT", division: 2 },
-  { id: "it113", name: "Cosenza", level: 1, color: "#000000", country: "IT", division: 2 },
-  { id: "it114", name: "Spezia", level: 1, color: "#FFFF00", country: "IT", division: 2 },
-  { id: "it115", name: "Cittadella", level: 1, color: "#800080", country: "IT", division: 2 },
-  { id: "it116", name: "Ternana", level: 1, color: "#FFA500", country: "IT", division: 2 },
-  { id: "it117", name: "Ascoli", level: 1, color: "#FF0000", country: "IT", division: 2 },
-  { id: "it118", name: "Feralpisalò", level: 1, color: "#0000FF", country: "IT", division: 2 },
-  { id: "it119", name: "Lecco", level: 1, color: "#008000", country: "IT", division: 2 },
-  { id: "it120", name: "Mantova", level: 1, color: "#FFFFFF", country: "IT", division: 2 },
+  { id: "it101", name: "Sampdoria", level: 1, color: "#FF0000", country: "IT", division: 2, logo: SampdoriaLogo },
+  { id: "it102", name: "Palermo", level: 1, color: "#0000FF", country: "IT", division: 2, logo: PalermoLogo },
+  { id: "it103", name: "Bari", level: 1, color: "#008000", country: "IT", division: 2, logo: BariLogo },
+  { id: "it104", name: "Avellino", level: 1, color: "#FFFFFF", country: "IT", division: 2, logo: AvellinoLogo },
+  { id: "it105", name: "Cremonese", level: 1, color: "#000000", country: "IT", division: 2, logo: CremoneseLogo },
+  { id: "it106", name: "Frosinone", level: 1, color: "#FFFF00", country: "IT", division: 2, logo: FrosinoneLogo },
+  { id: "it107", name: "Cesena", level: 1, color: "#800080", country: "IT", division: 2, logo: CesenaLogo },
+  { id: "it108", name: "JuveStabia", level: 1, color: "#FFA500", country: "IT", division: 2, logo: JuveStabiaLogo },
+  { id: "it109", name: "Catanzaro", level: 1, color: "#FF0000", country: "IT", division: 2, logo: CatanzaroLogo },
+  { id: "it110", name: "Modena", level: 1, color: "#0000FF", country: "IT", division: 2, logo: ModenaLogo },
+  { id: "it111", name: "Reggiana", level: 1, color: "#008000", country: "IT", division: 2, logo: ReggianaLogo },
+  { id: "it112", name: "Sudtirol", level: 1, color: "#FFFFFF", country: "IT", division: 2, logo: SudtirolLogo },
+  { id: "it113", name: "Padova", level: 1, color: "#000000", country: "IT", division: 2, logo: PadovaLogo },
+  { id: "it114", name: "Spezia", level: 1, color: "#FFFF00", country: "IT", division: 2, logo: SpeziaLogo },
+  { id: "it115", name: "Parma", level: 1, color: "#800080", country: "IT", division: 2, logo: ParmaLogo },
+  { id: "it116", name: "Virtus Entella", level: 1, color: "#FFA500", country: "IT", division: 2, logo: VirtusEntellaLogo },
+  { id: "it117", name: "Ascoli", level: 1, color: "#FF0000", country: "IT", division: 2, logo: AscoliLogo },
+  { id: "it118", name: "Pescara", level: 1, color: "#0000FF", country: "IT", division: 2, logo: PescaraLogo },
+  { id: "it119", name: "Carrarese", level: 1, color: "#008000", country: "IT", division: 2, logo: CarrareseLogo },
+  { id: "it120", name: "Mantova", level: 1, color: "#FFFFFF", country: "IT", division: 2, logo: MantovaLogo },
   // ESPANHA (ES) - Div 1
   { id: "es121", name: "Real Madrid", level: 5, color: "#FF0000", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/9/98/Real_Madrid.png/120px-Real_Madrid.png" },
   { id: "es122", name: "Barcelona", level: 5, color: "#0000FF", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Aerial_view_of_Barcelona%2C_Spain_%2851227309370%29_edited.jpg/330px-Aerial_view_of_Barcelona%2C_Spain_%2851227309370%29_edited.jpg" },
