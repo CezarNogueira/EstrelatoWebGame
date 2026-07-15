@@ -1,4 +1,5 @@
 import { Team, FamilyMember, Friend, Relationships } from "./types";
+// Logos dos times brasileiros
 import AthleticoParanaenseLogo from "./assets/teamsBR/AthleticoParanaense.png";
 import FlamengoLogo from "./assets/teamsBR/Flamengo.png";
 import PalmeirasLogo from "./assets/teamsBR/Palmeiras.png";
@@ -22,6 +23,7 @@ import GoiasLogo from "./assets/teamsBR/Goias.png";
 import ChapecoenseLogo from "./assets/teamsBR/Chapecoense.png";
 import BragantinoLogo from "./assets/teamsBR/Bragantino.png";
 import CoritibaLogo from "./assets/teamsBR/Coritiba.png";
+// Logos dos times ingleses
 import ArsenalLogo from "./assets/teamsEN/Arsenal.png";
 import ManchesterCityLogo from "./assets/teamsEN/ManchesterCity.png";
 import LiverpoolLogo from "./assets/teamsEN/Liverpool.png";
