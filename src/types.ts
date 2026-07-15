@@ -11,7 +11,7 @@ export type Team = {
   id: string;
   name: string;
   level: number; // 1 to 5 stars
-  color: string;
+  color?: string;
   country: string;
   division?: number;
   logo?: string; // URL do escudo do time (opcional)
