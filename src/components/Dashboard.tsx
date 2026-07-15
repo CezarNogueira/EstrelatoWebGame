@@ -252,9 +252,16 @@ export function Dashboard({
                 title={player.currentTeam.name}
               >
                 {player.currentTeam.logo ? (
-                  <img src={player.currentTeam.logo} alt={player.currentTeam.name} className="w-full h-full object-cover p-0.5" />
+                  <img 
+                    src={player.currentTeam.logo} 
+                    alt="Logo do time"
+                    className="w-16 h-16 object-cover" 
+                  />
                 ) : (
-                  <div className="w-full h-full" style={{ backgroundColor: player.currentTeam.color }} />
+                  <div 
+                    className="w-16 h-16 rounded-full border-4 border-slate-950"
+                    style={{ backgroundColor: player.currentTeam.color }}
+                  />
                 )}
               </div>
             </div>
