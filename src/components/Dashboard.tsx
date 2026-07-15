@@ -248,18 +248,18 @@ export function Dashboard({
                 <User className="w-12 h-12 text-slate-600" />
               </div>
               <div 
-                className="absolute -bottom-2 -right-2 w-10 h-10 rounded-full shadow-md overflow-hidden flex items-center justify-center"
+                className="absolute -bottom-2 -right-2 w-8 h-auto shadow-md overflow-hidden flex items-center justify-center"
                 title={player.currentTeam.name}
               >
                 {player.currentTeam.logo ? (
                   <img 
                     src={player.currentTeam.logo} 
                     alt="Logo do time"
-                    className="w-24 h-auto object-contain" 
+                    className="w-16 h-auto rounded-none object-contain" 
                   />
                 ) : (
                   <div 
-                    className="w-24 h-auto rounded-full border-4 border-slate-950"
+                    className="w-16 h-auto rounded-full border-4 border-slate-950"
                     style={{ backgroundColor: player.currentTeam.color }}
                   />
                 )}

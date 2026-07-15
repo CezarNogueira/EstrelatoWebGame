@@ -35,10 +35,19 @@ export function ContractOffersModal({
                 className="w-full flex items-center justify-between gap-4 p-4 rounded-2xl border border-slate-800 bg-slate-950 hover:border-emerald-500/50 hover:bg-slate-800/50 transition-all text-left"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div
-                    className="w-10 h-10 rounded-full border-2 border-slate-700 shrink-0"
-                    style={{ backgroundColor: team.color }}
-                  />
+                  {team.logo ? (
+                    <img 
+                      src={team.logo} 
+                      alt={`Logo do ${team.name}`}
+                      className="w-10 h-10 rounded-none object-contain shrink-0" 
+                    />
+                  ) : (
+                    <div
+                      className="w-10 h-10 rounded-full border-2 border-slate-700 shrink-0"
+                      style={{ backgroundColor: team.color }}
+                    />
+                  )}
+
                   <div className="min-w-0">
                     <div className="font-bold text-slate-100 truncate">{team.name}</div>
                     <div className="text-xs text-slate-500">
