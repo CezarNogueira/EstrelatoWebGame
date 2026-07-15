@@ -21,6 +21,7 @@ import SantosLogo from "./assets/teams/Santos.png";
 import GoiasLogo from "./assets/teams/Goias.png";
 import ChapecoenseLogo from "./assets/teams/Chapecoense.png";
 import BragantinoLogo from "./assets/teams/Bragantino.png";
+import CoritibaLogo from "./assets/teams/Coritiba.png";
 
 export const NATIONALITIES = [
   "Brasil",
@@ -61,7 +62,7 @@ export const TEAMS: Team[] = [
   { id: "br21", name: "Guarani", level: 1, color: "#FF0000", country: "BR", division: 2 },
   { id: "br22", name: "Ponte Preta", level: 1, color: "#0000FF", country: "BR", division: 2 },
   { id: "br23", name: "Vila Nova", level: 1, color: "#008000", country: "BR", division: 2 },
-  { id: "br24", name: "Coritiba", level: 1, color: "#FFFFFF", country: "BR", division: 2 },
+  { id: "br24", name: "Coritiba", level: 1, color: "#FFFFFF", country: "BR", division: 2, logo: CoritibaLogo },
   { id: "br25", name: "América Mineiro", level: 1, color: "#000000", country: "BR", division: 2 },
   { id: "br26", name: "Criciúma", level: 1, color: "#FFFF00", country: "BR", division: 2 },
   { id: "br27", name: "Avaí", level: 1, color: "#800080", country: "BR", division: 2 },
