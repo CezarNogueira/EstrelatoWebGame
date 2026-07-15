@@ -122,6 +122,43 @@ import VeneziaLogo from "./assets/teamsIT/Venezia.png";
 import VirtusEntellaLogo from "./assets/teamsIT/VirtusEntella.png";
 import CremoneseLogo from "./assets/teamsIT/Cremonese.png";
 import VeronaLogo from "./assets/teamsIT/Verona.png";
+// Logos dos times espanhois
+import AlavesLogo from "./assets/teamsES/alaves.png";
+import RealMadridLogo from "./assets/teamsES/realmadrid.png";
+import BarcelonaLogo from "./assets/teamsES/barcelona.png";
+import AtDeMadridLogo from "./assets/teamsES/atlmadrid.png";
+import SevillaLogo from "./assets/teamsES/sevilla.png";
+import RealSociedadLogo from "./assets/teamsES/realsociedad.png";
+import VillarrealLogo from "./assets/teamsES/villarreal.png";
+import AtBilbaoLogo from "./assets/teamsES/atbilbao.png";
+import RealBetisLogo from "./assets/teamsES/realbetis.png";
+import ValenciaLogo from "./assets/teamsES/valencia.png";
+import OsasunaLogo from "./assets/teamsES/osasuna.png";
+import CDeVigoLogo from "./assets/teamsES/cdevigo.png";
+import GetafeLogo from "./assets/teamsES/getafe.png";
+import MallorcaLogo from "./assets/teamsES/mallorca.png";
+import RVallecanoLogo from "./assets/teamsES/rvallecano.png";
+import GironaLogo from "./assets/teamsES/girona.png";
+import LeganesLogo from "./assets/teamsES/leganes.png";
+import ValladolidLogo from "./assets/teamsES/valladolid.png";
+import EspanyolLogo from "./assets/teamsES/espanyol.png";
+import RealZaragozaLogo from "./assets/teamsES/realzaragoza.png";
+import RealOviedoLogo from "./assets/teamsES/realoviedo.png";
+import TenerifeLogo from "./assets/teamsES/tenerife.png";
+import LevanteLogo from "./assets/teamsES/levante.png";
+import CadizLogo from "./assets/teamsES/cadiz.png";
+import AlmeriaLogo from "./assets/teamsES/almeria.png";
+import GranadaLogo from "./assets/teamsES/granada.png";
+import EibarLogo from "./assets/teamsES/eibar.png";
+import RSantanderLogo from "./assets/teamsES/rsantander.png";
+import ElcheLogo from "./assets/teamsES/elche.png";
+import BurgosLogo from "./assets/teamsES/burgos.png";
+import AlbaceteLogo from "./assets/teamsES/albacete.png";
+import DLaCorunaLogo from "./assets/teamsES/dlacoruna.png";
+import MalagaLogo from "./assets/teamsES/malaga.png";
+import CastellonLogo from "./assets/teamsES/castellon.png";
+import CordobaLogo from "./assets/teamsES/cordoba.png";
+
 
 export const NATIONALITIES = [
   "Brasil",
@@ -264,47 +301,48 @@ export const TEAMS: Team[] = [
   { id: "it119", name: "Carrarese", level: 1, color: "#008000", country: "IT", division: 2, logo: CarrareseLogo },
   { id: "it120", name: "Mantova", level: 1, color: "#FFFFFF", country: "IT", division: 2, logo: MantovaLogo },
   // ESPANHA (ES) - Div 1
-  { id: "es121", name: "Real Madrid", level: 5, color: "#FF0000", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/9/98/Real_Madrid.png/120px-Real_Madrid.png" },
-  { id: "es122", name: "Barcelona", level: 5, color: "#0000FF", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5d/Aerial_view_of_Barcelona%2C_Spain_%2851227309370%29_edited.jpg/330px-Aerial_view_of_Barcelona%2C_Spain_%2851227309370%29_edited.jpg" },
-  { id: "es123", name: "At. de Madrid", level: 4, color: "#008000", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/c/c1/Atletico_Madrid_logo.svg/120px-Atletico_Madrid_logo.svg.png" },
-  { id: "es124", name: "Sevilla", level: 3, color: "#FFFFFF", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Collage_de_la_ciudad_de_Sevilla%2C_capital_de_Andaluc%C3%ADa%2C_Espa%C3%B1a.png/330px-Collage_de_la_ciudad_de_Sevilla%2C_capital_de_Andaluc%C3%ADa%2C_Espa%C3%B1a.png" },
-  { id: "es125", name: "Real Sociedad", level: 3, color: "#000000", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/c/c2/Real_Sociedad_de_Futbol.png/120px-Real_Sociedad_de_Futbol.png" },
-  { id: "es126", name: "Villarreal", level: 3, color: "#FFFF00", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e5/Pra%C3%A7a_Vila_Real.jpg/330px-Pra%C3%A7a_Vila_Real.jpg" },
-  { id: "es127", name: "At. Bilbao", level: 3, color: "#800080", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/9/90/Athletic_Club_de_Bilbao.png/120px-Athletic_Club_de_Bilbao.png" },
-  { id: "es128", name: "Real Betis", level: 3, color: "#FFA500", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/1/17/Real_Betis_Balompi%C3%A9.png/250px-Real_Betis_Balompi%C3%A9.png" },
-  { id: "es129", name: "Valencia", level: 3, color: "#FF0000", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e3/Collage_de_la_ciudad_de_Valencia%2C_capital_de_la_Comunidad_Valenciana%2C_Espa%C3%B1a.png/330px-Collage_de_la_ciudad_de_Valencia%2C_capital_de_la_Comunidad_Valenciana%2C_Espa%C3%B1a.png" },
-  { id: "es130", name: "Osasuna", level: 3, color: "#0000FF", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/3/39/CA_Osasuna.png/120px-CA_Osasuna.png" },
-  { id: "es131", name: "C. de Vigo", level: 3, color: "#008000", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/3/3d/Celta_de_Vigo.png/250px-Celta_de_Vigo.png" },
-  { id: "es132", name: "Getafe", level: 3, color: "#FFFFFF", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/2/27/Cerro-angeles1.jpg/330px-Cerro-angeles1.jpg" },
-  { id: "es133", name: "Mallorca", level: 2, color: "#000000", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Can_Picafort_beach.jpg/250px-Can_Picafort_beach.jpg" },
-  { id: "es134", name: "Alavés", level: 2, color: "#FFFF00", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/en/thumb/f/f8/Deportivo_Alaves_logo_%282020%29.svg/250px-Deportivo_Alaves_logo_%282020%29.svg.png" },
-  { id: "es135", name: "Las Palmas", level: 2, color: "#800080", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/ba/Collage_Las_Palmas_de_Gran_Canaria.jpg/330px-Collage_Las_Palmas_de_Gran_Canaria.jpg" },
-  { id: "es136", name: "R. Vallecano", level: 2, color: "#FFA500", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/pt/b/b2/Rayo_Vallecano_de_Madrid.png" },
-  { id: "es137", name: "Girona", level: 2, color: "#FF0000", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Girona_-_Riu_Onyar_3_exposed.jpg/330px-Girona_-_Riu_Onyar_3_exposed.jpg" },
-  { id: "es138", name: "Leganés", level: 2, color: "#0000FF", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5f/Leganes-panoramica-040711.jpg/330px-Leganes-panoramica-040711.jpg" },
-  { id: "es139", name: "Valladolid", level: 2, color: "#008000", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Ciudad_de_Valladolid%2C_desde_el_aire.jpg/330px-Ciudad_de_Valladolid%2C_desde_el_aire.jpg" },
-  { id: "es140", name: "Espanyol", level: 2, color: "#FFFFFF", country: "ES", logo: "https://upload.wikimedia.org/wikipedia/pt/thumb/2/29/Rcd_espanyol_logo.png/120px-Rcd_espanyol_logo.png" },
+  { id: "es121", name: "Real Madrid", level: 5, color: "#FF0000", country: "ES", logo: RealMadridLogo },
+  { id: "es122", name: "Barcelona", level: 5, color: "#0000FF", country: "ES", logo: BarcelonaLogo },
+  { id: "es123", name: "At. de Madrid", level: 4, color: "#008000", country: "ES", logo: AtDeMadridLogo },
+  { id: "es124", name: "Sevilla", level: 3, color: "#FFFFFF", country: "ES", logo: SevillaLogo },
+  { id: "es125", name: "Real Sociedad", level: 2, color: "#000000", country: "ES", logo: RealSociedadLogo },
+  { id: "es126", name: "Villarreal", level: 3, color: "#FFFF00", country: "ES", logo: VillarrealLogo },
+  { id: "es127", name: "At. Bilbao", level: 3, color: "#800080", country: "ES", logo: AtBilbaoLogo },
+  { id: "es128", name: "Real Betis", level: 3, color: "#FFA500", country: "ES", logo: RealBetisLogo },
+  { id: "es129", name: "Valencia", level: 3, color: "#FF0000", country: "ES", logo: ValenciaLogo },
+  { id: "es130", name: "Osasuna", level: 3, color: "#0000FF", country: "ES", logo: OsasunaLogo },
+  { id: "es131", name: "C. de Vigo", level: 3, color: "#008000", country: "ES", logo: CDeVigoLogo },
+  { id: "es132", name: "Getafe", level: 3, color: "#FFFFFF", country: "ES", logo: GetafeLogo },
+  { id: "es133", name: "Mallorca", level: 2, color: "#000000", country: "ES", logo: MallorcaLogo },
+  { id: "es134", name: "Alavés", level: 2, color: "#FFFF00", country: "ES", logo: AlavesLogo },
+  { id: "es135", name: "Las Palmas", level: 2, color: "#eeff00", country: "ES" },
+  { id: "es136", name: "R. Vallecano", level: 2, color: "#FFA500", country: "ES", logo: RVallecanoLogo },
+  { id: "es137", name: "Girona", level: 2, color: "#FF0000", country: "ES", logo: GironaLogo },
+  { id: "es138", name: "Leganés", level: 2, color: "#0000FF", country: "ES", logo: LeganesLogo },
+  { id: "es139", name: "Valladolid", level: 2, color: "#008000", country: "ES", logo: ValladolidLogo },
+  { id: "es140", name: "Espanyol", level: 2, color: "#FFFFFF", country: "ES", logo: EspanyolLogo },
+
   // ESPANHA (ES) - Div 2
-  { id: "es141", name: "Real Zaragoza", level: 1, color: "#FF0000", country: "ES", division: 2 },
+  { id: "es141", name: "Real Zaragoza", level: 1, color: "#FF0000", country: "ES", division: 2, logo: RealZaragozaLogo },
   { id: "es142", name: "S. Gijón", level: 1, color: "#0000FF", country: "ES", division: 2 },
-  { id: "es143", name: "Real Oviedo", level: 1, color: "#008000", country: "ES", division: 2 },
-  { id: "es144", name: "Tenerife", level: 1, color: "#FFFFFF", country: "ES", division: 2 },
-  { id: "es145", name: "Levante", level: 1, color: "#000000", country: "ES", division: 2 },
-  { id: "es146", name: "Cadiz", level: 1, color: "#FFFF00", country: "ES", division: 2 },
-  { id: "es147", name: "Almeria", level: 1, color: "#800080", country: "ES", division: 2 },
-  { id: "es148", name: "Granada", level: 1, color: "#FFA500", country: "ES", division: 2 },
-  { id: "es149", name: "Eibar", level: 1, color: "#FF0000", country: "ES", division: 2 },
-  { id: "es150", name: "R. Santander", level: 1, color: "#0000FF", country: "ES", division: 2 },
-  { id: "es151", name: "Elche", level: 1, color: "#008000", country: "ES", division: 2 },
-  { id: "es152", name: "Burgos", level: 1, color: "#FFFFFF", country: "ES", division: 2 },
-  { id: "es153", name: "Huesca", level: 1, color: "#000000", country: "ES", division: 2 },
-  { id: "es154", name: "Cartagena", level: 1, color: "#FFFF00", country: "ES", division: 2 },
-  { id: "es155", name: "Mirandés", level: 1, color: "#800080", country: "ES", division: 2 },
-  { id: "es156", name: "Albacete", level: 1, color: "#FFA500", country: "ES", division: 2 },
-  { id: "es157", name: "D. La Coruña", level: 1, color: "#FF0000", country: "ES", division: 2 },
-  { id: "es158", name: "Málaga", level: 1, color: "#0000FF", country: "ES", division: 2 },
-  { id: "es159", name: "Castellón", level: 1, color: "#008000", country: "ES", division: 2 },
-  { id: "es160", name: "Córdoba", level: 1, color: "#FFFFFF", country: "ES", division: 2 },
+  { id: "es143", name: "Real Oviedo", level: 1, color: "#008000", country: "ES", division: 2, logo: RealOviedoLogo },
+  { id: "es144", name: "Tenerife", level: 1, color: "#FFFFFF", country: "ES", division: 2, logo: TenerifeLogo },
+  { id: "es145", name: "Levante", level: 1, color: "#000000", country: "ES", division: 2, logo: LevanteLogo },
+  { id: "es146", name: "Cadiz", level: 1, color: "#FFFF00", country: "ES", division: 2, logo: CadizLogo },
+  { id: "es147", name: "Almeria", level: 1, color: "#800080", country: "ES", division: 2, logo: AlmeriaLogo },
+  { id: "es148", name: "Granada", level: 1, color: "#FFA500", country: "ES", division: 2, logo: GranadaLogo },
+  { id: "es149", name: "Eibar", level: 1, color: "#FF0000", country: "ES", division: 2, logo: EibarLogo },
+  { id: "es150", name: "R. Santander", level: 1, color: "#0000FF", country: "ES", division: 2, logo: RSantanderLogo },
+  { id: "es151", name: "Elche", level: 1, color: "#008000", country: "ES", division: 2, logo: ElcheLogo },
+  { id: "es152", name: "Burgos", level: 1, color: "#FFFFFF", country: "ES", division: 2, logo: BurgosLogo },
+  { id: "es153", name: "Huesca", level: 1, color: "#000000", country: "ES", division: 2, },
+  { id: "es154", name: "Cartagena", level: 1, color: "#FFFF00", country: "ES", division: 2, },
+  { id: "es155", name: "Mirandés", level: 1, color: "#800080", country: "ES", division: 2, },
+  { id: "es156", name: "Albacete", level: 1, color: "#FFA500", country: "ES", division: 2, logo: AlbaceteLogo },
+  { id: "es157", name: "D. La Coruña", level: 1, color: "#FF0000", country: "ES", division: 2, logo: DLaCorunaLogo },
+  { id: "es158", name: "Málaga", level: 1, color: "#0000FF", country: "ES", division: 2, logo: MalagaLogo },
+  { id: "es159", name: "Castellón", level: 1, color: "#008000", country: "ES", division: 2, logo: CastellonLogo },
+  { id: "es160", name: "Córdoba", level: 1, color: "#FFFFFF", country: "ES", division: 2, logo: CordobaLogo },
   // ALEMANHA (DE) - Div 1
   { id: "de161", name: "B. de Munique", level: 5, color: "#FF0000", country: "DE", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/8d/FC_Bayern_M%C3%BCnchen_logo_%282024%29.svg/250px-FC_Bayern_M%C3%BCnchen_logo_%282024%29.svg.png" },
   { id: "de162", name: "B. Dortmund", level: 5, color: "#0000FF", country: "DE", logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/67/Borussia_Dortmund_logo.svg/120px-Borussia_Dortmund_logo.svg.png" },
