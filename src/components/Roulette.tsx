@@ -12,7 +12,6 @@ export function Roulette({ nationality, onTeamSelected }: { nationality: string;
   const [strip, setStrip] = useState<Team[]>([]);
   const [winner, setWinner] = useState<Team | null>(null);
 
-  // Only clubs from the player's chosen nationality enter the roulette.
   const eligibleTeams = getInitialTeamsForNationality(nationality);
 
   const controls = useAnimation();
@@ -68,7 +67,7 @@ export function Roulette({ nationality, onTeamSelected }: { nationality: string;
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950 text-slate-50 p-6">
       <div className="space-y-8 text-center flex flex-col items-center max-w-2xl w-full">
         <h2 className="text-3xl font-bold text-slate-300">
-          {isSpinning ? "Sorteando clube formador..." : "Você foi escolhido pelo:"}
+          {isSpinning ? "Sorteando clube formador..." : `Você foi escolhido pelo: ${winner?.name || "Time não selecionado"}`}
         </h2>
         
         <div className="relative overflow-hidden w-80 max-w-full h-40 bg-slate-900 border-4 border-slate-800 rounded-3xl shadow-2xl flex items-center">
