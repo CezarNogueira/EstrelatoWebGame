@@ -142,7 +142,6 @@ import GironaLogo from "./assets/teamsES/girona.png";
 import LeganesLogo from "./assets/teamsES/leganes.png";
 import ValladolidLogo from "./assets/teamsES/valladolid.png";
 import EspanyolLogo from "./assets/teamsES/espanyol.png";
-import RealZaragozaLogo from "./assets/teamsES/realzaragoza.png";
 import RealOviedoLogo from "./assets/teamsES/realoviedo.png";
 import TenerifeLogo from "./assets/teamsES/tenerife.png";
 import LevanteLogo from "./assets/teamsES/levante.png";
@@ -158,6 +157,7 @@ import DLaCorunaLogo from "./assets/teamsES/dlacoruna.png";
 import MalagaLogo from "./assets/teamsES/malaga.png";
 import CastellonLogo from "./assets/teamsES/castellon.png";
 import CordobaLogo from "./assets/teamsES/cordoba.png";
+import LasPalmasLogo from "./assets/teamsES/udlaspalmas.png";
 
 
 export const NATIONALITIES = [
@@ -315,15 +315,14 @@ export const TEAMS: Team[] = [
   { id: "es132", name: "Getafe", level: 3, color: "#FFFFFF", country: "ES", logo: GetafeLogo },
   { id: "es133", name: "Mallorca", level: 2, color: "#000000", country: "ES", logo: MallorcaLogo },
   { id: "es134", name: "Alavés", level: 2, color: "#FFFF00", country: "ES", logo: AlavesLogo },
-  { id: "es135", name: "Las Palmas", level: 2, color: "#eeff00", country: "ES" },
+  { id: "es135", name: "Las Palmas", level: 2, color: "#eeff00", country: "ES", logo: LasPalmasLogo },
   { id: "es136", name: "R. Vallecano", level: 2, color: "#FFA500", country: "ES", logo: RVallecanoLogo },
   { id: "es137", name: "Girona", level: 2, color: "#FF0000", country: "ES", logo: GironaLogo },
   { id: "es138", name: "Leganés", level: 2, color: "#0000FF", country: "ES", logo: LeganesLogo },
   { id: "es139", name: "Valladolid", level: 2, color: "#008000", country: "ES", logo: ValladolidLogo },
   { id: "es140", name: "Espanyol", level: 2, color: "#FFFFFF", country: "ES", logo: EspanyolLogo },
-
   // ESPANHA (ES) - Div 2
-  { id: "es141", name: "Real Zaragoza", level: 1, color: "#FF0000", country: "ES", division: 2, logo: RealZaragozaLogo },
+  { id: "es141", name: "Real Zaragoza", level: 1, color: "#FF0000", country: "ES", division: 2 },
   { id: "es142", name: "S. Gijón", level: 1, color: "#0000FF", country: "ES", division: 2 },
   { id: "es143", name: "Real Oviedo", level: 1, color: "#008000", country: "ES", division: 2, logo: RealOviedoLogo },
   { id: "es144", name: "Tenerife", level: 1, color: "#FFFFFF", country: "ES", division: 2, logo: TenerifeLogo },
