@@ -57,7 +57,7 @@ import MillwallLogo from "./assets/teamsEN/Millwall.png";
 import MiddlesbroughLogo from "./assets/teamsEN/Middlesbrough.png";
 import LincolnCityLogo from "./assets/teamsEN/LincolnCity.png";
 import SunderlandLogo from "./assets/teamsEN/Sunderland.png";
-import WestBromwichLogo from "./assets/teamsEN/WestBromwich.png";
+import WestBrownwichLogo from "./assets/teamsEN/WestBrownwich.png";
 import NorwichLogo from "./assets/teamsEN/Norwich.png";
 import CoventryLogo from "./assets/teamsEN/Coventry.png";
 import PrestonLogo from "./assets/teamsEN/Preston.png";
@@ -147,7 +147,7 @@ export const TEAMS: Team[] = [
   { id: "en61", name: "Leeds United", level: 1, color: "#FF0000", country: "EN", division: 2, logo: LeedsLogo },
   { id: "en62", name: "Sunderland", level: 1, color: "#0000FF", country: "EN", division: 2, logo: SunderlandLogo },
   { id: "en63", name: "Sheffield United", level: 1, color: "#008000", country: "EN", division: 2, logo: SheffieldLogo },
-  { id: "en64", name: "West Bromwich", level: 1, color: "#FFFFFF", country: "EN", division: 2, logo: WestBromwichLogo },
+  { id: "en64", name: "West Bromwich", level: 1, color: "#FFFFFF", country: "EN", division: 2, logo: WestBrownwichLogo },
   { id: "en65", name: "Norwich City", level: 1, color: "#000000", country: "EN", division: 2, logo: NorwichLogo },
   { id: "en66", name: "Burnley", level: 1, color: "#FFFF00", country: "EN", division: 2, logo: BurnleyLogo },
   { id: "en67", name: "Bolton Wanderers", level: 1, color: "#800080", country: "EN", division: 2, logo: BoltonWanderersLogo },
