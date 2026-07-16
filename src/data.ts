@@ -227,7 +227,7 @@ export const TEAMS: Team[] = [
   { id: "br35", name: "Bragantino", level: 3, country: "BR", logo: BragantinoLogo },
   { id: "br20", name: "Coritiba", level: 1, country: "BR", logo: CoritibaLogo },
   // BRASIL (BR) - Div 2
-  { id: "br21", name: "Guarani", level: 1, color: "#FF0000", country: "BR", division: 2 },
+  { id: "br21", name: "At. Goianiense", level: 1, country: "BR", division: 2, logo: AtleticoGoianienseLogo },
   { id: "br22", name: "Ponte Preta", level: 1, country: "BR", division: 2, logo: PontePretaLogo },
   { id: "br23", name: "Vila Nova", level: 1, country: "BR", division: 2, logo: VilaNovaLogo },
   { id: "br24", name: "Goiás", level: 1, country: "BR", division: 2, logo: GoiasLogo },
