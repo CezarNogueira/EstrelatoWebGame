@@ -14,7 +14,7 @@ export const STORE_ITEMS = [
   { id: "Iate", name: "Iate", price: 2000000, icon: Ship, description: "Custo: 600k/ano", socialGain: 18 },
   { id: "Helicóptero", name: "Helicóptero", price: 800000, icon: Plane, description: "Custo: 80k/ano", socialGain: 13 },
   { id: "Avião Particular", name: "Avião Particular", price: 15000000, icon: Plane, description: "Custo: 1M/ano", socialGain: 25 },
-  { id: "Ilha Privativa", name: "Ilha Privativa", price: 50000000, icon: Palmtree, description: "Custo: 20M/ano", socialGain: 25 },
+  { id: "Ilha Privativa", name: "Ilha Privativa", price: 50000000, icon: Palmtree, description: "Custo: 2M/ano", socialGain: 25 },
   { id: "Cavalo de Raça", name: "Cavalo de Raça", price: 500000, icon: Ghost, description: "Custo: 50k/ano", socialGain: 10 },
   { id: "Obras de Arte", name: "Obras de Arte", price: 1000000, icon: Brush, socialGain: 11 },
   { id: "Ternos", name: "Ternos de Grife", price: 10000, icon: Shirt, socialGain: 4 },

@@ -498,7 +498,7 @@ export default function App() {
     "Jetski": 5000,
     "Iate": 600000,
     "Avião Particular": 1000000,
-    "Ilha Privativa": 20000000,
+    "Ilha Privativa": 2000000,
     "Cavalo de Raça": 50000,
     "Helicóptero": 80000
   };
@@ -543,8 +543,8 @@ export default function App() {
     { name: "Umbro", minOvr: 65, pay: 200000 },
     { name: "New Balance", minOvr: 70, pay: 500000 },
     { name: "Puma", minOvr: 75, pay: 1000000 },
-    { name: "Adidas", minOvr: 85, pay: 2000000 },
-    { name: "Nike", minOvr: 85, pay: 3000000 }
+    { name: "Adidas", minOvr: 85, pay: 4000000 },
+    { name: "Nike", minOvr: 85, pay: 4000000 }
   ];
 
   const handleSponsorDecision = (sponsorName: string) => {
