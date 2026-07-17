@@ -1,4 +1,25 @@
 import { Team, FamilyMember, Friend, Relationships } from "./types";
+
+import male1 from "./assets/avatars/male1.png";
+import male2 from "./assets/avatars/male2.png";
+import male3 from "./assets/avatars/male3.png";
+import female1 from "./assets/avatars/female1.png";
+import female2 from "./assets/avatars/female2.png";
+import female3 from "./assets/avatars/female3.png";
+import coachAvatar from "./assets/avatars/oldmale.png";
+
+export const PLAYER_AVATARS = [male1, male2, male3, female1, female2, female3];
+
+export const getRandomAvatar = (gender?: "male" | "female") => {
+  return PLAYER_AVATARS[Math.floor(Math.random() * PLAYER_AVATARS.length)];
+};
+
+export const getCoachAvatar = () => coachAvatar;
+
+export const sanitizeAvatar = (url: string | undefined, name: string) => {
+  return url;
+};
+
 // Logos dos times brasileiros
 import AthleticoParanaenseLogo from "./assets/teamsBR/AthleticoParanaense.png";
 import FlamengoLogo from "./assets/teamsBR/Flamengo.png";
@@ -745,13 +766,7 @@ export function getNationalContinentalCup(nationality: string): string {
 // giants (level 4-5) are rare - a 14-year-old should only very occasionally
 // start their career at a club like Real Madrid or Flamengo.
 function getRouletteWeight(level: number): number {
-  switch (level) {
-    case 1: return 100;
-    case 2: return 40;
-    case 3: return 8;
-    case 4: return 2;
-    default: return 1; // level 5 - extremely rare
-  }
+  return 1;
 }
 
 // Builds the pool of clubs the Roulette should draw from for a given
@@ -847,15 +862,15 @@ function nextRelationshipId(prefix: string): string {
   return `${prefix}_${Date.now()}_${relationshipIdCounter}`;
 }
 
-function pickRandom<T>(arr: T[]): T {
+export function pickRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-function randomIntBetween(min: number, max: number): number {
+export function randomIntBetween(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function generatePersonName(nationality: string, gender: "male" | "female"): string {
+export function generatePersonName(nationality: string, gender: "male" | "female"): string {
   const pool = NAME_POOLS[nationality] || DEFAULT_NAME_POOL;
   const first = pickRandom(pool[gender]);
   const last = pickRandom(pool.surnames);
@@ -898,6 +913,7 @@ function generateFamily(nationality: string): FamilyMember[] {
       role: "Pai",
       age: randomIntBetween(38, 60),
       affinity: randomIntBetween(40, 100),
+      avatarUrl: getRandomAvatar("male"),
     });
   }
 
@@ -908,6 +924,7 @@ function generateFamily(nationality: string): FamilyMember[] {
       role: "Mãe",
       age: randomIntBetween(36, 58),
       affinity: randomIntBetween(45, 100),
+      avatarUrl: getRandomAvatar("female"),
     });
   }
 
@@ -921,6 +938,7 @@ function generateFamily(nationality: string): FamilyMember[] {
         role: isBrother ? "Irmão" : "Irmã",
         age: randomIntBetween(6, 32),
         affinity: randomIntBetween(50, 100),
+        avatarUrl: getRandomAvatar(isBrother ? "male" : "female"),
       });
     }
   }
@@ -928,21 +946,33 @@ function generateFamily(nationality: string): FamilyMember[] {
   return members;
 }
 
-const FRIEND_TAGS = ["Amigo de Infância", "Companheiro de Time", "Vizinho", "Amigo da Escola", "Melhor Amigo"];
+const FRIEND_TAGS = ["Amigo de Infância", "Companheiro de Time", "Vizinho", "Amigo da Escola"];
+
+const OCCUPATIONS = ["Estudante", "Vendedor", "Empresário", "Músico", "Advogado", "Personal Trainer", "Fisioterapeuta", "Jornalista", "Influenciador", "Modelo"];
+
+export function generateFriend(nationality: string, playerAge: number): Friend {
+  const relationTag = pickRandom(FRIEND_TAGS);
+  const isMale = relationTag === "Companheiro de Time" ? true : Math.random() < 0.6;
+  const friendAge = Math.max(14, playerAge + randomIntBetween(-3, 5));
+  
+  let occupation = friendAge < 18 ? "Estudante" : pickRandom(OCCUPATIONS);
+  if (relationTag === "Companheiro de Time") {
+    occupation = "Jogador de Futebol";
+  }
+
+  return {
+    id: nextRelationshipId("friend"),
+    name: generatePersonName(nationality, isMale ? "male" : "female"),
+    relationTag,
+    affinity: randomIntBetween(50, 100),
+    age: friendAge,
+    occupation,
+    avatarUrl: getRandomAvatar(isMale ? "male" : "female"),
+  };
+}
 
 function generateFriends(nationality: string): Friend[] {
-  const count = randomIntBetween(2, 4);
-  const friends: Friend[] = [];
-  for (let i = 0; i < count; i++) {
-    const isMale = Math.random() < 0.6;
-    friends.push({
-      id: nextRelationshipId("friend"),
-      name: generatePersonName(nationality, isMale ? "male" : "female"),
-      relationTag: pickRandom(FRIEND_TAGS),
-      affinity: randomIntBetween(50, 100),
-    });
-  }
-  return friends;
+  return [];
 }
 
 // Ponto de entrada usado ao criar o jogador: sorteia a família e os amigos

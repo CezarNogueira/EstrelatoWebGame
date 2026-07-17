@@ -1,5 +1,6 @@
 import { Heart, Sparkles } from "lucide-react";
 import { RomanceEvent, RomanceChoiceTone } from "../types";
+import { sanitizeAvatar } from "../data";
 
 // Estilos por "tom" da escolha, para deixar claro visualmente
 // qual opção é mais segura e qual é mais arriscada (pode gerar
@@ -23,13 +24,19 @@ export function RomanceEventModal({
       <div className="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl max-w-md w-full space-y-6">
         {/* Cabeçalho com quem está envolvido na situação */}
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center shrink-0">
-            <Heart className="w-6 h-6 text-pink-400" />
+          <div className="w-12 h-12 rounded-full bg-slate-800 border-2 border-slate-700 flex items-center justify-center shrink-0 overflow-hidden">
+            {event.avatarUrl ? <img src={sanitizeAvatar(event.avatarUrl, event.personName)} alt={event.personName} className="w-full h-full object-cover" /> : <Heart className="w-6 h-6 text-pink-400" />}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="text-slate-100 font-bold leading-tight truncate">{event.personName}</div>
             <div className="text-xs text-slate-500 font-medium">{event.relationTag}</div>
           </div>
+          {(event.age || event.occupation) && (
+            <div className="text-right text-xs text-slate-400">
+              {event.age && <div>{event.age} anos</div>}
+              {event.occupation && <div>{event.occupation}</div>}
+            </div>
+          )}
         </div>
 
         {/* Título e descrição do evento */}

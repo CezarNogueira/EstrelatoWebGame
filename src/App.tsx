@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Attributes, FinalResult, Player, Position, RomanceEvent, SeasonStat, Team } from "./types";
 import { StartScreen } from "./components/StartScreen";
 import { ChooseNationality } from "./components/ChooseNationality";
+import { ChooseAppearance } from "./components/ChooseAppearance";
 import { Roulette } from "./components/Roulette";
 import { ChoosePosition } from "./components/ChoosePosition";
 import { Dashboard } from "./components/Dashboard";
@@ -11,19 +12,22 @@ import { ProContractModal } from "./components/ProContractModal";
 import { CareerSummary } from "./components/CareerSummary";
 import { ContractNegotiationModal } from "./components/ContractNegotiationModal";
 import { ContractOffersModal } from "./components/ContractOffersModal";
-import { InjuryModal } from "./components/InjuryModal";
+
 import { InteractiveMatchModal, resetOpponentMemory } from "./components/InteractiveMatchModal";
-import { RomanceEventModal, ROMANCE_EVENTS } from "./components/RomanceEventModal";
+import { RomanceEventModal } from "./components/RomanceEventModal";
+import { generateRomanceEvent } from "./data/romanceEvents";
 import { MentalHealthModal } from "./components/MentalHealthModal";
-import { HeartCrack } from "lucide-react";
-import { generateRelationships } from "./data";
-import { simulateSeason, applyGrowth, autoDistributePoints, generatePressMessage, calculateMarketValue, calculateOverall, formatCurrency, getReachedFinals, getContractEndOffers } from "./utils";
+import { HeartCrack, Heart } from "lucide-react";
+import { generateRelationships, generateFriend } from "./data";
+import { simulateSeason, applyGrowth, autoDistributePoints, generatePressMessage, calculateMarketValue, calculateOverall, formatCurrency, getReachedFinals, getContractEndOffers, addMessageToChat } from "./utils";
+import { NewFriendModal } from "./components/NewFriendModal";
+import { Friend } from "./types";
 
 // Abaixo deste valor de Social, os encontros da temporada tendem a terminar
 // em "não rolou química" em vez de virarem um evento de romance completo.
 const ROMANCE_INTEREST_THRESHOLD = 40;
 
-type Screen = "START" | "CHOOSE_NATIONALITY" | "ROULETTE" | "CHOOSE_POSITION" | "DASHBOARD" | "CAREER_SUMMARY";
+type Screen = "START" | "CHOOSE_NATIONALITY" | "CHOOSE_APPEARANCE" | "ROULETTE" | "CHOOSE_POSITION" | "DASHBOARD" | "CAREER_SUMMARY";
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>("START");
@@ -31,6 +35,7 @@ export default function App() {
   const [draftTeam, setDraftTeam] = useState<Team | null>(null);
   const [playerName, setPlayerName] = useState<string>("Você");
   const [playerNationality, setPlayerNationality] = useState<string>("");
+  const [playerAvatar, setPlayerAvatar] = useState<string>("");
 
   const handleStart = (name: string) => {
     setPlayerName(name);
@@ -39,6 +44,11 @@ export default function App() {
 
   const handleNationalitySelected = (nationality: string) => {
     setPlayerNationality(nationality);
+    setScreen("CHOOSE_APPEARANCE");
+  };
+
+  const handleAppearanceSelected = (avatarUrl: string) => {
+    setPlayerAvatar(avatarUrl);
     setScreen("ROULETTE");
   };
 
@@ -62,6 +72,7 @@ export default function App() {
 
     setPlayer({
       name: playerName,
+      avatarUrl: playerAvatar,
       age: 14,
       position,
       attributes,
@@ -95,7 +106,7 @@ export default function App() {
   const [showTraining, setShowTraining] = useState(false);
   const [nationalTeamMsg, setNationalTeamMsg] = useState(false);
   const [pendingFinals, setPendingFinals] = useState<FinalResult[] | null>(null);
-  const [pendingInjury, setPendingInjury] = useState<{ days: number; careerEnding: boolean } | null>(null);
+
   const [pendingProContract, setPendingProContract] = useState<boolean>(false);
   
   const [pendingContractNegotiation, setPendingContractNegotiation] = useState<{
@@ -261,12 +272,8 @@ export default function App() {
   };
 
   const proceedToInjuryCheck = (stateToPass: any) => {
-    if (stateToPass.seasonStat.injured) {
-      setPendingInjury({
-        days: stateToPass.seasonStat.injuryDays || 0,
-        careerEnding: stateToPass.seasonStat.careerEndingInjury || false,
-      });
-      setPendingSimulationPhase(stateToPass);
+    if (stateToPass.baseUpdatedPlayer.retired) {
+      finishSeason(stateToPass);
     } else {
       proceedAfterInjuryCheck(stateToPass);
     }
@@ -288,18 +295,7 @@ export default function App() {
     }
   };
 
-  const handleContinueFromInjury = () => {
-    if (!pendingSimulationPhase) return;
-    const stateToPass = pendingSimulationPhase;
-    setPendingInjury(null);
 
-    if (stateToPass.baseUpdatedPlayer.retired) {
-      // Lesão gravíssima encerrou a carreira: pula direto para o fim de temporada.
-      finishSeason(stateToPass);
-    } else {
-      proceedAfterInjuryCheck(stateToPass);
-    }
-  };
 
   const proceedToProContract = (stateToPass: any) => {
     if (stateToPass.proContractOffer) {
@@ -382,7 +378,8 @@ export default function App() {
   };
 
   const [pendingRomanceEvent, setPendingRomanceEvent] = useState<RomanceEvent | null>(null);
-  const [pendingRomanceRejection, setPendingRomanceRejection] = useState<boolean>(false);
+  const [pendingRomanceResult, setPendingRomanceResult] = useState<{ success: boolean, personName: string } | null>(null);
+  const [pendingFriendEvent, setPendingFriendEvent] = useState<Friend | null>(null);
 
   // Quanto maior o Social do jogador, mais comum é surgir um evento de
   // romance na temporada — com Social em 100%, o evento acontece sempre.
@@ -391,22 +388,49 @@ export default function App() {
   const checkRomanceEventOrNext = (stateToPass: any) => {
     const p = stateToPass.baseUpdatedPlayer;
     if (!p.retired) {
+      if (p.age >= 14 && p.age <= 16 && !p.hadFirstKiss && !p.relationships.girlfriend) {
+        p.hadFirstKiss = true;
+        setPendingRomanceEvent(generateRomanceEvent(p, true));
+        setPendingSimulationPhase(stateToPass);
+        return;
+      }
+
       const social = p.personal.social;
       const eventChance = Math.min(100, Math.max(15, social));
 
       if (Math.random() * 100 < eventChance) {
-        if (social >= ROMANCE_INTEREST_THRESHOLD) {
-          const event = ROMANCE_EVENTS[Math.floor(Math.random() * ROMANCE_EVENTS.length)];
-          setPendingRomanceEvent(event);
-          setPendingSimulationPhase(stateToPass);
-          return;
+        if (Math.random() > 0.5) {
+          if (social >= ROMANCE_INTEREST_THRESHOLD) {
+            setPendingRomanceEvent(generateRomanceEvent(p));
+            setPendingSimulationPhase(stateToPass);
+            return;
+          }
         } else {
-          setPendingRomanceRejection(true);
+          setPendingFriendEvent(generateFriend(p.nationality, p.age));
           setPendingSimulationPhase(stateToPass);
           return;
         }
       }
     }
+    checkSponsorOrFinish(stateToPass);
+  };
+
+  const handleFriendChoice = (accept: boolean) => {
+    if (!pendingSimulationPhase || !pendingFriendEvent) return;
+    
+    const stateToPass = { ...pendingSimulationPhase };
+    const p = stateToPass.baseUpdatedPlayer;
+
+    if (accept) {
+      p.relationships.friends = [...p.relationships.friends, pendingFriendEvent];
+      p.personal.social = Math.min(100, p.personal.social + 10);
+      p.personal.mood = Math.min(100, p.personal.mood + 5);
+      if (p.history.length > 0) {
+         p.history[0].pressMessage = `"Nova amizade! ${p.name} é visto com ${pendingFriendEvent.name} e aumenta seu círculo social."`;
+      }
+    }
+
+    setPendingFriendEvent(null);
     checkSponsorOrFinish(stateToPass);
   };
 
@@ -423,11 +447,19 @@ export default function App() {
         case "safe":
           p.personal.social = Math.min(100, p.personal.social + 5);
           p.personal.mood = Math.min(100, p.personal.mood + 5);
+          if (!p.relationships.girlfriend && !p.relationships.friends.some(f => f.name === event.personName)) {
+            p.relationships = {
+              ...p.relationships,
+              friends: [
+                ...p.relationships.friends,
+                { id: `friend_${Date.now()}`, name: event.personName, relationTag: "Amiga", affinity: event.attraction, age: event.age, occupation: event.occupation, avatarUrl: event.avatarUrl },
+              ],
+            };
+          }
           break;
         case "positive": {
           p.personal.social = Math.min(100, p.personal.social + 10);
           p.personal.mood = Math.min(100, p.personal.mood + 5);
-
           if (!p.relationships.girlfriend && Math.random() < 0.5) {
             // A escolha "positiva" pode evoluir para um namoro de verdade.
             p.relationships = {
@@ -438,20 +470,32 @@ export default function App() {
                 relationTag: "Namorada",
                 affinity: event.attraction,
                 sinceAge: p.age,
+                age: event.age,
+                occupation: event.occupation,
+                avatarUrl: event.avatarUrl
               },
             };
             if (p.history.length > 0) {
               p.history[0].pressMessage = `"Romance confirmado! ${p.name} está namorando ${event.personName}."`;
             }
+            setPendingRomanceEvent(null);
+            setPendingSimulationPhase(stateToPass);
+            setPendingRomanceResult({ success: true, personName: event.personName });
+            return;
           } else if (!p.relationships.girlfriend) {
             // Não virou namoro dessa vez, mas rende uma nova amizade.
             p.relationships = {
               ...p.relationships,
               friends: [
                 ...p.relationships.friends,
-                { id: `friend_${Date.now()}`, name: event.personName, relationTag: event.relationTag, affinity: event.attraction },
+                { id: `friend_${Date.now()}`, name: event.personName, relationTag: event.relationTag, affinity: event.attraction, age: event.age, occupation: event.occupation, avatarUrl: event.avatarUrl },
               ],
             };
+            p.personal.mood = Math.max(0, p.personal.mood - 10);
+            setPendingRomanceEvent(null);
+            setPendingSimulationPhase(stateToPass);
+            setPendingRomanceResult({ success: false, personName: event.personName });
+            return;
           }
           break;
         }
@@ -480,14 +524,10 @@ export default function App() {
     checkSponsorOrFinish(stateToPass);
   };
 
-  const handleRomanceRejectionContinue = () => {
+  const handleRomanceResultContinue = () => {
     if (!pendingSimulationPhase) return;
-
     const stateToPass = { ...pendingSimulationPhase };
-    const p = stateToPass.baseUpdatedPlayer;
-    p.personal.mood = Math.max(0, p.personal.mood - 5);
-
-    setPendingRomanceRejection(false);
+    setPendingRomanceResult(null);
     checkSponsorOrFinish(stateToPass);
   };
 
@@ -584,7 +624,13 @@ export default function App() {
   };
 
   const finishSeason = (stateToPass: any) => {
-    const finalPlayer = stateToPass.baseUpdatedPlayer;
+    let finalPlayer = stateToPass.baseUpdatedPlayer;
+    if (finalPlayer.history && finalPlayer.history.length > 0) {
+      const currentStat = finalPlayer.history[0];
+      if (currentStat.individualAwards?.includes("Artilheiro")) {
+        finalPlayer = addMessageToChat(finalPlayer, "treinador", "Parabéns pela artilharia na última temporada! Precisamos desse faro de gol de novo.");
+      }
+    }
     setPlayer(finalPlayer);
 
     if (finalPlayer.retired) {
@@ -637,13 +683,15 @@ export default function App() {
     if (!pendingSimulationPhase || !pendingContractNegotiation) return;
 
     const stateToPass = { ...pendingSimulationPhase };
-    const p = stateToPass.baseUpdatedPlayer;
+    let p = stateToPass.baseUpdatedPlayer;
 
     p.salary = salary;
     p.contractYears = years;
 
     if (pendingContractNegotiation.type === "PRO") {
       p.isPro = true;
+      p = addMessageToChat(p, "treinador", "Bem-vindo ao profissional, garoto! Agora o bicho vai pegar, conto com você.");
+      stateToPass.baseUpdatedPlayer = p;
       setPendingContractNegotiation(null);
       proceedToTransfer(stateToPass);
     } else if (pendingContractNegotiation.type === "TRANSFER") {
@@ -651,6 +699,12 @@ export default function App() {
       if (p.history.length > 0) {
         p.history[0].pressMessage = `"Novo reforço! ${p.name} assina com o ${p.currentTeam.name}!"`;
       }
+      if (p.chats && p.chats["treinador"]) {
+        p.chats = { ...p.chats };
+        delete p.chats["treinador"];
+      }
+      p = addMessageToChat(p, "treinador", `Seja bem-vindo ao ${p.currentTeam.name}! Estamos felizes com sua chegada, vamos trabalhar duro.`);
+      stateToPass.baseUpdatedPlayer = p;
       setPendingContractNegotiation(null);
       checkRenewalOrFinish(stateToPass);
     } else if (pendingContractNegotiation.type === "RENEWAL") {
@@ -666,7 +720,6 @@ export default function App() {
     setPlayerName("Você");
     setTransferOffer(null);
     setPendingFinals(null);
-    setPendingInjury(null);
     setPendingMentalHealthEvent(null);
     setPendingProContract(false);
     setPendingContractNegotiation(null);
@@ -675,7 +728,6 @@ export default function App() {
     setShowTraining(false);
     setNationalTeamMsg(false);
     setPendingRomanceEvent(null);
-    setPendingRomanceRejection(false);
     setScreen("START");
   };
 
@@ -683,6 +735,7 @@ export default function App() {
     <>
       {screen === "START" && <StartScreen onStart={handleStart} />}
       {screen === "CHOOSE_NATIONALITY" && <ChooseNationality onSelect={handleNationalitySelected} />}
+      {screen === "CHOOSE_APPEARANCE" && <ChooseAppearance onSelect={handleAppearanceSelected} playerName={playerName} />}
       {screen === "ROULETTE" && <Roulette nationality={playerNationality} onTeamSelected={handleTeamSelected} />}
       {screen === "CHOOSE_POSITION" && <ChoosePosition onPositionSelected={handlePositionSelected} />}
       {screen === "CAREER_SUMMARY" && player && <CareerSummary player={player} onRestart={handleRestart} />}
@@ -697,13 +750,7 @@ export default function App() {
             />
           )}
 
-          {pendingInjury && (
-            <InjuryModal
-              days={pendingInjury.days}
-              careerEnding={pendingInjury.careerEnding}
-              onContinue={handleContinueFromInjury}
-            />
-          )}
+
           
           {currentFinalType && (
             <InteractiveMatchModal 
@@ -774,24 +821,36 @@ export default function App() {
             </div>
           )}
 
+          {pendingFriendEvent && (
+            <NewFriendModal 
+              friend={pendingFriendEvent} 
+              onAccept={() => handleFriendChoice(true)} 
+              onDecline={() => handleFriendChoice(false)} 
+            />
+          )}
+
           {pendingRomanceEvent && (
             <RomanceEventModal event={pendingRomanceEvent} onChoice={handleRomanceChoice} />
           )}
 
-          {pendingRomanceRejection && (
+          {pendingRomanceResult && (
             <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/90 p-4">
               <div className="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl max-w-md w-full text-center space-y-6">
-                <div className="w-16 h-16 mx-auto rounded-full bg-slate-800 flex items-center justify-center">
-                  <HeartCrack className="w-8 h-8 text-slate-500" />
+                <div className={`w-16 h-16 mx-auto rounded-full ${pendingRomanceResult.success ? 'bg-pink-500/20' : 'bg-slate-800'} flex items-center justify-center`}>
+                  {pendingRomanceResult.success ? <Heart className="w-8 h-8 text-pink-500" /> : <HeartCrack className="w-8 h-8 text-slate-500" />}
                 </div>
                 <div className="space-y-2">
-                  <h3 className="text-2xl font-black text-slate-300">Sem Sorte no Amor</h3>
+                  <h3 className={`text-2xl font-black ${pendingRomanceResult.success ? 'text-pink-400' : 'text-slate-300'}`}>
+                    {pendingRomanceResult.success ? "Novo Relacionamento!" : "Apenas Amigos"}
+                  </h3>
                   <p className="text-slate-400">
-                    Durante a temporada você até conheceu uma mulher interessante, mas ela não demonstrou nenhum interesse em você. Talvez sua vida social precise melhorar.
+                    {pendingRomanceResult.success
+                      ? `Incrível! As coisas deram certo e você começou a namorar com ${pendingRomanceResult.personName}.`
+                      : `Você tentou algo a mais com ${pendingRomanceResult.personName}, mas o sentimento não foi recíproco e vocês decidiram ser apenas amigos.`}
                   </p>
                 </div>
                 <button
-                  onClick={handleRomanceRejectionContinue}
+                  onClick={handleRomanceResultContinue}
                   className="w-full py-4 bg-slate-700 hover:bg-slate-600 text-slate-100 font-bold rounded-xl transition-all"
                 >
                   Continuar

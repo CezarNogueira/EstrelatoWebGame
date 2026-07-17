@@ -9,6 +9,17 @@ export const getRelativeLevel = (team: Team): number => {
   return Math.max(1, 5 - levelDiff);
 };
 
+export const addMessageToChat = (player: Player, personId: string, text: string): Player => {
+  const updatedPlayer = { ...player, chats: { ...(player.chats || {}) } };
+  const currentChat = updatedPlayer.chats[personId] || { messages: [], hasUnread: false };
+  updatedPlayer.chats[personId] = {
+    ...currentChat,
+    messages: [...currentChat.messages, { sender: "them", text }],
+    hasUnread: true,
+  };
+  return updatedPlayer;
+};
+
 export const calculateOverall = (attr: Attributes, pos: Position): number => {
   let weights = { pace: 1, shooting: 1, passing: 1, dribbling: 1, defending: 1, physical: 1 };
   
@@ -87,13 +98,32 @@ export const generateSeasonMatchStats = (
 ): { goals: number; assists: number; tackles: number; cleanSheets: number } => {
   const w = POSITION_STAT_WEIGHTS[player.position];
 
-  // O número de gols e assistências é influenciado pelos atributos de finalização e passe do jogador, respectivamente, bem como pela taxa de desempenho e pelos pesos de posição.
-  const goals = Math.max(0, Math.round(
-    randomInt(1, 20) * performanceRatio * (player.attributes.shooting / 39) * w.goals
-  ));
-  const assists = Math.max(0, Math.round(
-    randomInt(1, 20) * performanceRatio * (player.attributes.passing / 39) * w.assists
-  ));
+  const goalScale = 0.6;
+  const assistScale = 0.4;
+
+  const goalProbBase = ((player.attributes.shooting * 0.7 + player.attributes.pace * 0.3) / 100) * performanceRatio * w.goals * goalScale;
+  const assistProbBase = (player.attributes.passing / 100) * performanceRatio * w.assists * assistScale;
+
+  let goals = 0;
+  let assists = 0;
+
+  for (let i = 0; i < matches; i++) {
+    let matchGoals = 0;
+    let matchAssists = 0;
+    const currGoalProb = goalProbBase * (0.5 + Math.random() * 0.7); // slight match variance
+    const currAssistProb = assistProbBase * (0.5 + Math.random() * 0.7);
+    
+    for (let j = 0; j < 4; j++) {
+       if (Math.random() < currGoalProb / (Math.pow(2.5, j) + 0.2)) {
+         matchGoals++;
+       }
+       if (Math.random() < currAssistProb / (Math.pow(2.5, j) + 0.2)) {
+         matchAssists++;
+       }
+    }
+    goals += matchGoals;
+    assists += matchAssists;
+  }
 
   const tacklesPerMatch = (0.6 + (player.attributes.defending / 99) * 3.4) * w.tackles;
   const tackles = Math.max(0, Math.round(matches * tacklesPerMatch * (0.85 + Math.random() * 0.3)));
@@ -347,11 +377,6 @@ export const generatePressMessage = (
   }
 
   let chosenMessage = messages[Math.floor(Math.random() * messages.length)];
-
-  if (stat.relationshipLosses && stat.relationshipLosses.length > 0) {
-    chosenMessage += "\\n\\n[Nota Extra Campo] " + stat.relationshipLosses.join(" ");
-  }
-
   return chosenMessage;
 };
 
@@ -468,12 +493,12 @@ export const simulateSeason = (
 
   let injured = false;
   let injuryDays = 0;
-  let careerEndingInjury = false;
+  let seasonEndingInjury = false;
 
   if (newHealth <= 0) {
-    // Saúde chegou a 0% - lesão gravíssima que encerra a carreira.
+    // Saúde chegou a 0% - lesão gravíssima que tira o jogador da temporada inteira.
     injured = true;
-    careerEndingInjury = true;
+    seasonEndingInjury = true;
     injuryDays = 60;
   } else if (Math.random() * 100 < injuryChance) {
     injured = true;
@@ -484,7 +509,7 @@ export const simulateSeason = (
 
     newHealth = Math.max(0, newHealth - randomInt(5, 15));
     if (newHealth <= 0) {
-      careerEndingInjury = true;
+      seasonEndingInjury = true;
       injuryDays = 60;
     }
   }
@@ -493,59 +518,22 @@ export const simulateSeason = (
   const expectedOvr = player.currentTeam.level * 15 + 35; 
   let performanceRatio = Math.min(1.5, Math.max(0.5, currentOvr / expectedOvr));
 
-  // O número de partidas disputadas é influenciado pela taxa de desempenho do jogador e por um fator aleatório, mas limitado a um intervalo de 0 a 50 partidas
-  let matches = Math.min(50, Math.max(0, Math.round(randomInt(20, 45) * performanceRatio)));
-
-  let isolated = false;
-  let depressed = false;
-
-  if (player.personal.mood === 0) {
-    depressed = true;
-    matches = 0;
-    performanceRatio = 0;
-  } else if (player.personal.mood < 50) {
-    isolated = true;
-    // O jogador se isola e joga menos partidas
-    const moodFactor = player.personal.mood / 50;
-    matches = Math.round(matches * moodFactor);
-    performanceRatio = performanceRatio * (0.6 + moodFactor * 0.4);
-  }
-
-  if (injured) {
-    // A lesão custa uma parcela da temporada proporcional aos dias parado
-    // (até 60 dias = pior caso), além de reduzir o rendimento no resto do ano.
-    const matchesLost = careerEndingInjury
-      ? matches
-      : Math.round(matches * Math.min(1, injuryDays / 60));
-    matches = Math.max(0, matches - matchesLost);
-    performanceRatio = performanceRatio * (0.5 + Math.random() * 0.2);
-  }
-
-  const { goals, assists, tackles, cleanSheets } = generateSeasonMatchStats(player, matches, performanceRatio);
-  const cleanSheetRateThisSeason = matches > 0 ? cleanSheets / matches : 0;
-
-  let nationalTeamCall = false;
-  const callScore = getNationalCallScore(goals, assists, tackles, cleanSheets);
-  if (currentOvr > 78 && callScore >= 15) {
-    if (Math.random() > 0.4) {
-      nationalTeamCall = true;
-    }
-  }
-
-  // Finals Logic
   let finals: { type: string; won: boolean }[] = prePlayedFinals || [];
   
   if (!prePlayedFinals) {
     const reached = getReachedFinals(player, currentOvr);
     finals = reached.map(f => ({ type: f, won: Math.random() > 0.5 }));
-    // Adjust for clubWC depending on continental win in legacy flow
-    // But since this is a refactor and we usually pass prePlayedFinals, this is mostly fallback.
+  }
+
+  if (seasonEndingInjury) {
+    finals = [];
   }
 
   let cupName = "Copa Nacional";
   let leagueName = "Liga Nacional";
   let continentalName = "Copa Continental";
   let clubWCName = "Mundial de Clubes";
+  let natContCup = getNationalContinentalCup(player.nationality);
 
   if (player.isPro) {
     const country = player.currentTeam.country;
@@ -601,6 +589,93 @@ export const simulateSeason = (
     }
   }
 
+  let totalTeamMatches = 0;
+  let nationalTeamCall = false;
+
+  if (player.isPro) {
+    const isDiv2 = player.currentTeam.division === 2;
+    const relLevel = isDiv2 ? 1 : getRelativeLevel(player.currentTeam);
+    
+    totalTeamMatches += 38; // League
+    
+    if (finals.some(f => f.type === cupName)) {
+      totalTeamMatches += 7;
+    } else {
+      totalTeamMatches += randomInt(3, 6);
+    }
+    
+    if (finals.some(f => f.type === continentalName)) {
+      totalTeamMatches += 13;
+    } else if (!isDiv2 && relLevel >= 4) {
+      totalTeamMatches += randomInt(3, 12);
+    }
+    
+    if (finals.some(f => f.type === clubWCName)) {
+      totalTeamMatches += 7;
+    } else if (!isDiv2 && relLevel === 5 && Math.random() > 0.8) {
+      totalTeamMatches += randomInt(3, 6);
+    }
+    
+    const tempMatches = 38;
+    const tempGoals = Math.round(tempMatches * 0.4 * performanceRatio);
+    const tempAssists = Math.round(tempMatches * 0.2 * performanceRatio);
+    const callScore = getNationalCallScore(tempGoals, tempAssists, 0, 0);
+    
+    if (!seasonEndingInjury && (finals.some(f => f.type === "Copa do Mundo" || f.type === natContCup) || (currentOvr > 78 && callScore >= 15 && Math.random() > 0.4))) {
+      nationalTeamCall = true;
+    }
+    
+    if (nationalTeamCall) {
+      if (player.age % 4 === 0) {
+        if (finals.some(f => f.type === "Copa do Mundo")) {
+          totalTeamMatches += 8;
+        } else {
+          totalTeamMatches += randomInt(3, 7);
+        }
+      } else if (player.age % 4 === 2) {
+        if (finals.some(f => f.type === natContCup)) {
+          totalTeamMatches += 7;
+        } else {
+          totalTeamMatches += randomInt(3, 6);
+        }
+      } else {
+        totalTeamMatches += randomInt(2, 6);
+      }
+    }
+  } else {
+    totalTeamMatches = randomInt(20, 30);
+    if (finals.some(f => f.type === "Torneio de Base")) {
+      totalTeamMatches += 5;
+    }
+  }
+
+  let matches = Math.round(totalTeamMatches * Math.min(1, Math.max(0.6, performanceRatio)));
+
+  let isolated = false;
+  let depressed = false;
+
+  if (player.personal.mood === 0) {
+    depressed = true;
+    matches = 0;
+    performanceRatio = 0;
+  } else if (player.personal.mood < 50) {
+    isolated = true;
+    const moodFactor = player.personal.mood / 50;
+    matches = Math.round(matches * moodFactor);
+    performanceRatio = performanceRatio * (0.6 + moodFactor * 0.4);
+  }
+
+  if (injured) {
+    const matchesLost = seasonEndingInjury
+      ? matches
+      : Math.round(totalTeamMatches * Math.min(1, injuryDays / 300));
+    matches = Math.max(0, matches - matchesLost);
+    performanceRatio = performanceRatio * (0.5 + Math.random() * 0.2);
+  }
+
+  const { goals, assists, tackles, cleanSheets } = generateSeasonMatchStats(player, matches, performanceRatio);
+  const cleanSheetRateThisSeason = matches > 0 ? cleanSheets / matches : 0;
+
   let leaguePosition: number | undefined;
 
   if (player.isPro) {
@@ -640,21 +715,55 @@ export const simulateSeason = (
   };
 
   if (player.isPro) {
-    if (goals >= 25 && Math.random() > 0.4) {
+    let g = goals;
+    const isDiv2 = player.currentTeam.division === 2;
+    
+    // Copa do mundo de Seleção
+    let wcGoals = 0;
+    if (finals.some(f => f.type === "Copa do Mundo") || (player.age % 4 === 0 && nationalTeamCall)) {
+      wcGoals = Math.floor(g * (Math.random() * 0.2 + 0.1));
+      g -= wcGoals;
+    }
+    
+    // Copa continental de Seleção
+    let nationalContinentalGoals = 0;
+    let natContCup = getNationalContinentalCup(player.nationality);
+    if (finals.some(f => f.type === natContCup) || (player.age % 4 === 2 && nationalTeamCall)) {
+      nationalContinentalGoals = Math.floor(g * (Math.random() * 0.2 + 0.1));
+      g -= nationalContinentalGoals;
+    }
+    
+    // Mundial de clubes
+    let clubWCGoals = 0;
+    if (finals.some(f => f.type === clubWCName)) {
+      clubWCGoals = Math.floor(g * (Math.random() * 0.15 + 0.05));
+      g -= clubWCGoals;
+    }
+    
+    // Copa Continental
+    let continentalGoals = 0;
+    if (finals.some(f => f.type === continentalName) || (!isDiv2 && getRelativeLevel(player.currentTeam) >= 4)) {
+      continentalGoals = Math.floor(g * (Math.random() * 0.25 + 0.1));
+      g -= continentalGoals;
+    }
+    
+    // Copa Nacional
+    let cupGoals = Math.floor(g * (Math.random() * 0.2 + 0.1));
+    g -= cupGoals;
+    
+    let leagueGoals = g;
+
+    if (isDiv2 && leagueGoals >= 20) {
+      individualAwards.push(getArtilheiroString(leagueName));
+    } else if (!isDiv2 && leagueGoals >= 25) {
       individualAwards.push(getArtilheiroString(leagueName));
     }
-    if (finals.some(f => f.type === cupName) && goals >= 8 && Math.random() > 0.5) {
-      individualAwards.push(getArtilheiroString(cupName));
-    }
-    if (finals.some(f => f.type === continentalName) && goals >= 10 && Math.random() > 0.5) {
-      individualAwards.push(getArtilheiroString(continentalName));
-    }
-    if (finals.some(f => f.type === clubWCName) && goals >= 5 && Math.random() > 0.6) {
-      individualAwards.push(getArtilheiroString(clubWCName));
-    }
-    if (finals.some(f => f.type === "Copa do Mundo") && goals >= 6 && Math.random() > 0.6) {
-      individualAwards.push("Artilheiro da Copa do Mundo");
-    }
+    
+    if (cupGoals >= 10) individualAwards.push(getArtilheiroString(cupName));
+    if (continentalGoals >= 10) individualAwards.push(getArtilheiroString(continentalName));
+    if (clubWCGoals >= 8) individualAwards.push(getArtilheiroString(clubWCName));
+    if (nationalContinentalGoals >= 10) individualAwards.push(getArtilheiroString(natContCup));
+    if (wcGoals >= 10) individualAwards.push("Artilheiro da Copa do Mundo");
 
     if (goals >= 35 && Math.random() > 0.3) {
       individualAwards.push("Chuteira de Ouro");
@@ -736,7 +845,7 @@ export const simulateSeason = (
 
   const newAttributes = applyGrowth(player.attributes, decline); // Only decline applied here
 
-  // Decrease relationships affinity over the season and handle breakups
+  // Decrease relationships affinity over the season
   let moodChange = 0;
 
   for (const f of finals) {
@@ -747,40 +856,21 @@ export const simulateSeason = (
     }
   }
 
-  const relationshipLosses: string[] = [];
+  const newFamily = player.relationships.family.map(f => ({
+    ...f,
+    affinity: Math.max(0, f.affinity - randomInt(1, 3))
+  }));
 
-  const newFamily = [];
-  for (const f of player.relationships.family) {
-    const newAffinity = Math.max(0, f.affinity - randomInt(5, 10));
-    if (newAffinity <= 30 && Math.random() < 0.3) {
-      relationshipLosses.push(`Você teve uma briga feia com seu(sua) ${f.role} ${f.name} e vocês cortaram relações temporariamente.`);
-      moodChange -= randomInt(15, 25);
-    } else {
-      newFamily.push({ ...f, affinity: newAffinity });
-    }
-  }
-  
-  const newFriends = [];
-  for (const f of player.relationships.friends) {
-    const newAffinity = Math.max(0, f.affinity - randomInt(5, 15));
-    if (newAffinity <= 30 && Math.random() < 0.3) {
-      relationshipLosses.push(`Você discutiu gravemente com seu amigo ${f.name} e a amizade acabou.`);
-      moodChange -= randomInt(5, 15);
-    } else {
-      newFriends.push({ ...f, affinity: newAffinity });
-    }
-  }
+  const newFriends = player.relationships.friends.map(f => ({
+    ...f,
+    affinity: Math.max(0, f.affinity - randomInt(1, 3))
+  }));
 
   let newGirlfriend = player.relationships.girlfriend ? { ...player.relationships.girlfriend } : null;
   if (newGirlfriend) {
-    newGirlfriend.affinity = Math.max(0, newGirlfriend.affinity - randomInt(5, 10));
-    if (newGirlfriend.affinity <= 30 && Math.random() < 0.4) {
-      relationshipLosses.push(`Seu relacionamento com ${newGirlfriend.name} estava muito desgastado e vocês terminaram.`);
-      moodChange -= randomInt(20, 25);
-      newGirlfriend = null;
-    }
+    newGirlfriend.affinity = Math.max(0, newGirlfriend.affinity - randomInt(1, 3));
   }
-  
+
   const newRelationships = {
     family: newFamily,
     friends: newFriends,
@@ -824,8 +914,7 @@ export const simulateSeason = (
     individualAwards,
     injured,
     injuryDays: injured ? injuryDays : undefined,
-    careerEndingInjury: careerEndingInjury || undefined,
-    relationshipLosses: relationshipLosses.length > 0 ? relationshipLosses : undefined,
+    seasonEndingInjury: seasonEndingInjury || undefined,
     isolated,
     depressed,
     leaguePosition,
@@ -854,7 +943,7 @@ export const simulateSeason = (
     attributes: newAttributes,
     relationships: newRelationships,
     history: player.history, // history is not updated yet, will be appended after point distribution
-    retired: careerEndingInjury || player.age >= 38 || (player.age >= 34 && Math.random() > 0.7),
+    retired: player.age >= 38 || (player.age >= 34 && Math.random() > 0.7),
     contractYears: player.isPro ? Math.max(0, (player.contractYears || 0) - 1) : 0,
     personal: {
       ...player.personal,
@@ -862,6 +951,11 @@ export const simulateSeason = (
       mood: Math.min(100, Math.max(0, player.personal.mood + moodChange)),
     },
   };
+
+  if (baseUpdatedPlayer.chats && baseUpdatedPlayer.chats["treinador"]) {
+    baseUpdatedPlayer.chats = { ...baseUpdatedPlayer.chats };
+    delete baseUpdatedPlayer.chats["treinador"];
+  }
 
   return { baseUpdatedPlayer, seasonStat, transfer, earnedPoints: points, proContractOffer };
 };

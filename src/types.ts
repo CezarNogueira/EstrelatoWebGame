@@ -38,8 +38,7 @@ export type SeasonStat = {
   pressMessage?: string;
   injured?: boolean;
   injuryDays?: number; // duração da lesão em dias (4 a 60)
-  careerEndingInjury?: boolean; // lesão gravíssima que encerra a carreira (saúde chegou a 0%)
-  relationshipLosses?: string[]; // mensagens de brigas e términos
+  seasonEndingInjury?: boolean; // lesão gravíssima que tira o jogador da temporada (saúde chegou a 0%)
   isolated?: boolean;
   depressed?: boolean;
   leaguePosition?: number;
@@ -63,6 +62,9 @@ export type RomanceEvent = {
   title: string;
   description: string;
   attraction: number; // 0 a 100, exibido como barra
+  age?: number;
+  occupation?: string;
+  avatarUrl?: string;
   choices: RomanceChoice[];
 };
 
@@ -86,6 +88,7 @@ export type FamilyMember = {
   role: FamilyRole;
   age: number;
   affinity: number; // 0 a 100, o quão próxima é a relação
+  avatarUrl?: string;
 };
 
 export type Friend = {
@@ -93,6 +96,9 @@ export type Friend = {
   name: string;
   relationTag: string; // ex: "Amigo de Infância", "Companheiro de Time"
   affinity: number; // 0 a 100
+  age?: number;
+  occupation?: string;
+  avatarUrl?: string;
 };
 
 export type Girlfriend = {
@@ -101,6 +107,9 @@ export type Girlfriend = {
   relationTag: string;
   affinity: number; // 0 a 100
   sinceAge: number;
+  age?: number;
+  occupation?: string;
+  avatarUrl?: string;
 };
 
 export type Relationships = {
@@ -109,8 +118,19 @@ export type Relationships = {
   girlfriend: Girlfriend | null;
 };
 
+export type ChatMessage = {
+  sender: "me" | "them";
+  text: string;
+};
+
+export type ChatState = {
+  messages: ChatMessage[];
+  hasUnread: boolean;
+};
+
 export type Player = {
   name: string;
+  avatarUrl?: string;
   age: number;
   position: Position;
   attributes: Attributes;
@@ -127,11 +147,13 @@ export type Player = {
   assets: string[];
   hasPersonalTrainer: boolean;
   hasMasseuse?: boolean;
+  hadFirstKiss?: boolean;
   usedExclusiveParty?: boolean;
   usedInternationalTrip?: boolean;
   bootSponsor?: string | null;
   bootSponsorSeasonsLeft?: number; // temporadas restantes do contrato de chuteira (dura 5 temporadas)
   relationships: Relationships;
+  chats?: Record<string, ChatState>;
   personal: {
     mood: number;
     health: number;

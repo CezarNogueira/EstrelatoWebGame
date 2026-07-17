@@ -1,12 +1,20 @@
 import { FamilyEvent, Player, SeasonStat } from "../types";
 import { calculateOverall, getPlayerTitle, formatCurrency } from "../utils";
-import { ArrowRight, Calendar, Goal, User, Users, Zap, FileSignature, ShoppingBag, Shield, ShieldCheck } from "lucide-react";
+import { ArrowRight, Calendar, Goal, User, Users, Zap, FileSignature, ShoppingBag, Shield, ShieldCheck, MapPin, Smartphone } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useState } from "react";
 import { StoreModal, STORE_ITEMS } from "./StoreModal";
 import { RelationshipsModal } from "./RelationshipsModal";
 import { FamilyEventModal } from "./FamilyEventModal";
+import { NewFriendModal } from "./NewFriendModal";
 import { FAMILY_EVENTS } from "../data/familyEvents";
+import { generateFriend } from "../data";
+import { Friend } from "../types";
+import { CityMapModal } from "./CityMapModal";
+import { NightclubModal } from "./NightclubModal";
+import { TrainingCenterModal } from "./TrainingCenterModal";
+import { PhoneModal } from "./PhoneModal";
+import { DiscussionEventModal } from "./DiscussionEventModal";
 
 function AttributeBar({ label, value }: { label: string; value: number }) {
   return (
@@ -35,14 +43,136 @@ export function Dashboard({
   const [showEvent, setShowEvent] = useState(false);
   const [showContractInfo, setShowContractInfo] = useState(false);
   const [showStore, setShowStore] = useState(false);
+  const [showCityMap, setShowCityMap] = useState(false);
+  const [showNightclub, setShowNightclub] = useState(false);
+  const [showTrainingCenter, setShowTrainingCenter] = useState(false);
+  const [showPhone, setShowPhone] = useState(false);
   const [showRelationships, setShowRelationships] = useState(false);
+  const [pendingFriendEvent, setPendingFriendEvent] = useState<Friend | null>(null);
   const [pendingFamilyEvent, setPendingFamilyEvent] = useState<{event: FamilyEvent, personId: string, personName: string, type: "family" | "friend" | "girlfriend"} | null>(null);
+
+  let pendingDiscussionEvent: { id: string; name: string; type: "family" | "friend" | "girlfriend" } | null = null;
+  const zeroFamily = player.relationships.family.find(f => f.affinity <= 0);
+  if (zeroFamily) pendingDiscussionEvent = { id: zeroFamily.id, name: zeroFamily.name, type: "family" };
+  else {
+    const zeroFriend = player.relationships.friends.find(f => f.affinity <= 0);
+    if (zeroFriend) pendingDiscussionEvent = { id: zeroFriend.id, name: zeroFriend.name, type: "friend" };
+    else if (player.relationships.girlfriend && player.relationships.girlfriend.affinity <= 0) {
+      pendingDiscussionEvent = { id: player.relationships.girlfriend.id, name: player.relationships.girlfriend.name, type: "girlfriend" };
+    }
+  }
+
+  const handleDiscussionChoice = (choiceId: string) => {
+    if (!pendingDiscussionEvent) return;
+    const updatedPlayer = { ...player, relationships: { ...player.relationships }, personal: { ...player.personal } };
+    
+    let isRemoved = false;
+    let newAffinity = 0;
+    
+    if (choiceId === "pedir_desculpas") {
+      newAffinity = 30; // restores relationship to weak level
+      updatedPlayer.personal.mood = Math.max(0, updatedPlayer.personal.mood - 10);
+    } else if (choiceId === "ignorar") {
+      isRemoved = true;
+      updatedPlayer.personal.mood = Math.max(0, updatedPlayer.personal.mood - 5);
+    } else if (choiceId === "brigar") {
+      isRemoved = true;
+      updatedPlayer.personal.mood = Math.max(0, updatedPlayer.personal.mood - 20);
+      updatedPlayer.personal.social = Math.max(0, updatedPlayer.personal.social - 10);
+    }
+
+    if (pendingDiscussionEvent.type === "family") {
+      if (isRemoved) {
+        updatedPlayer.relationships.family = updatedPlayer.relationships.family.filter(f => f.id !== pendingDiscussionEvent!.id);
+      } else {
+        const idx = updatedPlayer.relationships.family.findIndex(f => f.id === pendingDiscussionEvent!.id);
+        if (idx !== -1) updatedPlayer.relationships.family[idx] = { ...updatedPlayer.relationships.family[idx], affinity: newAffinity };
+      }
+    } else if (pendingDiscussionEvent.type === "friend") {
+      if (isRemoved) {
+        updatedPlayer.relationships.friends = updatedPlayer.relationships.friends.filter(f => f.id !== pendingDiscussionEvent!.id);
+      } else {
+        const idx = updatedPlayer.relationships.friends.findIndex(f => f.id === pendingDiscussionEvent!.id);
+        if (idx !== -1) updatedPlayer.relationships.friends[idx] = { ...updatedPlayer.relationships.friends[idx], affinity: newAffinity };
+      }
+    } else if (pendingDiscussionEvent.type === "girlfriend") {
+      if (isRemoved) {
+        updatedPlayer.relationships.girlfriend = null;
+      } else if (updatedPlayer.relationships.girlfriend) {
+        updatedPlayer.relationships.girlfriend = { ...updatedPlayer.relationships.girlfriend, affinity: newAffinity };
+      }
+    }
+    
+    onUpdatePlayer(updatedPlayer);
+  };
 
   const ovr = calculateOverall(player.attributes, player.position);
   const title = getPlayerTitle(player.age, ovr);
+  
+  const hasUnreadMessages = player.chats ? Object.values(player.chats).some(c => c.hasUnread) : false;
 
   const handleSimulate = () => {
     onSimulate();
+  };
+
+  const handleParty = () => {
+    if (player.money >= 15000 && player.personal.health > 15) {
+      const updatedPlayer = {
+        ...player,
+        money: player.money - 15000,
+        personal: {
+          ...player.personal,
+          mood: Math.min(100, player.personal.mood + 20),
+          social: Math.min(100, player.personal.social + 20),
+          health: Math.max(0, player.personal.health - 15)
+        }
+      };
+
+      if (Math.random() > 0.5) {
+        setPendingFriendEvent(generateFriend(player.nationality, player.age));
+      }
+
+      onUpdatePlayer(updatedPlayer);
+      setShowNightclub(false);
+    }
+  };
+
+  const handleFriendChoice = (accept: boolean) => {
+    if (!pendingFriendEvent) return;
+    
+    if (accept) {
+      onUpdatePlayer({
+        ...player,
+        relationships: {
+          ...player.relationships,
+          friends: [...player.relationships.friends, pendingFriendEvent]
+        },
+        personal: {
+          ...player.personal,
+          social: Math.min(100, player.personal.social + 10),
+          mood: Math.min(100, player.personal.mood + 5)
+        }
+      });
+    }
+
+    setPendingFriendEvent(null);
+  };
+
+  const handleLocalTrain = (attr: keyof typeof player.attributes) => {
+    if (player.personal.health > 10 && player.personal.mood >= 1 && player.attributes[attr] < 99) {
+      onUpdatePlayer({
+        ...player,
+        attributes: {
+          ...player.attributes,
+          [attr]: Math.min(99, player.attributes[attr] + 1)
+        },
+        personal: {
+          ...player.personal,
+          health: player.personal.health - 10,
+          mood: player.personal.mood - 1
+        }
+      });
+    }
   };
 
   const handleBuyItem = (itemId: string, price: number) => {
@@ -50,34 +180,19 @@ export function Dashboard({
 
     const item = STORE_ITEMS.find(i => i.id === itemId);
 
-    if (itemId === "Preparador" && player.hasPersonalTrainer) return;
-    if (itemId === "Massagista" && player.hasMasseuse) return;
-    if (itemId === "Festa Exclusiva" && player.usedExclusiveParty) return;
-    if (itemId === "Viagem Internacional" && player.usedInternationalTrip) return;
+    const socialGain = item?.socialGain ?? 1;
 
     const updatedPlayer = { 
       ...player, 
       money: player.money - price,
-      personal: { ...player.personal }
+      assets: [...player.assets, itemId],
+      personal: {
+        ...player.personal,
+        social: Math.min(100, player.personal.social + socialGain),
+        mood: Math.min(100, player.personal.mood + 1)
+      }
     };
 
-    const socialGain = item?.socialGain ?? 1;
-    updatedPlayer.personal.social = Math.min(100, updatedPlayer.personal.social + socialGain);
-    updatedPlayer.personal.mood = Math.min(100, updatedPlayer.personal.mood + 1);
-
-    if (itemId === "Preparador") {
-      updatedPlayer.hasPersonalTrainer = true;
-    } else if (itemId === "Massagista") {
-      updatedPlayer.hasMasseuse = true;
-      const missingHealth = 100 - updatedPlayer.personal.health;
-      updatedPlayer.personal.health = Math.round(Math.min(100, updatedPlayer.personal.health + missingHealth * 0.5));
-    } else if (itemId === "Festa Exclusiva") {
-      updatedPlayer.usedExclusiveParty = true;
-    } else if (itemId === "Viagem Internacional") {
-      updatedPlayer.usedInternationalTrip = true;
-    } else if (!item?.consumable) {
-      updatedPlayer.assets = [...player.assets, itemId];
-    }
     onUpdatePlayer(updatedPlayer);
   };
 
@@ -170,6 +285,21 @@ export function Dashboard({
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-50 p-4 sm:p-8 font-sans">
+      {pendingDiscussionEvent && (
+        <DiscussionEventModal
+          personName={pendingDiscussionEvent.name}
+          relationType={pendingDiscussionEvent.type}
+          onChoice={handleDiscussionChoice}
+        />
+      )}
+      {pendingFriendEvent && (
+        <NewFriendModal 
+          friend={pendingFriendEvent}
+          onAccept={() => handleFriendChoice(true)}
+          onDecline={() => handleFriendChoice(false)}
+        />
+      )}
+
       {pendingFamilyEvent && (
         <FamilyEventModal
           event={pendingFamilyEvent.event}
@@ -222,6 +352,53 @@ export function Dashboard({
         </div>
       )}
 
+      {showCityMap && (
+        <CityMapModal
+          onClose={() => setShowCityMap(false)}
+          onOpenStore={() => { setShowCityMap(false); setShowStore(true); }}
+          onOpenTraining={() => { setShowCityMap(false); setShowTrainingCenter(true); }}
+          onOpenNightclub={() => { setShowCityMap(false); setShowNightclub(true); }}
+        />
+      )}
+
+      {showTrainingCenter && (
+        <TrainingCenterModal
+          player={player}
+          onClose={() => setShowTrainingCenter(false)}
+          onTrain={handleLocalTrain}
+        />
+      )}
+
+      {showNightclub && (
+        <NightclubModal
+          player={player}
+          onClose={() => setShowNightclub(false)}
+          onParty={handleParty}
+        />
+      )}
+
+      {showPhone && (
+        <PhoneModal
+          player={player}
+          onClose={() => setShowPhone(false)}
+          onOpenContract={() => { setShowPhone(false); setShowContractInfo(true); }}
+          onOpenMessages={() => { setShowPhone(false); setShowRelationships(true); }}
+          onBuyService={(service, price) => {
+            if (player.money >= price) {
+              const updatedPlayer = { ...player, money: player.money - price };
+              if (service === "Preparador") {
+                updatedPlayer.hasPersonalTrainer = true;
+              } else if (service === "Massagista") {
+                updatedPlayer.hasMasseuse = true;
+                const missingHealth = 100 - updatedPlayer.personal.health;
+                updatedPlayer.personal.health = Math.round(Math.min(100, updatedPlayer.personal.health + missingHealth * 0.5));
+              }
+              onUpdatePlayer(updatedPlayer);
+            }
+          }}
+        />
+      )}
+
       {showStore && (
         <StoreModal
           player={player}
@@ -234,7 +411,7 @@ export function Dashboard({
         <RelationshipsModal
           player={player}
           onClose={() => setShowRelationships(false)}
-          onSpendTime={handleSpendTime}
+          onUpdatePlayer={onUpdatePlayer}
         />
       )}
 
@@ -245,7 +422,11 @@ export function Dashboard({
           <div className="flex items-center gap-6">
             <div className="relative shrink-0">
               <div className="w-24 h-24 bg-slate-800 rounded-full flex items-center justify-center border-4 border-slate-950 shadow-inner overflow-hidden">
-                <User className="w-12 h-12 text-slate-600" />
+                {player.avatarUrl ? (
+                  <img src={player.avatarUrl} alt={player.name} className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-12 h-12 text-slate-600" />
+                )}
               </div>
               <div 
                 className="absolute -bottom-2 -right-2 w-8 h-auto shadow-md overflow-hidden flex items-center justify-center"
@@ -357,27 +538,24 @@ export function Dashboard({
               </button>
 
               <button
-                onClick={() => setShowContractInfo(true)}
-                className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-700"
+                onClick={() => setShowPhone(true)}
+                className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-700 relative"
               >
-                <FileSignature className="w-4 h-4" />
-                Contrato
+                <div className="relative">
+                  <Smartphone className="w-4 h-4" />
+                  {hasUnreadMessages && (
+                    <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-slate-800"></div>
+                  )}
+                </div>
+                Celular
               </button>
 
               <button
-                onClick={() => setShowStore(true)}
+                onClick={() => setShowCityMap(true)}
                 className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-700"
               >
-                <ShoppingBag className="w-4 h-4" />
-                Loja
-              </button>
-
-              <button
-                onClick={() => setShowRelationships(true)}
-                className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-700"
-              >
-                <Users className="w-4 h-4" />
-                Relações
+                <MapPin className="w-4 h-4" />
+                Mapa da Cidade
               </button>
             </div>
           </div>
@@ -448,12 +626,12 @@ export function Dashboard({
                           {stat.injured && (
                             <div className="flex flex-wrap gap-2 mt-2">
                               <div className={`px-2 py-1 text-xs font-bold rounded-md border ${
-                                stat.careerEndingInjury
+                                stat.seasonEndingInjury
                                   ? "bg-red-500/10 text-red-400 border-red-500/20"
                                   : "bg-orange-500/10 text-orange-400 border-orange-500/20"
                               }`}>
-                                🤕 {stat.careerEndingInjury
-                                  ? "Lesão encerrou a carreira"
+                                🤕 {stat.seasonEndingInjury
+                                  ? "Lesão tirou da temporada"
                                   : `Lesionado por ${stat.injuryDays} dias`}
                               </div>
                             </div>

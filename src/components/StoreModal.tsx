@@ -27,14 +27,6 @@ export const STORE_ITEMS = [
   { id: "Estúdio de Gravação", name: "Estúdio de Gravação", price: 600000, icon: Mic2, description: "Custo: 30k/ano", socialGain: 12 },
   { id: "Fazenda", name: "Fazenda de Luxo", price: 1500000, icon: TreePine, description: "Custo: 70k/ano", socialGain: 12 },
   { id: "Marca Própria", name: "Marca de Roupas Própria", price: 2000000, icon: StoreIcon, description: "Custo: 100k/ano", socialGain: 20 },
-
-  // Consumíveis: efeito imediato, podem ser comprados quantas vezes o jogador quiser
-  { id: "Festa Exclusiva", name: "Festa Exclusiva", price: 40000, icon: PartyPopper, description: "Consumível: eleva seu status social na hora (1x por temporada)", socialGain: 14, consumable: true },
-  { id: "Viagem Internacional", name: "Viagem Internacional", price: 25000, icon: Globe, description: "Consumível: eleva seu status social na hora (1x por temporada)", socialGain: 7, consumable: true },
-
-  // Consumíveis limitados a 1 vez por temporada
-  { id: "Preparador", name: "Preparador Físico", price: 150000, icon: Dumbbell, description: "+50% de ganho de Físico (dura 1 temporada)", socialGain: 2 },
-  { id: "Massagista", name: "Massagista Particular", price: 50000, icon: UserPlus, description: "Cura 50% da Saúde na hora (1x por temporada)", socialGain: 1 },
 ];
 
 export function StoreModal({ 
@@ -66,20 +58,7 @@ export function StoreModal({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {STORE_ITEMS.map((item) => {
             const Icon = item.icon;
-            let owned = false;
-            if (item.id === "Preparador") {
-              owned = player.hasPersonalTrainer;
-            } else if (item.id === "Massagista") {
-              owned = !!player.hasMasseuse;
-            } else if (item.id === "Festa Exclusiva") {
-              owned = !!player.usedExclusiveParty;
-            } else if (item.id === "Viagem Internacional") {
-              owned = !!player.usedInternationalTrip;
-            } else if (item.consumable) {
-              owned = false; // Consumível: pode ser comprado repetidas vezes
-            } else {
-              owned = player.assets.includes(item.id);
-            }
+            let owned = player.assets.includes(item.id);
 
             const canAfford = player.money >= item.price;
 
