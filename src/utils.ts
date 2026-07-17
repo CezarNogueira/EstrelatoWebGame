@@ -238,7 +238,7 @@ export const autoDistributePoints = (
     "ATA": ["shooting", "pace", "dribbling", "physical", "passing", "defending"],
     "PON": ["pace", "dribbling", "shooting", "passing", "physical", "defending"],
     "MEI": ["passing", "dribbling", "shooting", "pace", "physical", "defending"],
-    "MC": ["passing", "physical", "dribbling", "defending", "pace", "shooting"],
+    "MC":  ["passing", "physical", "dribbling", "defending", "pace", "shooting"],
     "VOL": ["defending", "physical", "passing", "pace", "dribbling", "shooting"],
     "ZAG": ["defending", "physical", "pace", "passing", "dribbling", "shooting"],
     "LAT": ["pace", "defending", "passing", "dribbling", "physical", "shooting"],
@@ -278,23 +278,17 @@ export const generatePressMessage = (
 
   // Mental Health
   if (stat.depressed) {
-    messages.push(`"Tristeza profunda. ${player.name} foi diagnosticado com depressão e se afastou completamente do futebol nesta temporada."`);
-    messages.push(`"Momento delicado. Lutando contra a depressão, ${player.name} não entrou em campo neste ano."`);
+    messages.push(`"${player.name} foi diagnosticado com depressão e se afastou completamente do futebol nesta temporada."`);
+    messages.push(`"Lutando contra a depressão, ${player.name} não entrou em campo neste ano."`);
   } else if (stat.isolated) {
-    messages.push(`"Isolado! Fontes dizem que ${player.name} tem faltado aos treinos e se distanciado do elenco por problemas pessoais."`);
-    messages.push(`"Fase ruim mentalmente. ${player.name} tem evitado a mídia e companheiros, refletindo em menos jogos disputados."`);
-  }
-
-  // Injury
-  if (stat.injured) {
-    messages.push(`"Temporada de lesões! ${player.name} passou boa parte do ano no departamento médico."`);
-    messages.push(`"Fora de combate! Uma lesão tirou ${player.name} de vários jogos importantes nesta temporada."`);
+    messages.push(`"Fontes dizem que ${player.name} tem faltado aos treinos e se distanciado do elenco por problemas pessoais."`);
+    messages.push(`"${player.name} tem evitado a mídia e companheiros, refletindo em menos jogos disputados."`);
   }
 
   // Awards
   if (stat.individualAwards && stat.individualAwards.includes("Bola de Ouro")) {
-    messages.push(`"Absoluto! ${player.name} ganha a Bola de Ouro e entra para a história como o melhor do mundo!"`);
-    messages.push(`"Não tem para ninguém! Temporada mágica coroa ${player.name} com a Bola de Ouro."`);
+    messages.push(`"${player.name} ganha a Bola de Ouro e entra para a história como o melhor do mundo!"`);
+    messages.push(`"Temporada mágica coroa ${player.name} com a Bola de Ouro."`);
   }
 
   // Titles & Relegation/Promotion
@@ -304,7 +298,7 @@ export const generatePressMessage = (
   if (player.isPro && stat.leaguePosition) {
     if (player.currentTeam.division === 2 && stat.leaguePosition <= 4) {
       if (wonLeague) {
-        messages.push(`"Campeão e acesso garantido! ${player.name} lidera o time rumo à elite com o título da ${stat.leagueName}."`);
+        messages.push(`"Campeão! ${player.name} lidera o time rumo à elite com o título da ${stat.leagueName}."`);
       } else {
         messages.push(`"Objetivo alcançado! A equipe de ${player.name} sobe para a primeira divisão."`);
       }
@@ -333,25 +327,18 @@ export const generatePressMessage = (
     }
   }
 
-  // Goals & Assists
-  if (stat.goals > 30) {
-    messages.push(`"Máquina de gols! ${player.name} aterrorizou as defesas adversárias nesta temporada."`);
-  } else if (stat.goals > 15 && stat.assists > 15) {
-    messages.push(`"O maestro do time! ${player.name} anota um 'duplo-duplo' com gols e assistências de sobra."`);
-  }
-
   // Defensive awards & standout defensive seasons
   if (stat.individualAwards && (stat.individualAwards.includes("Muralha da Temporada") || stat.individualAwards.includes("Muralha da Base"))) {
     messages.push(`"Intransponível! ${player.name} vira sinônimo de segurança na defesa e conquista a Muralha da Temporada."`);
     messages.push(`"Ninguém passa! ${player.name} anula os atacantes rivais e leva a Muralha da Temporada."`);
-  } else if (stat.tackles > 100 && stat.cleanSheets > 10) {
+  } else if (stat.tackles > 150 && stat.cleanSheets > 10) {
     messages.push(`"Parede na defesa! ${player.name} foi decisivo evitando gols do adversário nesta temporada."`);
   }
 
   // Pro contract
   if (proContractOffer) {
-    messages.push(`"Olho nele! A jovem promessa ${player.name} ganha sua primeira chance no time profissional."`);
-    messages.push(`"O futuro chegou? ${player.name} impressiona na base e sobe para os profissionais."`);
+    messages.push(`"A jovem promessa ${player.name} ganha sua primeira chance no time profissional."`);
+    messages.push(`"${player.name} impressiona na base e sobe para os profissionais."`);
   }
 
   // Transfer
@@ -362,7 +349,7 @@ export const generatePressMessage = (
   // Training/Attributes
   const attrTotal = Object.values(stat.attributeChanges || {}).reduce((a, b) => a + (b || 0), 0);
   if (attrTotal > 5 && !proContractOffer && !transferOffer && !wonLeague && wonFinals.length === 0 && stat.goals < 15) {
-     messages.push(`"Evolução visível! ${player.name} focou nos treinos e os resultados físicos e técnicos já aparecem."`);
+     messages.push(`"${player.name} focou nos treinos e os resultados físicos e técnicos já aparecem."`);
   }
 
   // Default or fallback
