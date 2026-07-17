@@ -1,12 +1,11 @@
-import { User } from "lucide-react";
 import { getRandomAvatar, sanitizeAvatar } from "../data";
 import { useState } from "react";
 
 export function ChooseAppearance({ onSelect, playerName }: { onSelect: (avatarUrl: string) => void; playerName: string }) {
-  const [currentAvatar, setCurrentAvatar] = useState<string>(sanitizeAvatar(getRandomAvatar(), playerName) || "");
+  const [currentAvatar, setCurrentAvatar] = useState<string>(sanitizeAvatar(getRandomAvatar("male"), playerName) || "");
 
   const handleShuffle = () => {
-    setCurrentAvatar(sanitizeAvatar(getRandomAvatar(), playerName) || "");
+    setCurrentAvatar(sanitizeAvatar(getRandomAvatar("male"), playerName) || "");
   };
 
   return (
@@ -14,7 +13,7 @@ export function ChooseAppearance({ onSelect, playerName }: { onSelect: (avatarUr
       <div className="text-center space-y-4">
         <h2 className="text-4xl font-black text-slate-100 tracking-tight">Sua Aparência</h2>
         <p className="text-slate-400 text-lg max-w-md mx-auto">
-          Escolha como você se parece.
+          Escolha sua Aparência
         </p>
       </div>
 
@@ -28,14 +27,14 @@ export function ChooseAppearance({ onSelect, playerName }: { onSelect: (avatarUr
             onClick={handleShuffle}
             className="w-full py-3 rounded-xl font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
           >
-            Mudar Aparência
+            Trocar
           </button>
 
           <button
             onClick={() => onSelect(currentAvatar)}
             className="w-full py-3 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-600 text-white transition-colors"
           >
-            Confirmar Aparência
+            Confirmar
           </button>
         </div>
       </div>

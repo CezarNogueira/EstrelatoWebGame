@@ -8,10 +8,15 @@ import female2 from "./assets/avatars/female2.png";
 import female3 from "./assets/avatars/female3.png";
 import coachAvatar from "./assets/avatars/oldmale.png";
 
-export const PLAYER_AVATARS = [male1, male2, male3, female1, female2, female3];
+export const MALE_AVATARS = [male1, male2, male3];
+export const FEMALE_AVATARS = [female1, female2, female3];
+export const PLAYER_AVATARS = MALE_AVATARS; // jogador é sempre masculino
 
+// Agora `gender` é respeitado de fato. Se não vier gender, cai no masculino
+// (mantendo compatibilidade com quem chama sem esse argumento).
 export const getRandomAvatar = (gender?: "male" | "female") => {
-  return PLAYER_AVATARS[Math.floor(Math.random() * PLAYER_AVATARS.length)];
+  const pool = gender === "female" ? FEMALE_AVATARS : MALE_AVATARS;
+  return pool[Math.floor(Math.random() * pool.length)];
 };
 
 export const getCoachAvatar = () => coachAvatar;
