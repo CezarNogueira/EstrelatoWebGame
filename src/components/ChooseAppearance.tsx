@@ -1,11 +1,18 @@
-import { getRandomAvatar, sanitizeAvatar } from "../data";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { MALE_AVATARS, sanitizeAvatar } from "../data";
 import { useState } from "react";
 
 export function ChooseAppearance({ onSelect, playerName }: { onSelect: (avatarUrl: string) => void; playerName: string }) {
-  const [currentAvatar, setCurrentAvatar] = useState<string>(sanitizeAvatar(getRandomAvatar("male"), playerName) || "");
+  const [avatarIndex, setAvatarIndex] = useState(0);
 
-  const handleShuffle = () => {
-    setCurrentAvatar(sanitizeAvatar(getRandomAvatar("male"), playerName) || "");
+  const currentAvatar = sanitizeAvatar(MALE_AVATARS[avatarIndex], playerName) || "";
+
+  const handlePrev = () => {
+    setAvatarIndex((prev) => (prev - 1 + MALE_AVATARS.length) % MALE_AVATARS.length);
+  };
+
+  const handleNext = () => {
+    setAvatarIndex((prev) => (prev + 1) % MALE_AVATARS.length);
   };
 
   return (
@@ -13,30 +20,48 @@ export function ChooseAppearance({ onSelect, playerName }: { onSelect: (avatarUr
       <div className="text-center space-y-4">
         <h2 className="text-4xl font-black text-slate-100 tracking-tight">Sua Aparência</h2>
         <p className="text-slate-400 text-lg max-w-md mx-auto">
-          Escolha sua Aparência
+          Escolha como você se parece.
         </p>
       </div>
 
       <div className="flex flex-col items-center gap-6 bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl max-w-sm w-full">
-        <div className="w-32 h-32 rounded-full border-4 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden">
-          <img src={currentAvatar} alt="Avatar" className="w-full h-full object-cover" />
-        </div>
-
-        <div className="flex flex-col gap-3 w-full">
+        <div className="flex items-center gap-4">
           <button
-            onClick={handleShuffle}
-            className="w-full py-3 rounded-xl font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors"
+            onClick={handlePrev}
+            aria-label="Aparência anterior"
+            className="w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-slate-300 transition-colors shrink-0"
           >
-            Trocar
+            <ChevronLeft className="w-5 h-5" />
           </button>
 
+          <div className="w-32 h-32 rounded-full border-4 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+            <img src={currentAvatar} alt="Avatar" className="w-full h-full object-cover" />
+          </div>
+
           <button
-            onClick={() => onSelect(currentAvatar)}
-            className="w-full py-3 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-600 text-white transition-colors"
+            onClick={handleNext}
+            aria-label="Próxima aparência"
+            className="w-10 h-10 rounded-full bg-slate-800 hover:bg-slate-700 border border-slate-700 flex items-center justify-center text-slate-300 transition-colors shrink-0"
           >
-            Confirmar
+            <ChevronRight className="w-5 h-5" />
           </button>
         </div>
+
+        <div className="flex gap-2">
+          {MALE_AVATARS.map((_, i) => (
+            <span
+              key={i}
+              className={`w-2 h-2 rounded-full transition-colors ${i === avatarIndex ? "bg-emerald-500" : "bg-slate-700"}`}
+            />
+          ))}
+        </div>
+
+        <button
+          onClick={() => onSelect(currentAvatar)}
+          className="w-full py-3 rounded-xl font-bold bg-emerald-500 hover:bg-emerald-600 text-white transition-colors"
+        >
+          Confirmar Aparência
+        </button>
       </div>
     </div>
   );
