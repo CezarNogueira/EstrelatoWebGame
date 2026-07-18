@@ -64,9 +64,9 @@ export function Roulette({ nationality, onTeamSelected }: { nationality: string;
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950 text-slate-50 p-6">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950 text-slate-50 p-6 select-none">
       <div className="space-y-8 text-center flex flex-col items-center max-w-2xl w-full">
-        <h2 className="text-3xl font-bold text-slate-300">
+        <h2 className="text-3xl font-bold uppercase tracking-wide text-slate-100">
           {isSpinning ? "Sorteando clube formador..." : `Você foi escolhido pelo: ${winner?.name || "Time não selecionado"}`}
         </h2>
         
@@ -111,15 +111,15 @@ export function Roulette({ nationality, onTeamSelected }: { nationality: string;
             <div className="flex flex-col gap-3 w-full">
               <button
                 onClick={handleContinue}
-                className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black rounded-2xl transition-all shadow-lg"
+                className="w-full py-4 bg-emerald-700 hover:bg-emerald-600 text-slate-100 font-black rounded-2xl transition-all uppercase tracking-wide shadow-lg"
               >
-                Começar a Carreira!
+                Iniciar Carreira
               </button>
               
               {rerollsLeft > 0 ? (
                 <button
                   onClick={() => startSpin(false)}
-                  className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl transition-all flex items-center justify-center gap-2 border border-slate-700"
+                  className="w-full py-4 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-2xl transition-all flex items-center justify-center gap-2 border border-slate-700"
                 >
                   <Dices className="w-5 h-5" />
                   Rodar Novamente ({rerollsLeft})
