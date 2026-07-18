@@ -13,18 +13,13 @@ export function StartScreen({ onStart }: { onStart: (name: string) => void }) {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950 text-slate-50 p-6">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950 text-slate-50 p-6 select-none">
       <div className="max-w-md w-full flex flex-col items-center text-center space-y-8">
         <div className="p-4 bg-emerald-500/10 rounded-full">
           <Trophy className="w-20 h-20 text-emerald-500" />
         </div>
         
-        <div className="space-y-2">
-          <h1 className="text-5xl font-black tracking-tight text-white">Estrelato</h1>
-          <p className="text-slate-400 text-lg">
-            Sua jornada no futebol começa aos 14 anos. Comece na base, evolua seus atributos e alcance o topo do mundo.
-          </p>
-        </div>
+          <h1 className="text-5xl font-black tracking-tight text-slate-100 tracking-wide">ESTRELATO</h1>
 
         <div className="w-full">
           <input 
@@ -39,9 +34,9 @@ export function StartScreen({ onStart }: { onStart: (name: string) => void }) {
 
         <button
           onClick={handleStart}
-          className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xl rounded-2xl transition-all active:scale-95 shadow-[0_0_40px_-10px_rgba(16,185,129,0.5)]"
+          className="w-full py-4 bg-emerald-700 hover:bg-emerald-600 text-slate-100 font-black text-xl rounded-2xl tracking-wide transition-all active:scale-95 shadow-[0_0_40px_-10px_rgba(16,185,129,0.5)]"
         >
-          Sortear Clube Formador
+          JOGAR
         </button>
       </div>
     </div>
