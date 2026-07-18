@@ -56,13 +56,15 @@ export function Dashboard({
   const [pendingFamilyEvent, setPendingFamilyEvent] = useState<{event: FamilyEvent, personId: string, personName: string, type: "family" | "friend" | "girlfriend"} | null>(null);
 
   let pendingDiscussionEvent: { id: string; name: string; type: "family" | "friend" | "girlfriend" } | null = null;
-  const zeroFamily = player.relationships.family.find(f => f.affinity <= 0);
-  if (zeroFamily) pendingDiscussionEvent = { id: zeroFamily.id, name: zeroFamily.name, type: "family" };
-  else {
-    const zeroFriend = player.relationships.friends.find(f => f.affinity <= 0);
-    if (zeroFriend) pendingDiscussionEvent = { id: zeroFriend.id, name: zeroFriend.name, type: "friend" };
-    else if (player.relationships.girlfriend && player.relationships.girlfriend.affinity <= 0) {
-      pendingDiscussionEvent = { id: player.relationships.girlfriend.id, name: player.relationships.girlfriend.name, type: "girlfriend" };
+  if (player.mode !== "QUICK") {
+    const zeroFamily = player.relationships.family.find(f => f.affinity <= 0);
+    if (zeroFamily) pendingDiscussionEvent = { id: zeroFamily.id, name: zeroFamily.name, type: "family" };
+    else {
+      const zeroFriend = player.relationships.friends.find(f => f.affinity <= 0);
+      if (zeroFriend) pendingDiscussionEvent = { id: zeroFriend.id, name: zeroFriend.name, type: "friend" };
+      else if (player.relationships.girlfriend && player.relationships.girlfriend.affinity <= 0) {
+        pendingDiscussionEvent = { id: player.relationships.girlfriend.id, name: player.relationships.girlfriend.name, type: "girlfriend" };
+      }
     }
   }
 
@@ -583,27 +585,28 @@ export function Dashboard({
                 {player.retired ? "Carreira Encerrada" : "Simular Temporada"}
               </button>
 
-              <button
-                onClick={() => setShowPhone(true)}
-                className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-700 relative"
-              >
-                <div className="relative">
-                  <Smartphone className="w-4 h-4" />
-                  {hasUnreadMessages && (
-                    <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-slate-800"></div>
-                  )}
-                </div>
-                Celular
-              </button>
-
               {player.mode !== "QUICK" && (
-                <button
-                  onClick={() => setShowCityMap(true)}
+                <>
+                  <button
+                    onClick={() => setShowPhone(true)}
+                    className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-700 relative"
+                  >
+                    <div className="relative">
+                      <Smartphone className="w-4 h-4" />
+                      {hasUnreadMessages && (
+                        <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-slate-800"></div>
+                      )}
+                    </div>
+                    Celular
+                  </button>
+                  <button
+                    onClick={() => setShowCityMap(true)}
                   className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-700"
                 >
                   <MapPin className="w-4 h-4" />
                   Mapa da Cidade
                 </button>
+                </>
               )}
 
               {!player.retired && (

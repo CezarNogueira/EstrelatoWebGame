@@ -3,62 +3,42 @@ import re
 with open('src/components/Dashboard.tsx', 'r') as f:
     content = f.read()
 
-handle_party_code = """
-  const handleParty = () => {
-    if (player.money >= 15000 && player.personal.health > 15) {
-      let updatedPlayer = {
-        ...player,
-        money: player.money - 15000,
-        personal: {
-          ...player.personal,
-          mood: Math.min(100, player.personal.mood + 20),
-          social: Math.min(100, player.personal.social + 20),
-          health: Math.max(0, player.personal.health - 15)
-        }
-      };
+old_button = """              <button
+                onClick={() => setShowPhone(true)}
+                className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-700 relative"
+              >
+                <div className="relative">
+                  <Smartphone className="w-4 h-4" />
+                  {hasUnreadMessages && (
+                    <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-slate-800"></div>
+                  )}
+                </div>
+                Celular
+              </button>
 
-      if (updatedPlayer.relationships.girlfriend) {
-        updatedPlayer.relationships = {
-          ...updatedPlayer.relationships,
-          girlfriend: {
-            ...updatedPlayer.relationships.girlfriend,
-            affinity: 0
-          }
-        };
-        alert(`Sua namorada descobriu que você foi para a balada e discutiu feio com você! A afinidade dela caiu para 0%.`);
-      }
+              {player.mode !== "QUICK" && (
+                <button
+                  onClick={() => setShowCityMap(true)}"""
 
-      onUpdatePlayer(updatedPlayer);
-      setShowNightclub(false);
+new_button = """              {player.mode !== "QUICK" && (
+                <>
+                  <button
+                    onClick={() => setShowPhone(true)}
+                    className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-700 relative"
+                  >
+                    <div className="relative">
+                      <Smartphone className="w-4 h-4" />
+                      {hasUnreadMessages && (
+                        <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-slate-800"></div>
+                      )}
+                    </div>
+                    Celular
+                  </button>
+                  <button
+                    onClick={() => setShowCityMap(true)}"""
 
-      if (Math.random() < 0.99) {
-          const names = ["Camila", "Sofia", "Isabella", "Giovanna", "Beatriz"];
-          const name = names[Math.floor(Math.random() * names.length)];
-          const event: RomanceEvent = {
-             id: `balada_${Date.now()}`,
-             personName: name,
-             relationTag: "Conhecida da Balada",
-             title: "Noitada Forte!",
-             description: `Na área VIP da balada, ${name} se aproximou de você com muito interesse e deixou claro que quer ficar com você.`,
-             attraction: 80,
-             age: 20,
-             choices: [
-                { id: "beijar", label: "Beijar", tone: "positive" },
-                { id: "fazer-amor", label: "Fazer amor", tone: "positive" },
-                { id: "ignorar", label: "Ignorar", tone: "neutral" }
-             ]
-          };
-          onTriggerRomanceEvent?.(event);
-      } else {
-        if (Math.random() > 0.5) {
-          setPendingFriendEvent(generateFriend(player.nationality, player.age));
-        }
-      }
-    }
-  };
-"""
-
-content = re.sub(r'const handleParty = \(\) => \{[\s\S]*?setShowNightclub\(false\);\n    \}\n  \};', handle_party_code.strip(), content)
+content = content.replace(old_button, new_button)
+content = content.replace('                  </button>\n              )}\n\n              <button', '                  </button>\n                </>\n              )}\n\n              <button')
 
 with open('src/components/Dashboard.tsx', 'w') as f:
     f.write(content)
