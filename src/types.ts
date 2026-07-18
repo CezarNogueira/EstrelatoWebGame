@@ -35,10 +35,12 @@ export type SeasonStat = {
   nationalTeamCall?: boolean;
   finals?: FinalResult[];
   individualAwards?: string[];
+  ballonDorCandidates?: any[];
   pressMessage?: string;
   injured?: boolean;
   injuryDays?: number; // duração da lesão em dias (4 a 60)
   seasonEndingInjury?: boolean; // lesão gravíssima que tira o jogador da temporada (saúde chegou a 0%)
+  isBenched?: boolean;
   isolated?: boolean;
   depressed?: boolean;
   leaguePosition?: number;
@@ -57,6 +59,7 @@ export type RomanceChoice = {
 
 export type RomanceEvent = {
   id: string;
+  friendId?: string; // se for um evento gerado a partir de um amigo
   personName: string;
   relationTag: string; // ex: "Melhor Amigo", "Fã", "Conhecida"
   title: string;
@@ -130,6 +133,7 @@ export type ChatState = {
 
 export type Player = {
   name: string;
+  mode?: "STORY" | "QUICK";
   avatarUrl?: string;
   age: number;
   position: Position;
@@ -159,4 +163,5 @@ export type Player = {
     health: number;
     social: number;
   };
+  idolClubs?: string[];
 };

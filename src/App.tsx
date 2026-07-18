@@ -5,6 +5,7 @@ import { ChooseNationality } from "./components/ChooseNationality";
 import { ChooseAppearance } from "./components/ChooseAppearance";
 import { Roulette } from "./components/Roulette";
 import { ChoosePosition } from "./components/ChoosePosition";
+import { ChooseMode } from "./components/ChooseMode";
 import { Dashboard } from "./components/Dashboard";
 import { TrainingModal } from "./components/TrainingModal";
 import { FinalsModal } from "./components/FinalsModal";
@@ -14,12 +15,16 @@ import { ContractNegotiationModal } from "./components/ContractNegotiationModal"
 import { ContractOffersModal } from "./components/ContractOffersModal";
 
 import { InteractiveMatchModal, resetOpponentMemory } from "./components/InteractiveMatchModal";
+import { BallonDorModal } from "./components/BallonDorModal";
+import { ChuteiraModal } from "./components/ChuteiraModal";
+import { MuralhaModal } from "./components/MuralhaModal";
 import { RomanceEventModal } from "./components/RomanceEventModal";
 import { generateRomanceEvent } from "./data/romanceEvents";
 import { MentalHealthModal } from "./components/MentalHealthModal";
 import { HeartCrack, Heart } from "lucide-react";
 import { generateRelationships, generateFriend } from "./data";
-import { simulateSeason, applyGrowth, autoDistributePoints, generatePressMessage, calculateMarketValue, calculateOverall, formatCurrency, getReachedFinals, getContractEndOffers, addMessageToChat } from "./utils";
+import { simulateSeason, applyGrowth, autoDistributePoints, generatePressMessage, calculateMarketValue, calculateOverall, formatCurrency, getReachedFinals, getContractEndOffers, addMessageToChat, updateIdolStatus } from "./utils";
+import { IdolModal } from "./components/IdolModal";
 import { NewFriendModal } from "./components/NewFriendModal";
 import { Friend } from "./types";
 
@@ -27,7 +32,7 @@ import { Friend } from "./types";
 // em "não rolou química" em vez de virarem um evento de romance completo.
 const ROMANCE_INTEREST_THRESHOLD = 40;
 
-type Screen = "START" | "CHOOSE_NATIONALITY" | "CHOOSE_APPEARANCE" | "ROULETTE" | "CHOOSE_POSITION" | "DASHBOARD" | "CAREER_SUMMARY";
+type Screen = "START" | "CHOOSE_MODE" | "CHOOSE_NATIONALITY" | "CHOOSE_APPEARANCE" | "ROULETTE" | "CHOOSE_POSITION" | "DASHBOARD" | "CAREER_SUMMARY";
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>("START");
@@ -36,9 +41,17 @@ export default function App() {
   const [playerName, setPlayerName] = useState<string>("Você");
   const [playerNationality, setPlayerNationality] = useState<string>("");
   const [playerAvatar, setPlayerAvatar] = useState<string>("");
+  const [pendingIdol, setPendingIdol] = useState<{ club: string, reason: string } | null>(null);
+
+  const [gameMode, setGameMode] = useState<"STORY" | "QUICK">("STORY");
 
   const handleStart = (name: string) => {
     setPlayerName(name);
+    setScreen("CHOOSE_MODE");
+  };
+
+  const handleModeSelected = (mode: "STORY" | "QUICK") => {
+    setGameMode(mode);
     setScreen("CHOOSE_NATIONALITY");
   };
 
@@ -72,6 +85,7 @@ export default function App() {
 
     setPlayer({
       name: playerName,
+      mode: gameMode,
       avatarUrl: playerAvatar,
       age: 14,
       position,
@@ -123,7 +137,7 @@ export default function App() {
   } | null>(null);
 
   const [reachedFinalsQueue, setReachedFinalsQueue] = useState<string[]>([]);
-  const [playedFinals, setPlayedFinals] = useState<{type: string; won: boolean}[]>([]);
+  const [playedFinals, setPlayedFinals] = useState<{type: string; won: boolean; goals: number; assists: number}[]>([]);
   const [currentFinalType, setCurrentFinalType] = useState<string | null>(null);
   const [pendingTrainingBuff, setPendingTrainingBuff] = useState<Partial<Attributes> | undefined>();
   // Soma de gols e assistências que o jogador fez pessoalmente nas finais
@@ -166,7 +180,7 @@ export default function App() {
   };
 
   const handleInteractiveFinalComplete = (won: boolean, playerGoals: number, playerAssists: number) => {
-    const updatedPlayed = [...playedFinals, { type: currentFinalType!, won }];
+    const updatedPlayed = [...playedFinals, { type: currentFinalType!, won, goals: playerGoals, assists: playerAssists }];
     setPlayedFinals(updatedPlayed);
 
     const updatedGoalsAssists = {
@@ -182,14 +196,13 @@ export default function App() {
     } else {
       setReachedFinalsQueue([]);
       setCurrentFinalType(null);
-      executeSimulation(pendingTrainingBuff, updatedPlayed, updatedGoalsAssists);
+      executeSimulation(pendingTrainingBuff, updatedPlayed);
     }
   };
 
   const executeSimulation = (
     trainingBuff?: Partial<Attributes>,
-    prePlayedFinals?: {type: string; won: boolean}[],
-    finalsStatsBonus?: { goals: number; assists: number }
+    prePlayedFinals?: {type: string; won: boolean; goals: number; assists: number}[]
   ) => {
     if (!player) return;
     const { baseUpdatedPlayer, seasonStat, transfer, earnedPoints, proContractOffer } = simulateSeason(player, prePlayedFinals);
@@ -217,10 +230,6 @@ export default function App() {
 
     const finalStat: SeasonStat = {
       ...seasonStat,
-      // Gols e assistências feitos pelo jogador nas finais interativas somam
-      // ao total gerado pela simulação da temporada.
-      goals: seasonStat.goals + (finalsStatsBonus?.goals || 0),
-      assists: seasonStat.assists + (finalsStatsBonus?.assists || 0),
       attributeChanges: {
         pace: (seasonStat.attributeChanges.pace || 0) + (combinedBuff.pace || 0),
         shooting: (seasonStat.attributeChanges.shooting || 0) + (combinedBuff.shooting || 0),
@@ -234,6 +243,8 @@ export default function App() {
 
     const currentOvr = calculateOverall(finalAttributes, player.position);
     const marketValue = calculateMarketValue(currentOvr, baseUpdatedPlayer.age);
+    
+    const { idolClubs, newIdol } = updateIdolStatus(baseUpdatedPlayer, finalStat, prePlayedFinals);
 
     const finalBasePlayer: Player = {
       ...baseUpdatedPlayer,
@@ -246,6 +257,7 @@ export default function App() {
       hasMasseuse: false,
       usedExclusiveParty: false,
       usedInternationalTrip: false,
+      idolClubs: idolClubs,
     };
 
     if (finalStat.nationalTeamCall) {
@@ -258,6 +270,7 @@ export default function App() {
       seasonStat: finalStat,
       transferOffer: transfer || null,
       proContractOffer: proContractOffer || false,
+      newIdol: newIdol || null,
     };
 
     if (finalStat.depressed) {
@@ -291,11 +304,25 @@ export default function App() {
       setPendingFinals(stateToPass.seasonStat.finals);
       setPendingSimulationPhase(stateToPass);
     } else {
+      proceedToIdolCheck(stateToPass);
+    }
+  };
+
+  const proceedToIdolCheck = (stateToPass: any) => {
+    if (stateToPass.newIdol) {
+      setPendingIdol(stateToPass.newIdol);
+      setPendingSimulationPhase(stateToPass);
+    } else {
       proceedToProContract(stateToPass);
     }
   };
 
-
+  const handleContinueFromIdol = () => {
+    setPendingIdol(null);
+    if (pendingSimulationPhase) {
+      proceedToProContract(pendingSimulationPhase);
+    }
+  };
 
   const proceedToProContract = (stateToPass: any) => {
     if (stateToPass.proContractOffer) {
@@ -344,6 +371,10 @@ export default function App() {
 
   const checkPartyOrFinish = (stateToPass: any) => {
     const p = stateToPass.baseUpdatedPlayer;
+    if (p.mode === "QUICK") {
+      checkSponsorOrFinish(stateToPass);
+      return;
+    }
     if ((p.assets.includes("Casa") || p.assets.includes("Mansão")) && !p.retired && p.money >= 450000) {
       if (Math.random() <= 0.1) {
         const cost = Math.floor(Math.random() * (900000 - 450000 + 1)) + 450000;
@@ -379,6 +410,7 @@ export default function App() {
 
   const [pendingRomanceEvent, setPendingRomanceEvent] = useState<RomanceEvent | null>(null);
   const [pendingRomanceResult, setPendingRomanceResult] = useState<{ success: boolean, personName: string } | null>(null);
+  const [appreciationModal, setAppreciationModal] = useState<{message: string; affinity: number} | null>(null);
   const [pendingFriendEvent, setPendingFriendEvent] = useState<Friend | null>(null);
 
   // Quanto maior o Social do jogador, mais comum é surgir um evento de
@@ -387,6 +419,10 @@ export default function App() {
   // completo (com escolhas) aparece só um aviso de que não houve interesse.
   const checkRomanceEventOrNext = (stateToPass: any) => {
     const p = stateToPass.baseUpdatedPlayer;
+    if (p.mode === "QUICK") {
+      checkSponsorOrFinish(stateToPass);
+      return;
+    }
     if (!p.retired) {
       if (p.age >= 14 && p.age <= 16 && !p.hadFirstKiss && !p.relationships.girlfriend) {
         p.hadFirstKiss = true;
@@ -442,12 +478,61 @@ export default function App() {
     const event = pendingRomanceEvent;
     const choice = event.choices.find((c) => c.id === choiceId);
 
+
     if (choice) {
+      if (choice.id === "beijar" || choice.id === "fazer-amor") {
+         p.personal.social = Math.min(100, p.personal.social + 10);
+         p.personal.mood = Math.min(100, p.personal.mood + 10);
+         if (!p.relationships.girlfriend) {
+             p.relationships = {
+               ...p.relationships,
+               friends: [
+                 ...p.relationships.friends,
+                 { id: `friend_${Date.now()}`, name: event.personName, relationTag: "Ficante", affinity: 85, age: event.age, occupation: event.occupation, avatarUrl: event.avatarUrl },
+               ],
+             };
+         }
+         
+         const msg = choice.id === "beijar" 
+           ? `Ela gostou muito do seu beijo e vocês se divertiram bastante.`
+           : `A noite foi inesquecível e ela adorou passar esse tempo com você.`;
+           
+         setAppreciationModal({ message: msg, affinity: 85 });
+         setPendingRomanceEvent(null);
+         setPendingSimulationPhase(stateToPass);
+         return;
+      }
+      
+      if (choice.id === "aceitar-traicao") {
+         p.personal.mood = Math.min(100, p.personal.mood + 10);
+         p.personal.social = Math.max(0, p.personal.social - 15);
+         if (p.relationships.girlfriend) {
+             const exGirlfriendName = p.relationships.girlfriend.name;
+             p.relationships = { ...p.relationships, girlfriend: null };
+             if (p.history.length > 0) {
+               p.history[0].pressMessage = `"Escândalo! ${p.name} é flagrado traindo e o namoro com ${exGirlfriendName} chega ao fim."`;
+             }
+         }
+         setAppreciationModal({ message: `Você ficou com a sua amiga, mas sua namorada descobriu tudo e terminou com você.`, affinity: 100 });
+         setPendingRomanceEvent(null);
+         setPendingSimulationPhase(stateToPass);
+         return;
+      }
+      
+      if (choice.id === "negar-traicao") {
+         p.personal.mood = Math.min(100, p.personal.mood + 5);
+         setAppreciationModal({ message: `Você negou educadamente. Ela ficou sem graça, mas respeitou sua decisão.`, affinity: event.attraction });
+         setPendingRomanceEvent(null);
+         setPendingSimulationPhase(stateToPass);
+         return;
+      }
+
       switch (choice.tone) {
+
         case "safe":
           p.personal.social = Math.min(100, p.personal.social + 5);
           p.personal.mood = Math.min(100, p.personal.mood + 5);
-          if (!p.relationships.girlfriend && !p.relationships.friends.some(f => f.name === event.personName)) {
+          if (!event.friendId && !p.relationships.girlfriend && !p.relationships.friends.some(f => f.name === event.personName)) {
             p.relationships = {
               ...p.relationships,
               friends: [
@@ -464,8 +549,9 @@ export default function App() {
             // A escolha "positiva" pode evoluir para um namoro de verdade.
             p.relationships = {
               ...p.relationships,
+              friends: event.friendId ? p.relationships.friends.filter(f => f.id !== event.friendId) : p.relationships.friends,
               girlfriend: {
-                id: `gf_${Date.now()}`,
+                id: event.friendId || `gf_${Date.now()}`,
                 name: event.personName,
                 relationTag: "Namorada",
                 affinity: event.attraction,
@@ -484,13 +570,15 @@ export default function App() {
             return;
           } else if (!p.relationships.girlfriend) {
             // Não virou namoro dessa vez, mas rende uma nova amizade.
-            p.relationships = {
-              ...p.relationships,
-              friends: [
-                ...p.relationships.friends,
-                { id: `friend_${Date.now()}`, name: event.personName, relationTag: event.relationTag, affinity: event.attraction, age: event.age, occupation: event.occupation, avatarUrl: event.avatarUrl },
-              ],
-            };
+            if (!event.friendId) {
+              p.relationships = {
+                ...p.relationships,
+                friends: [
+                  ...p.relationships.friends,
+                  { id: `friend_${Date.now()}`, name: event.personName, relationTag: event.relationTag, affinity: event.attraction, age: event.age, occupation: event.occupation, avatarUrl: event.avatarUrl },
+                ],
+              };
+            }
             p.personal.mood = Math.max(0, p.personal.mood - 10);
             setPendingRomanceEvent(null);
             setPendingSimulationPhase(stateToPass);
@@ -544,6 +632,9 @@ export default function App() {
   };
 
   const [pendingSocialEvent, setPendingSocialEvent] = useState<any>(null);
+  const [pendingBallonDor, setPendingBallonDor] = useState<any>(null);
+  const [pendingChuteira, setPendingChuteira] = useState<any>(null);
+  const [pendingMuralha, setPendingMuralha] = useState<any>(null);
 
   const [pendingSponsorChoice, setPendingSponsorChoice] = useState<boolean>(false);
 
@@ -554,7 +645,60 @@ export default function App() {
       setPendingSimulationPhase(stateToPass);
       return;
     }
+    checkBallonDorOrFinish(stateToPass);
+  };
+
+  const checkBallonDorOrFinish = (stateToPass: any) => {
+    const stat = stateToPass.seasonStat;
+    if (stat && stat.ballonDorCandidates && stat.ballonDorCandidates.length > 0) {
+      setPendingBallonDor(stateToPass);
+      return;
+    }
+    checkChuteiraOrFinish(stateToPass);
+  };
+
+  const handleBallonDorClose = () => {
+    if (pendingBallonDor) {
+      const stateToPass = { ...pendingBallonDor };
+      setPendingBallonDor(null);
+      checkChuteiraOrFinish(stateToPass);
+    }
+  };
+
+  const checkChuteiraOrFinish = (stateToPass: any) => {
+    const stat = stateToPass.seasonStat;
+    // Chuteira de Ouro check
+    if (stat && stat.individualAwards && stat.individualAwards.includes("Chuteira de Ouro")) {
+      setPendingChuteira(stateToPass);
+      return;
+    }
+    checkMuralhaOrFinish(stateToPass);
+  };
+
+  const handleChuteiraClose = () => {
+    if (pendingChuteira) {
+      const stateToPass = { ...pendingChuteira };
+      setPendingChuteira(null);
+      checkMuralhaOrFinish(stateToPass);
+    }
+  };
+
+  const checkMuralhaOrFinish = (stateToPass: any) => {
+    const stat = stateToPass.seasonStat;
+    // Muralha da Temporada check
+    if (stat && stat.individualAwards && (stat.individualAwards.includes("Muralha da Temporada") || stat.individualAwards.includes("Muralha da Base"))) {
+      setPendingMuralha(stateToPass);
+      return;
+    }
     applyMaintenanceAndFinish(stateToPass);
+  };
+
+  const handleMuralhaClose = () => {
+    if (pendingMuralha) {
+      const stateToPass = { ...pendingMuralha };
+      setPendingMuralha(null);
+      applyMaintenanceAndFinish(stateToPass);
+    }
   };
 
   const handleSocialDecision = (accept: boolean) => {
@@ -658,7 +802,7 @@ export default function App() {
   const handleContinueFromFinals = () => {
     setPendingFinals(null);
     if (pendingSimulationPhase) {
-      proceedToProContract(pendingSimulationPhase);
+      proceedToIdolCheck(pendingSimulationPhase);
     }
   };
 
@@ -734,6 +878,7 @@ export default function App() {
   return (
     <>
       {screen === "START" && <StartScreen onStart={handleStart} />}
+      {screen === "CHOOSE_MODE" && <ChooseMode onSelect={handleModeSelected} />}
       {screen === "CHOOSE_NATIONALITY" && <ChooseNationality onSelect={handleNationalitySelected} />}
       {screen === "CHOOSE_APPEARANCE" && <ChooseAppearance onSelect={handleAppearanceSelected} playerName={playerName} />}
       {screen === "ROULETTE" && <Roulette nationality={playerNationality} onTeamSelected={handleTeamSelected} />}
@@ -833,7 +978,40 @@ export default function App() {
             <RomanceEventModal event={pendingRomanceEvent} onChoice={handleRomanceChoice} />
           )}
 
+
+          {appreciationModal && (
+            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[150] p-4">
+              <div className="bg-[#202c33] border border-slate-700 rounded-2xl p-6 max-w-sm w-full text-center shadow-xl">
+                <h3 className="text-white font-bold text-lg mb-2">Reação</h3>
+                <p className="text-slate-300 mb-6 text-sm">{appreciationModal.message}</p>
+                
+                <div className="mb-6">
+                  <div className="flex justify-between text-xs font-bold text-slate-400 mb-2">
+                    <span>Apreciação</span>
+                    <span className="text-emerald-400">{appreciationModal.affinity}%</span>
+                  </div>
+                  <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-emerald-500 transition-all duration-1000" 
+                      style={{ width: `${appreciationModal.affinity}%` }}
+                    />
+                  </div>
+                </div>
+
+                <button 
+                  onClick={() => {
+                    setAppreciationModal(null);
+                  }}
+                  className="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl transition-all"
+                >
+                  Entendi
+                </button>
+              </div>
+            </div>
+          )}
+          
           {pendingRomanceResult && (
+
             <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/90 p-4">
               <div className="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl max-w-md w-full text-center space-y-6">
                 <div className={`w-16 h-16 mx-auto rounded-full ${pendingRomanceResult.success ? 'bg-pink-500/20' : 'bg-slate-800'} flex items-center justify-center`}>
@@ -922,7 +1100,7 @@ export default function App() {
                 <button
                   onClick={() => {
                     setPendingSponsorChoice(false);
-                    applyMaintenanceAndFinish(pendingSimulationPhase);
+                    checkBallonDorOrFinish(pendingSimulationPhase);
                   }}
                   className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-xl transition-all"
                 >
@@ -956,8 +1134,40 @@ export default function App() {
               </div>
             </div>
           )}
-          <Dashboard player={player} onSimulate={handleSimulate} onUpdatePlayer={setPlayer} />
+          <Dashboard player={player} onSimulate={handleSimulate} onUpdatePlayer={setPlayer} onTriggerRomanceEvent={setPendingRomanceEvent} />
+
+      {pendingBallonDor && (
+        <BallonDorModal
+          player={pendingBallonDor.baseUpdatedPlayer}
+          seasonStat={pendingBallonDor.seasonStat}
+          onClose={handleBallonDorClose}
+        />
+      )}
+      
+      {pendingChuteira && (
+        <ChuteiraModal
+          player={pendingChuteira.baseUpdatedPlayer}
+          seasonStat={pendingChuteira.seasonStat}
+          onClose={handleChuteiraClose}
+        />
+      )}
+
+      {pendingMuralha && (
+        <MuralhaModal
+          player={pendingMuralha.baseUpdatedPlayer}
+          seasonStat={pendingMuralha.seasonStat}
+          onClose={handleMuralhaClose}
+        />
+      )}
         </div>
+      )}
+
+      {pendingIdol && (
+        <IdolModal
+          club={pendingIdol.club}
+          reason={pendingIdol.reason}
+          onContinue={handleContinueFromIdol}
+        />
       )}
     </>
   );

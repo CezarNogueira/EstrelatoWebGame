@@ -1,5 +1,6 @@
+import { RomanceEvent } from "../types";
 import { FamilyEvent, Player, SeasonStat } from "../types";
-import { calculateOverall, getPlayerTitle, formatCurrency } from "../utils";
+import { calculateOverall, getPlayerTitle, formatCurrency, getLeagueName } from "../utils";
 import { ArrowRight, Calendar, Goal, User, Users, Zap, FileSignature, ShoppingBag, Shield, ShieldCheck, MapPin, Smartphone } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useState } from "react";
@@ -31,14 +32,17 @@ function AttributeBar({ label, value }: { label: string; value: number }) {
   );
 }
 
+
 export function Dashboard({ 
   player, 
   onSimulate,
-  onUpdatePlayer
+  onUpdatePlayer,
+  onTriggerRomanceEvent
 }: { 
   player: Player; 
   onSimulate: () => void;
   onUpdatePlayer: (p: Player) => void;
+  onTriggerRomanceEvent?: (event: RomanceEvent) => void;
 }) {
   const [showEvent, setShowEvent] = useState(false);
   const [showContractInfo, setShowContractInfo] = useState(false);
@@ -109,6 +113,17 @@ export function Dashboard({
   const ovr = calculateOverall(player.attributes, player.position);
   const title = getPlayerTitle(player.age, ovr);
   
+  const minOvrForStarter: Record<number, number> = {
+    1: 64,
+    2: 71,
+    3: 78,
+    4: 83,
+    5: 88
+  };
+  const requiredOvr = minOvrForStarter[player.currentTeam.level] || 64;
+  const isBenched = player.isPro && ovr < requiredOvr;
+  const situation = isBenched ? "Banco" : "Titular";
+
   const hasUnreadMessages = player.chats ? Object.values(player.chats).some(c => c.hasUnread) : false;
 
   const handleSimulate = () => {
@@ -117,7 +132,7 @@ export function Dashboard({
 
   const handleParty = () => {
     if (player.money >= 15000 && player.personal.health > 15) {
-      const updatedPlayer = {
+      let updatedPlayer = {
         ...player,
         money: player.money - 15000,
         personal: {
@@ -128,12 +143,43 @@ export function Dashboard({
         }
       };
 
-      if (Math.random() > 0.5) {
-        setPendingFriendEvent(generateFriend(player.nationality, player.age));
+      if (updatedPlayer.relationships.girlfriend) {
+        updatedPlayer.relationships = {
+          ...updatedPlayer.relationships,
+          girlfriend: {
+            ...updatedPlayer.relationships.girlfriend,
+            affinity: 0
+          }
+        };
+        alert(`Sua namorada descobriu que você foi para a balada e discutiu feio com você! A afinidade dela caiu para 0%.`);
       }
 
       onUpdatePlayer(updatedPlayer);
       setShowNightclub(false);
+
+      if (Math.random() < 0.99) {
+          const names = ["Camila", "Sofia", "Isabella", "Giovanna", "Beatriz"];
+          const name = names[Math.floor(Math.random() * names.length)];
+          const event: RomanceEvent = {
+             id: `balada_${Date.now()}`,
+             personName: name,
+             relationTag: "Conhecida da Balada",
+             title: "Noitada Forte!",
+             description: `Na área VIP da balada, ${name} se aproximou de você com muito interesse e deixou claro que quer ficar com você.`,
+             attraction: 80,
+             age: 20,
+             choices: [
+                { id: "beijar", label: "Beijar", tone: "positive" },
+                { id: "fazer-amor", label: "Fazer amor", tone: "positive" },
+                { id: "ignorar", label: "Ignorar", tone: "neutral" }
+             ]
+          };
+          onTriggerRomanceEvent?.(event);
+      } else {
+        if (Math.random() > 0.5) {
+          setPendingFriendEvent(generateFriend(player.nationality, player.age));
+        }
+      }
     }
   };
 
@@ -412,6 +458,10 @@ export function Dashboard({
           player={player}
           onClose={() => setShowRelationships(false)}
           onUpdatePlayer={onUpdatePlayer}
+          onTriggerRomanceEvent={(event) => {
+            setShowRelationships(false);
+            onTriggerRomanceEvent?.(event);
+          }}
         />
       )}
 
@@ -459,13 +509,9 @@ export function Dashboard({
                 <span>•</span>
                 <span>{player.currentTeam.name}</span>
                 <span>•</span>
-                <span className={player.isPro ? "text-emerald-400" : "text-blue-400"}>{player.isPro ? "Profissional" : "Base"}</span>
-                {player.caps > 0 && (
-                  <>
-                    <span>•</span>
-                    <span className="text-yellow-500 font-bold">{player.caps} Convocações</span>
-                  </>
-                )}
+                <span className={player.isPro ? "text-emerald-400" : "text-blue-400"}>{player.isPro ? getLeagueName(player.currentTeam) : "Base"}</span>
+                <span>•</span>
+                <span className="text-yellow-500 font-bold">{situation}</span>
               </div>
 
               {/* Personal Attributes */}
@@ -550,13 +596,29 @@ export function Dashboard({
                 Celular
               </button>
 
-              <button
-                onClick={() => setShowCityMap(true)}
-                className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-700"
-              >
-                <MapPin className="w-4 h-4" />
-                Mapa da Cidade
-              </button>
+              {player.mode !== "QUICK" && (
+                <button
+                  onClick={() => setShowCityMap(true)}
+                  className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-700"
+                >
+                  <MapPin className="w-4 h-4" />
+                  Mapa da Cidade
+                </button>
+              )}
+
+              {!player.retired && (
+                <button
+                  onClick={() => {
+                    if (window.confirm("Tem certeza que deseja se aposentar agora? Esta ação é irreversível.")) {
+                      onUpdatePlayer({ ...player, retired: true });
+                    }
+                  }}
+                  className="w-full py-3 bg-red-900/20 hover:bg-red-900/40 text-red-400 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 border border-red-900/50"
+                >
+                  <Calendar className="w-4 h-4" />
+                  Aposentar-se
+                </button>
+              )}
             </div>
           </div>
 
@@ -633,6 +695,13 @@ export function Dashboard({
                                 🤕 {stat.seasonEndingInjury
                                   ? "Lesão tirou da temporada"
                                   : `Lesionado por ${stat.injuryDays} dias`}
+                              </div>
+                            </div>
+                          )}
+                          {stat.isBenched && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              <div className="px-2 py-1 text-xs font-bold rounded-md border bg-slate-500/10 text-slate-400 border-slate-500/20">
+                                🪑 Banco de Reservas
                               </div>
                             </div>
                           )}

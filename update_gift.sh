@@ -1,0 +1,2 @@
+#!/bin/bash
+sed -i 's/addMessage(updatedPlayer, `Comprei um presente para você. Espero que goste!`, response);/addMessage(updatedPlayer, `Comprei um presente para você. Espero que goste!`, response);\n    setAppreciationModal({ message: `Ficou surpreso(a) e muito feliz ao receber o presente: ${gift.name}!`, affinity: Math.max(0, Math.min(100, newAffinity)) });/g' src/components/RelationshipsModal.tsx

@@ -13,7 +13,7 @@ import {
   Handshake,
   ArrowLeftRight,
 } from "lucide-react";
-import { formatCurrency } from "../utils";
+import { formatCurrency, calculateOverall } from "../utils";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -150,7 +150,22 @@ export function ContractNegotiationModal({
     const idealBonusPct = Math.round(4 + clubPower * 10 + interest * 6);
     const idealClauseMultiplier = 3 + interest * 3;
     const idealReleaseClause = Math.round((marketValue * idealClauseMultiplier) / 100) * 100;
-    const idealRole: SquadRole = clubConfidence > 0.6 ? "STARTER" : clubConfidence > 0.35 ? "COMPETING" : "ROTATION";
+    
+    const currentOvr = calculateOverall(player.attributes, player.position);
+    const minOvrForStarter: Record<number, number> = {
+      1: 64,
+      2: 71,
+      3: 78,
+      4: 83,
+      5: 88
+    };
+    const requiredOvr = minOvrForStarter[team.level] || 64;
+    const forceBench = currentOvr < requiredOvr;
+
+    let idealRole: SquadRole = clubConfidence > 0.6 ? "STARTER" : clubConfidence > 0.35 ? "COMPETING" : "ROTATION";
+    if (forceBench) {
+      idealRole = "ROTATION";
+    }
 
     const clubIdeal: OfferTerms = {
       salary: idealSalary,
@@ -160,10 +175,10 @@ export function ContractNegotiationModal({
       role: idealRole,
     };
 
-    return { marketValue, clubPower, interest, leverage, leverageLabel, clubConfidence, clubIdeal };
-  }, [player.marketValue, player.name, team.name, type]);
+    return { marketValue, clubPower, interest, leverage, leverageLabel, clubConfidence, clubIdeal, forceBench };
+  }, [player.marketValue, player.name, team.name, type, player.attributes, player.position, team.level]);
 
-  const { marketValue, clubPower, interest, leverage, leverageLabel, clubConfidence, clubIdeal } = ctx;
+  const { marketValue, clubPower, interest, leverage, leverageLabel, clubConfidence, clubIdeal, forceBench } = ctx;
 
   const minSalary = Math.max(80, clubIdeal.salary * 0.6);
   const maxSalary = clubIdeal.salary * 2.2;
@@ -191,7 +206,9 @@ export function ContractNegotiationModal({
     role: askRole,
   };
 
-  const scores = useMemo(() => evaluateClubWillingness(ask, clubConfidence, clubIdeal), [
+  const isIdol = player.idolClubs?.includes(team.name) || false;
+
+  const scores = useMemo(() => evaluateClubWillingness(ask, clubConfidence, clubIdeal, forceBench, isIdol), [
     askSalary,
     askYears,
     askBonusPct,
@@ -200,6 +217,8 @@ export function ContractNegotiationModal({
     askRole,
     clubConfidence,
     clubIdeal,
+    forceBench,
+    isIdol,
   ]);
 
   // Optional: flag if your ask would strain the club's wage budget, if the Team type exposes one.
@@ -622,8 +641,14 @@ export function ContractNegotiationModal({
 function evaluateClubWillingness(
   ask: OfferTerms,
   clubConfidence: number,
-  clubIdeal: OfferTerms
+  clubIdeal: OfferTerms,
+  forceBench: boolean = false,
+  isIdol: boolean = false
 ): WillingnessScores {
+  if (isIdol) {
+    return { salaryScore: 100, roleScore: 100, releaseScore: 100, yearsScore: 100, bonusScore: 100, overall: 100 };
+  }
+
   const salaryRatio = ask.salary / clubIdeal.salary;
   const salaryScore = salaryRatio <= 1 ? 100 : clamp(100 - (salaryRatio - 1) * 140, 0, 100);
 
@@ -636,7 +661,9 @@ function evaluateClubWillingness(
   const yearsScore = clamp(100 - Math.abs(ask.years - clubIdeal.years) * 18, 0, 100);
 
   const roleScore =
-    ask.role === "STARTER"
+    forceBench && (ask.role === "STARTER" || ask.role === "COMPETING")
+      ? 0
+      : ask.role === "STARTER"
       ? clamp(clubConfidence * 140, 0, 100)
       : ask.role === "COMPETING"
       ? clamp(70 + clubConfidence * 30, 0, 100)
@@ -691,7 +718,7 @@ function getClubMessage(outcome: Outcome, scores: WillingnessScores): string {
 
   const messages: Record<string, string> = {
     salary: "A diretoria diz que o salário pedido está acima do que conseguem pagar agora.",
-    role: "O clube não está confortável em garantir esse papel no elenco ainda.",
+    role: scores.roleScore === 0 ? "O clube exige que você seja reserva no momento. Seu futebol precisa evoluir antes de exigir a titularidade." : "O clube não está confortável em garantir esse papel no elenco ainda.",
     release: "O clube quer uma cláusula de rescisão mais alta para se proteger.",
     years: "A duração pedida não encaixa nos planos do clube no momento.",
     bonus: "As luvas pedidas pesam demais no caixa do clube neste momento.",

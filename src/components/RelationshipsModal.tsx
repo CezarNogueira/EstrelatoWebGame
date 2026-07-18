@@ -1,4 +1,4 @@
-import { Player } from "../types";
+import { Player, RomanceEvent } from "../types";
 import { Users, Heart, X, Search, ChevronLeft, Send, MessageCircle, Info, ThumbsUp, Frown, Gift, CreditCard, Clock, CheckCircle2, Film, Utensils, Home } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { formatCurrency } from "../utils";
@@ -19,15 +19,45 @@ const GIFTS = [
   { id: 'casa', name: 'Imóvel', price: 3000000, affinity: 100, emoji: '🏠' },
 ];
 
-export function RelationshipsModal({ player, onClose, onUpdatePlayer }: { player: Player; onClose: () => void; onUpdatePlayer: (player: Player) => void }) {
+export function RelationshipsModal({ player, onClose, onUpdatePlayer, onTriggerRomanceEvent }: { player: Player; onClose: () => void; onUpdatePlayer: (player: Player) => void; onTriggerRomanceEvent?: (event: RomanceEvent) => void }) {
   const { family, friends, girlfriend } = player.relationships;
   const father = family.find((m) => m.role === "Pai");
   const mother = family.find((m) => m.role === "Mãe");
   const siblings = family.filter((m) => m.role === "Irmão" || m.role === "Irmã");
 
+  const checkFriendRomance = (updatedPlayer: Player, currentAffinity: number) => {
+    if (selectedPerson?.type !== "friend") return;
+    if (updatedPlayer.relationships.girlfriend) return; // Se já namora, evita complicação
+    if (currentAffinity < 60) return; // Afinidade tem que ser razoável
+    
+    // Chance baseada na afinidade (ex: 60 = 6%, 100 = 10% por ação)
+    if (Math.random() < (currentAffinity / 1000)) {
+       const event: RomanceEvent = {
+         id: `romance_${Date.now()}`,
+         friendId: selectedPerson.id,
+         personName: selectedPerson.name,
+         relationTag: selectedPerson.role || "Amigo", 
+         title: "Interesse Amoroso!",
+         description: `Depois do tempo que passaram juntos, ${selectedPerson.name} demonstrou ter sentimentos por você além da amizade e sugeriu um encontro especial.`,
+         attraction: Math.min(100, currentAffinity + 10),
+         age: 18, 
+         avatarUrl: selectedPerson.avatarUrl,
+         choices: [
+           { id: "chamar-encontro", label: "Aceitar o encontro", tone: "positive" },
+           { id: "apenas-amizade", label: "Dizer que prefere só amizade", tone: "safe" },
+           { id: "nao-fazer-nada", label: "Desconversar", tone: "neutral" },
+         ]
+       };
+       setTimeout(() => {
+         onTriggerRomanceEvent?.(event);
+       }, 2000);
+    }
+  };
+
   const [selectedPerson, setSelectedPerson] = useState<{ id: string, type: "family" | "friend" | "girlfriend" | "staff", name: string, role: string, affinity: number, avatarUrl?: string } | null>(null);
   const [showTempoOptions, setShowTempoOptions] = useState(false);
   const [showGiftOptions, setShowGiftOptions] = useState(false);
+  const [appreciationModal, setAppreciationModal] = useState<{message: string; affinity: number} | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -80,6 +110,7 @@ export function RelationshipsModal({ player, onClose, onUpdatePlayer }: { player
       updatedPlayer.personal.mood = Math.min(100, updatedPlayer.personal.mood + 2);
       response = "Muito obrigado! Fico muito feliz em ouvir isso. 😊";
       addMessage(updatedPlayer, "Passei para dizer que você é excelente no que faz!", response);
+      setAppreciationModal({ message: "Gostou muito do seu elogio e sentiu-se valorizado(a).", affinity: Math.max(0, Math.min(100, newAffinity)) });
     } else if (action === "conversar") {
       newAffinity += 10;
       updatedPlayer.personal.mood = Math.min(100, updatedPlayer.personal.mood + 5);
@@ -95,6 +126,7 @@ export function RelationshipsModal({ player, onClose, onUpdatePlayer }: { player
           const randomConv = baseConversations[Math.floor(Math.random() * baseConversations.length)];
           response = randomConv.them;
           addMessage(updatedPlayer, randomConv.me, response);
+          setAppreciationModal({ message: "Aproveitou a conversa.", affinity: Math.max(0, Math.min(100, newAffinity)) });
         } else {
           const proConversations = [
             { me: "Professor, o que espera de mim para essa temporada?", them: `Espero que você seja a nossa referência em campo. Com o elenco que temos no ${player.currentTeam.name}, precisamos de você no seu melhor nível.` },
@@ -109,13 +141,16 @@ export function RelationshipsModal({ player, onClose, onUpdatePlayer }: { player
           const randomConv = proConversations[Math.floor(Math.random() * proConversations.length)];
           response = randomConv.them;
           addMessage(updatedPlayer, randomConv.me, response);
+          setAppreciationModal({ message: "Aproveitou a conversa.", affinity: Math.max(0, Math.min(100, newAffinity)) });
         }
       } else if (selectedPerson.id === "empresario") { 
          response = "Estou sempre de olho no mercado. Continue jogando bem que as propostas vão chegar!";
          addMessage(updatedPlayer, "Como estão as coisas nos bastidores? Alguma novidade?", response);
+         setAppreciationModal({ message: "Gostou de te atualizar sobre os bastidores.", affinity: Math.max(0, Math.min(100, newAffinity)) });
       } else {
         response = "Foi ótimo conversar com você! Precisamos fazer isso mais vezes.";
         addMessage(updatedPlayer, "E aí, como foi o seu dia? Me conta as novidades.", response);
+        setAppreciationModal({ message: "Aproveitou bastante a conversa com você.", affinity: Math.max(0, Math.min(100, newAffinity)) });
       }
     } else if (action === "dinheiro") {
       if (newAffinity > 70 && selectedPerson.type !== "staff") {
@@ -123,9 +158,11 @@ export function RelationshipsModal({ player, onClose, onUpdatePlayer }: { player
         const amount = 50000;
         updatedPlayer.money += amount;
         response = `Claro, te enviei ${formatCurrency(amount)}. Mas vê se não gasta tudo de uma vez, hein!`;
+        setAppreciationModal({ message: "Te emprestou o dinheiro, mas ficou um pouco incomodado(a) com a situação.", affinity: Math.max(0, Math.min(100, newAffinity)) });
       } else {
         newAffinity -= 40;
         response = selectedPerson.type === "staff" ? "Como profissional, eu não empresto dinheiro." : "Sério que você está me pedindo dinheiro? Não vou te dar nada.";
+        setAppreciationModal({ message: "Ficou ofendido(a) com o seu pedido de dinheiro.", affinity: Math.max(0, Math.min(100, newAffinity)) });
       }
       addMessage(updatedPlayer, "Estou precisando de uma grana emprestada, consegue me salvar?", response);
     } else if (action === "presentear") {
@@ -135,16 +172,10 @@ export function RelationshipsModal({ player, onClose, onUpdatePlayer }: { player
       newAffinity -= 50;
       response = "Que absurdo! Como você tem coragem de falar assim comigo? Não quero falar com você agora.";
       addMessage(updatedPlayer, "Você é um inútil e só me atrapalha! Sai da minha vida.", response);
+      setAppreciationModal({ message: "Ficou profundamente magoado(a) e irritado(a) com os seus insultos.", affinity: Math.max(0, Math.min(100, newAffinity)) });
     } else if (action === "tempo") {
-      if (selectedPerson.type === "girlfriend") {
-        setShowTempoOptions(true);
-        return;
-      }
-      newAffinity += 15;
-      updatedPlayer.personal.health = Math.max(0, updatedPlayer.personal.health - 2);
-      updatedPlayer.personal.mood = Math.min(100, updatedPlayer.personal.mood + 10);
-      response = "Adorei nosso tempo juntos hoje! Foi muito divertido.";
-      addMessage(updatedPlayer, "Vamos fazer alguma coisa juntos hoje? Estou precisando distrair a cabeça.", response);
+      setShowTempoOptions(true);
+      return;
     }
 
     newAffinity = Math.max(0, Math.min(100, newAffinity));
@@ -161,6 +192,7 @@ export function RelationshipsModal({ player, onClose, onUpdatePlayer }: { player
     }
 
     onUpdatePlayer(updatedPlayer);
+    if (action !== 'insultar' && action !== 'dinheiro') checkFriendRomance(updatedPlayer, newAffinity);
   };
 
   const handleGiftAction = (giftId: string) => {
@@ -180,6 +212,7 @@ export function RelationshipsModal({ player, onClose, onUpdatePlayer }: { player
     
     const response = `Uau, ${gift.name.toLowerCase()}! Que presente maravilhoso, eu amei de verdade! ${gift.emoji}❤️`;
     addMessage(updatedPlayer, `Comprei um presente para você. Espero que goste!`, response);
+    setAppreciationModal({ message: `Ficou surpreso(a) e muito feliz ao receber o presente: ${gift.name}!`, affinity: Math.max(0, Math.min(100, newAffinity)) });
 
     newAffinity = Math.max(0, Math.min(100, newAffinity));
     setSelectedPerson(prev => prev ? { ...prev, affinity: newAffinity } : null);
@@ -195,9 +228,10 @@ export function RelationshipsModal({ player, onClose, onUpdatePlayer }: { player
     }
     onUpdatePlayer(updatedPlayer);
     setShowGiftOptions(false);
+    checkFriendRomance(updatedPlayer, newAffinity);
   };
 
-  const handleTempoAction = (tipo: "amor" | "cinema" | "jantar" | "sogra") => {
+  const handleTempoAction = (tipo: "amor" | "cinema" | "jantar" | "sogra" | "visitar" | "jogar" | "role") => {
     if (!selectedPerson) return;
     
     const updatedPlayer = { ...player, relationships: { ...player.relationships }, personal: { ...player.personal } };
@@ -211,23 +245,46 @@ export function RelationshipsModal({ player, onClose, onUpdatePlayer }: { player
       updatedPlayer.personal.health = Math.max(0, updatedPlayer.personal.health - 5);
       meMessage = "Vem aqui, vamos aproveitar esse tempo juntos... 😏";
       response = "Nossa, foi incrível... ❤️";
+      setAppreciationModal({ message: "Tivemos um momento incrível e íntimo juntos.", affinity: Math.max(0, Math.min(100, newAffinity)) });
     } else if (tipo === "cinema") {
       newAffinity += 15;
       updatedPlayer.personal.mood = Math.min(100, updatedPlayer.personal.mood + 10);
       updatedPlayer.money -= 200;
       meMessage = "Vamos pegar um cineminha hoje?";
       response = "Adorei o filme! E a pipoca tava ótima. 🍿🎥";
+      setAppreciationModal({ message: "Curtiu bastante o filme e a sua companhia.", affinity: Math.max(0, Math.min(100, newAffinity)) });
     } else if (tipo === "jantar") {
       newAffinity += 20;
       updatedPlayer.personal.mood = Math.min(100, updatedPlayer.personal.mood + 15);
       updatedPlayer.money -= 800;
       meMessage = "Reservei um lugar especial para a gente jantar hoje.";
       response = "A comida estava maravilhosa! Obrigada por hoje. 🍷🍽️";
+      setAppreciationModal({ message: "Amou o jantar especial que você preparou.", affinity: Math.max(0, Math.min(100, newAffinity)) });
+    } else if (tipo === "visitar") {
+      newAffinity += 10;
+      updatedPlayer.personal.mood = Math.min(100, updatedPlayer.personal.mood + 5);
+      meMessage = "Aparece lá em casa pra gente trocar uma ideia!";
+      response = "Massa! Chego aí mais tarde. 🏠";
+      setAppreciationModal({ message: "Gostou muito da resenha na sua casa.", affinity: Math.max(0, Math.min(100, newAffinity)) });
+    } else if (tipo === "jogar") {
+      newAffinity += 15;
+      updatedPlayer.personal.mood = Math.min(100, updatedPlayer.personal.mood + 15);
+      meMessage = "Bora umas partidas online hoje?";
+      response = "Bora! Só não vale chorar quando perder! 🎮";
+      setAppreciationModal({ message: "Se divertiu muito jogando online com você.", affinity: Math.max(0, Math.min(100, newAffinity)) });
+    } else if (tipo === "role") {
+      newAffinity += 20;
+      updatedPlayer.personal.mood = Math.min(100, updatedPlayer.personal.mood + 20);
+      updatedPlayer.money -= 500;
+      meMessage = "Vamos dar um rolê hoje? Tô precisando sair um pouco.";
+      response = "Fechado! Vai ser top. 😎";
+      setAppreciationModal({ message: "Deu muitas risadas e adorou o rolê.", affinity: Math.max(0, Math.min(100, newAffinity)) });
     } else if (tipo === "sogra") {
       newAffinity += 25;
       updatedPlayer.personal.mood = Math.max(0, updatedPlayer.personal.mood - 10);
       meMessage = "Acho que já faz um tempo que não vemos seus pais, vamos lá visitar eles hoje?";
       response = "Sério?? Ai, minha mãe vai ficar tão feliz! Você é o melhor genro do mundo! 🥰🏡";
+      setAppreciationModal({ message: "Ficou extremamente feliz por você ter lembrado dos pais dela.", affinity: Math.max(0, Math.min(100, newAffinity)) });
     }
 
     addMessage(updatedPlayer, meMessage, response);
@@ -241,6 +298,7 @@ export function RelationshipsModal({ player, onClose, onUpdatePlayer }: { player
 
     onUpdatePlayer(updatedPlayer);
     setShowTempoOptions(false);
+    checkFriendRomance(updatedPlayer, newAffinity);
   };
 
   const getInitials = (name: string) => name.substring(0, 2).toUpperCase();
@@ -354,27 +412,52 @@ export function RelationshipsModal({ player, onClose, onUpdatePlayer }: { player
                 </div>
               ) : showTempoOptions ? (
                 <div className="grid grid-cols-2 gap-2 relative">
-                  <button onClick={() => setShowTempoOptions(false)} className="absolute -top-10 right-0 p-1 bg-[#2a3942] rounded-full text-slate-300 hover:text-white">
-                    <X className="w-5 h-5" />
-                  </button>
-                  {player.age >= 18 && (
-                    <button onClick={() => handleTempoAction("amor")} className="flex flex-col items-center justify-center p-3 rounded-xl bg-pink-500/10 hover:bg-pink-500/20 transition-all gap-1 border border-pink-500/30">
-                      <Heart className="w-6 h-6 text-pink-500" />
-                      <span className="text-xs text-pink-400 font-bold mt-1">Fazer amor</span>
-                    </button>
+                  {selectedPerson.type === "girlfriend" && (
+                    <>
+                      {player.age >= 18 && (
+                        <button onClick={() => handleTempoAction("amor")} className="flex flex-col items-center justify-center p-3 rounded-xl bg-pink-500/10 hover:bg-pink-500/20 transition-all gap-1 border border-pink-500/30">
+                          <Heart className="w-6 h-6 text-pink-500" />
+                          <span className="text-xs text-pink-400 font-bold mt-1">Fazer amor</span>
+                        </button>
+                      )}
+                      <button onClick={() => handleTempoAction("cinema")} className="flex flex-col items-center justify-center p-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 transition-all gap-1 border border-blue-500/30">
+                        <Film className="w-6 h-6 text-blue-500" />
+                        <span className="text-xs text-blue-400 font-bold mt-1 text-center leading-tight">Ir ao Cinema</span>
+                      </button>
+                      <button onClick={() => handleTempoAction("jantar")} className="flex flex-col items-center justify-center p-3 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 transition-all gap-1 border border-orange-500/30">
+                        <Utensils className="w-6 h-6 text-orange-500" />
+                        <span className="text-xs text-orange-400 font-bold mt-1 text-center leading-tight">Jantar</span>
+                      </button>
+                      <button onClick={() => handleTempoAction("sogra")} className="flex flex-col items-center justify-center p-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 transition-all gap-1 border border-emerald-500/30">
+                        <Home className="w-6 h-6 text-emerald-500" />
+                        <span className="text-xs text-emerald-400 font-bold mt-1 text-center leading-tight">Casa da Sogra</span>
+                      </button>
+                    </>
                   )}
-                  <button onClick={() => handleTempoAction("cinema")} className="flex flex-col items-center justify-center p-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 transition-all gap-1 border border-blue-500/30">
-                    <Film className="w-6 h-6 text-blue-500" />
-                    <span className="text-xs text-blue-400 font-bold mt-1">Ir ao Cinema</span>
-                  </button>
-                  <button onClick={() => handleTempoAction("jantar")} className="flex flex-col items-center justify-center p-3 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 transition-all gap-1 border border-orange-500/30">
-                    <Utensils className="w-6 h-6 text-orange-500" />
-                    <span className="text-xs text-orange-400 font-bold mt-1">Jantar</span>
-                  </button>
-                  <button onClick={() => handleTempoAction("sogra")} className="flex flex-col items-center justify-center p-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 transition-all gap-1 border border-emerald-500/30">
-                    <Home className="w-6 h-6 text-emerald-500" />
-                    <span className="text-xs text-emerald-400 font-bold mt-1">Casa da Sogra</span>
-                  </button>
+                  {(selectedPerson.type === "friend" || (selectedPerson.type === "family" && (selectedPerson.role === "Pai" || selectedPerson.role === "Mãe" || selectedPerson.role === "Irmão" || selectedPerson.role === "Irmã"))) && (
+                    <>
+                      <button onClick={() => handleTempoAction("cinema")} className="flex flex-col items-center justify-center p-3 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 transition-all gap-1 border border-blue-500/30">
+                        <Film className="w-6 h-6 text-blue-500" />
+                        <span className="text-xs text-blue-400 font-bold mt-1 text-center leading-tight">Ir ao Cinema</span>
+                      </button>
+                      { (selectedPerson.type === "friend" || player.assets.includes("Casa") || player.assets.includes("Mansão")) && (
+                        <button onClick={() => handleTempoAction("visitar")} className="flex flex-col items-center justify-center p-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 transition-all gap-1 border border-emerald-500/30">
+                          <Home className="w-6 h-6 text-emerald-500" />
+                          <span className="text-xs text-emerald-400 font-bold mt-1 text-center leading-tight">Visitar</span>
+                        </button>
+                      )}
+                      {(selectedPerson.type === "friend" || selectedPerson.role === "Irmão" || selectedPerson.role === "Irmã") && (
+                        <button onClick={() => handleTempoAction("jogar")} className="flex flex-col items-center justify-center p-3 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 transition-all gap-1 border border-purple-500/30">
+                          <span className="text-2xl">🎮</span>
+                          <span className="text-xs text-purple-400 font-bold mt-1 text-center leading-tight">Jogar Online</span>
+                        </button>
+                      )}
+                      <button onClick={() => handleTempoAction("role")} className="flex flex-col items-center justify-center p-3 rounded-xl bg-orange-500/10 hover:bg-orange-500/20 transition-all gap-1 border border-orange-500/30">
+                        <span className="text-2xl">😎</span>
+                        <span className="text-xs text-orange-400 font-bold mt-1 text-center leading-tight">Dar Rolê</span>
+                      </button>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className="grid grid-cols-3 gap-2">
@@ -386,18 +469,22 @@ export function RelationshipsModal({ player, onClose, onUpdatePlayer }: { player
                     <MessageCircle className="w-5 h-5 text-blue-400" />
                     <span className="text-[10px] text-slate-300 font-medium">Conversar</span>
                   </button>
-                  <button onClick={() => handleAction("tempo")} className="flex flex-col items-center justify-center p-2 rounded-xl bg-[#2a3942] hover:bg-[#32454f] transition-all gap-1">
-                    <Clock className="w-5 h-5 text-purple-400" />
-                    <span className="text-[10px] text-slate-300 font-medium">Passar Tempo</span>
-                  </button>
+                  {selectedPerson.type !== "staff" && (
+                    <button onClick={() => handleAction("tempo")} className="flex flex-col items-center justify-center p-2 rounded-xl bg-[#2a3942] hover:bg-[#32454f] transition-all gap-1">
+                      <Clock className="w-5 h-5 text-purple-400" />
+                      <span className="text-[10px] text-slate-300 font-medium">Passar Tempo</span>
+                    </button>
+                  )}
                   <button onClick={() => handleAction("presentear")} className="flex flex-col items-center justify-center p-2 rounded-xl bg-[#2a3942] hover:bg-[#32454f] transition-all gap-1">
                     <Gift className="w-5 h-5 text-pink-400" />
                     <span className="text-[10px] text-slate-300 font-medium">Presentear</span>
                   </button>
-                  <button onClick={() => handleAction("dinheiro")} className="flex flex-col items-center justify-center p-2 rounded-xl bg-[#2a3942] hover:bg-[#32454f] transition-all gap-1">
-                    <CreditCard className="w-5 h-5 text-amber-400" />
-                    <span className="text-[10px] text-slate-300 font-medium">Pedir Dinheiro</span>
-                  </button>
+                  {selectedPerson.type !== "staff" && (
+                    <button onClick={() => handleAction("dinheiro")} className="flex flex-col items-center justify-center p-2 rounded-xl bg-[#2a3942] hover:bg-[#32454f] transition-all gap-1">
+                      <CreditCard className="w-5 h-5 text-amber-400" />
+                      <span className="text-[10px] text-slate-300 font-medium">Pedir Dinheiro</span>
+                    </button>
+                  )}
                   <button onClick={() => handleAction("insultar")} className="flex flex-col items-center justify-center p-2 rounded-xl bg-[#2a3942] hover:bg-[#32454f] transition-all gap-1">
                     <Frown className="w-5 h-5 text-red-400" />
                     <span className="text-[10px] text-slate-300 font-medium">Insultar</span>
@@ -437,6 +524,36 @@ export function RelationshipsModal({ player, onClose, onUpdatePlayer }: { player
           </div>
         )}
       </div>
+
+      {appreciationModal && (
+        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-[100] p-4">
+          <div className="bg-[#202c33] border border-slate-700 rounded-2xl p-6 max-w-sm w-full text-center shadow-xl">
+            <h3 className="text-white font-bold text-lg mb-2">Reação</h3>
+            <p className="text-slate-300 mb-6 text-sm">{appreciationModal.message}</p>
+            
+            <div className="mb-6">
+              <div className="flex justify-between text-xs font-bold text-slate-400 mb-2">
+                <span>Apreciação</span>
+                <span className="text-emerald-400">{appreciationModal.affinity}%</span>
+              </div>
+              <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-emerald-500 transition-all duration-1000" 
+                  style={{ width: `${appreciationModal.affinity}%` }}
+                />
+              </div>
+            </div>
+
+            <button 
+              onClick={() => setAppreciationModal(null)}
+              className="w-full py-2 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold rounded-xl transition-all"
+            >
+              Entendi
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

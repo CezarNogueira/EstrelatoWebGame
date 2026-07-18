@@ -20,7 +20,7 @@ type Scenario =
   | "PENALTI"      // Cobrador oficial do time bate um pênalti
   | "FALTA";       // Cobrador oficial do time bate uma falta perigosa
 
-type MatchStatus = "INTRO" | "SIMULATING" | "WAITING_ACTION" | "FINISHED";
+type MatchStatus = "INTRO" | "SIMULATING" | "WAITING_ACTION" | "ROLLING_DICE" | "FINISHED";
 
 const ATTACKING_POSITIONS: Position[] = ["ATA", "PON", "MEI"];
 // MC, VOL, ZAG, LAT caem no grupo defensivo/transição.
@@ -296,7 +296,72 @@ interface MatchEvent {
   type: "neutral" | "goal_us" | "goal_them" | "chance" | "miss";
 }
 
-export function InteractiveMatchModal({ 
+
+
+const QUALITY_WORDS = ["Perfeito", "Muito Bom", "Bom", "Mediano", "Ruim", "Horrível"];
+
+function getQualityWord(roll: number, chance: number): string {
+  if (roll <= chance) {
+    if (roll <= chance / 3) return "Perfeito";
+    if (roll <= (chance * 2) / 3) return "Muito Bom";
+    return "Bom";
+  } else {
+    const gap = 100 - chance;
+    if (roll <= chance + gap / 3) return "Mediano";
+    if (roll <= chance + (gap * 2) / 3) return "Ruim";
+    return "Horrível";
+  }
+}
+
+function getQualityColor(word: string): string {
+  switch (word) {
+    case "Perfeito": return "text-emerald-400 drop-shadow-[0_0_10px_rgba(52,211,153,0.8)]";
+    case "Muito Bom": return "text-emerald-400";
+    case "Bom": return "text-green-300";
+    case "Mediano": return "text-yellow-400";
+    case "Ruim": return "text-orange-500";
+    case "Horrível": return "text-red-600 drop-shadow-[0_0_10px_rgba(220,38,38,0.8)]";
+    default: return "text-white";
+  }
+}
+
+function AnimatedActionQuality({ rollValue, chance }: { rollValue: number, chance: number }) {
+  const [currentWord, setCurrentWord] = useState(QUALITY_WORDS[0]);
+  const [done, setDone] = useState(false);
+
+  useEffect(() => {
+    let startTime: number;
+    const duration = 1500;
+    let lastChange = 0;
+    
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = timestamp - startTime;
+      
+      if (progress < duration) {
+        if (timestamp - lastChange > 100) {
+          setCurrentWord(QUALITY_WORDS[Math.floor(Math.random() * QUALITY_WORDS.length)]);
+          lastChange = timestamp;
+        }
+        requestAnimationFrame(animate);
+      } else {
+        setCurrentWord(getQualityWord(rollValue, chance));
+        setDone(true);
+      }
+    };
+    
+    requestAnimationFrame(animate);
+  }, [rollValue, chance]);
+
+  const colorClass = done ? getQualityColor(currentWord) : "text-slate-300 opacity-50";
+  const scaleClass = done ? "scale-110 transition-transform duration-300" : "scale-100";
+
+  return <span className={`inline-block font-black text-2xl md:text-3xl uppercase tracking-widest ${colorClass} ${scaleClass}`}>{currentWord}</span>;
+}
+
+
+export function InteractiveMatchModal({
+ 
   player, 
   finalType, 
   onComplete 
@@ -316,7 +381,10 @@ export function InteractiveMatchModal({
   // To track player chances
   const [chancesHad, setChancesHad] = useState(0);
   const [totalChances, setTotalChances] = useState(1);
+  
   const [resolvingPenalties, setResolvingPenalties] = useState(false);
+  const [diceRollInfo, setDiceRollInfo] = useState<{ actionId: string; chance: number; isSuccess: boolean; rollValue: number } | null>(null);
+
 
   // Gols e assistências que o PRÓPRIO jogador fez nesta final (somados ao
   // total da temporada quando a partida termina). Gols/assistências de
@@ -410,8 +478,9 @@ export function InteractiveMatchModal({
     setMatchAssists(0);
     // Cada final agora sorteia entre 1 e 6 chances de o jogador participar
     // ativamente da jogada, em vez de sempre uma única oportunidade.
-    setTotalChances(Math.floor(Math.random() * 6) + 1);
-  }, [finalType, player.currentTeam.country, player.currentTeam.id, player.nationality, isNational]);
+    const isIdol = player.idolClubs?.includes(player.currentTeam.name);
+    setTotalChances(isIdol && !isNational ? 6 : Math.floor(Math.random() * 6) + 1);
+  }, [finalType, player.currentTeam.country, player.currentTeam.name, player.idolClubs, player.nationality, isNational]);
 
   const eventsEndRef = useRef<HTMLDivElement>(null);
 
@@ -493,43 +562,51 @@ export function InteractiveMatchModal({
 
   const handleAction = (actionId: string) => {
     if (!currentScenario) return;
-    setChancesHad(c => c + 1);
 
     const config = SCENARIOS[currentScenario];
     const difficultyMod = player.currentTeam.level * 5;
 
     let chance = config.computeChance(actionId, player, difficultyMod);
-    chance = Math.max(10, Math.min(90, chance));
-    const isSuccess = (Math.random() * 100) <= chance;
+    chance = Math.max(10, Math.min(90, Math.round(chance)));
+    
+    // Rola de 1 a 100
+    const rollValue = Math.floor(Math.random() * 100) + 1;
+    const isSuccess = rollValue <= chance;
 
-    const isDefensiveScenario = DEFENSIVE_SCENARIO_SET.has(currentScenario);
+    setDiceRollInfo({ actionId, chance, isSuccess, rollValue });
+    setStatus("ROLLING_DICE");
+    
+    // Apply result after animation (e.g. 1.8s)
+    setTimeout(() => {
+      setChancesHad(c => c + 1);
+      const isDefensiveScenario = DEFENSIVE_SCENARIO_SET.has(currentScenario);
 
-    if (isSuccess) {
-      if (isDefensiveScenario) {
-        // Sucesso defensivo: evita o gol do adversário, ninguém marca.
-        addEvent(config.successText(actionId, player.name, opponentName), "chance");
-      } else {
-        setScoreUs(s => s + 1);
-        const action = config.actions.find(a => a.id === actionId);
-        if (action?.resultType === "goal") {
-          setMatchGoals(g => g + 1);
-        } else if (action?.resultType === "assist") {
-          setMatchAssists(a => a + 1);
+      if (isSuccess) {
+        if (isDefensiveScenario) {
+          addEvent(config.successText(actionId, player.name, opponentName), "chance");
+        } else {
+          setScoreUs(s => s + 1);
+          const action = config.actions.find(a => a.id === actionId);
+          if (action?.resultType === "goal") {
+            setMatchGoals(g => g + 1);
+          } else if (action?.resultType === "assist") {
+            setMatchAssists(a => a + 1);
+          }
+          addEvent(config.successText(actionId, player.name, opponentName), "goal_us");
         }
-        addEvent(config.successText(actionId, player.name, opponentName), "goal_us");
-      }
-    } else {
-      if (isDefensiveScenario) {
-        // Falha defensiva: o adversário marca o gol.
-        setScoreThem(s => s + 1);
-        addEvent(config.failText(actionId, player.name, opponentName), "goal_them");
       } else {
-        addEvent(config.failText(actionId, player.name, opponentName), "miss");
+        if (isDefensiveScenario) {
+          setScoreThem(s => s + 1);
+          addEvent(config.failText(actionId, player.name, opponentName), "goal_them");
+        } else {
+          addEvent(config.failText(actionId, player.name, opponentName), "miss");
+        }
       }
-    }
 
-    setCurrentScenario(null);
-    setStatus("SIMULATING");
+      setDiceRollInfo(null);
+      setCurrentScenario(null);
+      setStatus("SIMULATING");
+    }, 4500);
   };
 
   const getEventColor = (type: MatchEvent["type"]) => {
@@ -654,16 +731,40 @@ export function InteractiveMatchModal({
               <div className={`grid gap-4 ${currentActions.length === 3 ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2"}`}>
                 {currentActions.map((action) => {
                   const Icon = action.icon;
+                  const difficultyMod = player.currentTeam.level * 5;
+                  let chance = SCENARIOS[currentScenario].computeChance(action.id, player, difficultyMod);
+                  chance = Math.max(10, Math.min(90, Math.round(chance)));
                   return (
                     <button
                       key={action.id}
                       onClick={() => handleAction(action.id)}
-                      className={`p-4 rounded-xl font-bold flex items-center justify-center gap-3 transition-all ${action.classes}`}
+                      className={`p-4 rounded-xl font-bold flex flex-col items-center justify-center gap-2 transition-all active:scale-95 ${action.classes}`}
                     >
-                      <Icon className="w-6 h-6" /> {action.label}
+                      <div className="flex items-center gap-2">
+                        <Icon className="w-6 h-6" /> {action.label}
+                      </div>
+                      <div className="text-sm opacity-90 px-2 py-1 bg-black/30 rounded-lg">
+                        {chance}% de Sucesso
+                      </div>
                     </button>
                   );
                 })}
+              </div>
+            </div>
+          )}
+
+          
+          {status === "ROLLING_DICE" && diceRollInfo && (
+            <div className="flex flex-col items-center justify-center p-8 space-y-8 animate-in fade-in duration-300">
+              <div className="text-lg font-bold text-slate-400 tracking-widest uppercase">Executando a jogada...</div>
+              
+              <div className="h-32 flex items-center justify-center w-full">
+                <AnimatedActionQuality rollValue={diceRollInfo.rollValue} chance={diceRollInfo.chance} />
+              </div>
+              
+              <div className="bg-slate-800/50 border border-slate-700/50 px-6 py-4 rounded-2xl text-center w-full max-w-xs transition-opacity duration-1000 delay-1500 opacity-80">
+                <div className="text-xs text-slate-400 mb-1">Dificuldade da Jogada</div>
+                <div className="text-lg font-bold text-slate-200">{diceRollInfo.chance}% de chance</div>
               </div>
             </div>
           )}

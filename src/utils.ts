@@ -1,6 +1,38 @@
 import { Attributes, Player, Position, SeasonStat, Team } from "./types";
 import { TEAMS, getNationalContinentalCup } from "./data";
 
+export const getLeagueName = (team: Team): string => {
+  if (team.division === 2) {
+    if (team.country === "BR") return "Série B";
+    if (team.country === "EN") return "Championship";
+    if (team.country === "IT") return "Serie B";
+    if (team.country === "ES") return "La Liga 2";
+    if (team.country === "DE") return "2. Bundesliga";
+    if (team.country === "FR") return "Ligue 2";
+    if (team.country === "PT") return "Liga Portugal 2";
+    if (team.country === "NL") return "Eerste Divisie";
+    if (team.country === "US") return "USL Championship";
+    if (team.country === "SA") return "First Division League";
+    if (team.country === "AR") return "Primera Nacional";
+    if (team.country === "UY") return "Segunda División";
+    return "2ª Divisão";
+  } else {
+    if (team.country === "BR") return "Brasileirão";
+    if (team.country === "EN") return "Premier League";
+    if (team.country === "IT") return "Serie A";
+    if (team.country === "ES") return "La Liga";
+    if (team.country === "DE") return "Bundesliga";
+    if (team.country === "FR") return "Ligue 1";
+    if (team.country === "PT") return "Primeira Liga";
+    if (team.country === "NL") return "Eredivisie";
+    if (team.country === "US") return "MLS";
+    if (team.country === "SA") return "Saudi Pro League";
+    if (team.country === "AR") return "Liga Profesional Argentina";
+    if (team.country === "UY") return "Primera División Uruguaya";
+    return "1ª Divisão";
+  }
+};
+
 export const getRelativeLevel = (team: Team): number => {
   if (!team.country) return team.level;
   const sameCountryTeams = TEAMS.filter(t => t.country === team.country && t.division !== 2);
@@ -283,6 +315,9 @@ export const generatePressMessage = (
   } else if (stat.isolated) {
     messages.push(`"Fontes dizem que ${player.name} tem faltado aos treinos e se distanciado do elenco por problemas pessoais."`);
     messages.push(`"${player.name} tem evitado a mídia e companheiros, refletindo em menos jogos disputados."`);
+  } else if (stat.isBenched) {
+    messages.push(`"Sem espaço no time, ${player.name} amargou o banco de reservas durante a maior parte da temporada."`);
+    messages.push(`"${player.name} jogou pouco e não conseguiu se firmar entre os titulares."`);
   }
 
   // Awards
@@ -468,7 +503,7 @@ export const getReachedFinals = (player: Player, currentOvr: number): string[] =
 
 export const simulateSeason = (
   player: Player,
-  prePlayedFinals?: { type: string; won: boolean }[]
+  prePlayedFinals?: { type: string; won: boolean; goals?: number; assists?: number }[]
 ): { baseUpdatedPlayer: Player; seasonStat: SeasonStat; transfer?: Team; earnedPoints: number; proContractOffer?: boolean } => {
   const currentOvr = calculateOverall(player.attributes, player.position);
 
@@ -505,11 +540,11 @@ export const simulateSeason = (
   const expectedOvr = player.currentTeam.level * 15 + 35; 
   let performanceRatio = Math.min(1.5, Math.max(0.5, currentOvr / expectedOvr));
 
-  let finals: { type: string; won: boolean }[] = prePlayedFinals || [];
+  let finals: { type: string; won: boolean; goals?: number; assists?: number }[] = prePlayedFinals || [];
   
   if (!prePlayedFinals) {
     const reached = getReachedFinals(player, currentOvr);
-    finals = reached.map(f => ({ type: f, won: Math.random() > 0.5 }));
+    finals = reached.map(f => ({ type: f, won: Math.random() > 0.5, goals: 0, assists: 0 }));
   }
 
   if (seasonEndingInjury) {
@@ -638,18 +673,39 @@ export const simulateSeason = (
 
   let matches = Math.round(totalTeamMatches * Math.min(1, Math.max(0.6, performanceRatio)));
 
+  let isBenched = false;
+  if (player.isPro) {
+    const minOvrForStarter: Record<number, number> = {
+      1: 64,
+      2: 71,
+      3: 78,
+      4: 83,
+      5: 88
+    };
+    const teamLvl = player.currentTeam.level;
+    const requiredOvr = minOvrForStarter[teamLvl] || 64;
+
+    if (currentOvr < requiredOvr) {
+      isBenched = true;
+      matches = Math.round(matches * 0.25);
+      performanceRatio = performanceRatio * 0.8;
+    }
+  }
+
   let isolated = false;
   let depressed = false;
 
-  if (player.personal.mood === 0) {
-    depressed = true;
-    matches = 0;
-    performanceRatio = 0;
-  } else if (player.personal.mood < 50) {
-    isolated = true;
-    const moodFactor = player.personal.mood / 50;
-    matches = Math.round(matches * moodFactor);
-    performanceRatio = performanceRatio * (0.6 + moodFactor * 0.4);
+  if (player.mode !== "QUICK") {
+    if (player.personal.mood === 0) {
+      depressed = true;
+      matches = 0;
+      performanceRatio = 0;
+    } else if (player.personal.mood < 50) {
+      isolated = true;
+      const moodFactor = player.personal.mood / 50;
+      matches = Math.round(matches * moodFactor);
+      performanceRatio = performanceRatio * (0.6 + moodFactor * 0.4);
+    }
   }
 
   if (injured) {
@@ -660,8 +716,22 @@ export const simulateSeason = (
     performanceRatio = performanceRatio * (0.5 + Math.random() * 0.2);
   }
 
-  const { goals, assists, tackles, cleanSheets } = generateSeasonMatchStats(player, matches, performanceRatio);
+  let { goals, assists, tackles, cleanSheets } = generateSeasonMatchStats(player, matches, performanceRatio);
   const cleanSheetRateThisSeason = matches > 0 ? cleanSheets / matches : 0;
+
+  let finalBonusGoals = 0;
+  let finalBonusAssists = 0;
+  finals.forEach(f => {
+    finalBonusGoals += f.goals || 0;
+    finalBonusAssists += f.assists || 0;
+  });
+
+  goals += finalBonusGoals;
+  assists += finalBonusAssists;
+
+  const getFinalGoals = (type: string) => {
+    return finals.find(x => x.type === type)?.goals || 0;
+  };
 
   let leaguePosition: number | undefined;
 
@@ -692,6 +762,7 @@ export const simulateSeason = (
 
   // Individual Awards
   const individualAwards: string[] = [];
+  let ballonDorCandidates: any[] = [];
   
   const getArtilheiroString = (competition: string) => {
     const masculine = ["Brasileirão", "Mundial de Clubes", "Torneio de Base"];
@@ -702,41 +773,47 @@ export const simulateSeason = (
   };
 
   if (player.isPro) {
-    let g = goals;
+    let g = goals - finalBonusGoals;
     const isDiv2 = player.currentTeam.division === 2;
     
     // Copa do mundo de Seleção
-    let wcGoals = 0;
+    let wcGoals = getFinalGoals("Copa do Mundo");
     if (finals.some(f => f.type === "Copa do Mundo") || (player.age % 4 === 0 && nationalTeamCall)) {
-      wcGoals = Math.floor(g * (Math.random() * 0.2 + 0.1));
-      g -= wcGoals;
+      let simG = Math.floor(g * (Math.random() * 0.2 + 0.1));
+      wcGoals += simG;
+      g -= simG;
     }
     
     // Copa continental de Seleção
-    let nationalContinentalGoals = 0;
     let natContCup = getNationalContinentalCup(player.nationality);
+    let nationalContinentalGoals = getFinalGoals(natContCup);
     if (finals.some(f => f.type === natContCup) || (player.age % 4 === 2 && nationalTeamCall)) {
-      nationalContinentalGoals = Math.floor(g * (Math.random() * 0.2 + 0.1));
-      g -= nationalContinentalGoals;
+      let simG = Math.floor(g * (Math.random() * 0.2 + 0.1));
+      nationalContinentalGoals += simG;
+      g -= simG;
     }
     
     // Mundial de clubes
-    let clubWCGoals = 0;
+    let clubWCGoals = getFinalGoals(clubWCName);
     if (finals.some(f => f.type === clubWCName)) {
-      clubWCGoals = Math.floor(g * (Math.random() * 0.15 + 0.05));
-      g -= clubWCGoals;
+      let simG = Math.floor(g * (Math.random() * 0.15 + 0.05));
+      clubWCGoals += simG;
+      g -= simG;
     }
     
     // Copa Continental
-    let continentalGoals = 0;
+    let continentalGoals = getFinalGoals(continentalName);
     if (finals.some(f => f.type === continentalName) || (!isDiv2 && getRelativeLevel(player.currentTeam) >= 4)) {
-      continentalGoals = Math.floor(g * (Math.random() * 0.25 + 0.1));
-      g -= continentalGoals;
+      let simG = Math.floor(g * (Math.random() * 0.25 + 0.1));
+      continentalGoals += simG;
+      g -= simG;
     }
     
     // Copa Nacional
-    let cupGoals = Math.floor(g * (Math.random() * 0.2 + 0.1));
-    g -= cupGoals;
+    let cupGoals = getFinalGoals(cupName);
+    let simCupG = Math.floor(g * (Math.random() * 0.2 + 0.1));
+    cupGoals += simCupG;
+    g -= simCupG;
     
     let leagueGoals = g;
 
@@ -799,9 +876,84 @@ export const simulateSeason = (
       }
     }
 
-    if (wonBallonDor) {
-      individualAwards.push("Bola de Ouro");
+
+    // Gerar ranking da Bola de Ouro se o jogador for candidato (top 5 ou se ganhou)
+    // OVR alto, gols, assistências, prêmios, etc.
+    let isCandidate = wonBallonDor;
+    if (!wonBallonDor && currentOvr >= 85) {
+        if (goals + assists >= 25 || cleanSheetRateThisSeason >= 0.4) {
+            isCandidate = Math.random() > 0.4; // 60% chance de ser candidato
+        }
     }
+
+    if (isCandidate) {
+        const competitors = [
+            { name: "Vinícius Júnior", club: "Real Madrid", country: "Brasil", ovr: 92, score: 95 },
+            { name: "Kylian Mbappé", club: "Real Madrid", country: "França", ovr: 93, score: 94 },
+            { name: "Erling Haaland", club: "Manchester City", country: "Noruega", ovr: 92, score: 93 },
+            { name: "Jude Bellingham", club: "Real Madrid", country: "Inglaterra", ovr: 91, score: 90 },
+            { name: "Harry Kane", club: "Bayern München", country: "Inglaterra", ovr: 91, score: 88 },
+            { name: "Phil Foden", club: "Manchester City", country: "Inglaterra", ovr: 89, score: 86 },
+            { name: "Rodri", club: "Manchester City", country: "Espanha", ovr: 90, score: 87 },
+            { name: "Bukayo Saka", club: "Arsenal", country: "Inglaterra", ovr: 88, score: 84 },
+            { name: "Lamine Yamal", club: "Barcelona", country: "Espanha", ovr: 86, score: 82 },
+            { name: "Florian Wirtz", club: "Bayer Leverkusen", country: "Alemanha", ovr: 88, score: 85 }
+        ];
+        
+        // Shuffle and pick 4
+        let shuffled = competitors.sort(() => 0.5 - Math.random());
+        let top4 = shuffled.slice(0, 4).map(c => ({...c, chance: Math.floor(Math.random() * 20) + 10}));
+        
+        // Calcular score do player
+        let playerScore = (currentOvr) + (goals * 0.5) + (assists * 0.3) + (wonWC ? 20 : 0) + (wonCL ? 15 : 0) + (wonLeague ? 10 : 0);
+        if (player.position === "ZAG" && cleanSheetRateThisSeason >= 0.4) playerScore += (tackles * 0.1);
+        
+        const myCandidate = {
+            name: player.name,
+            club: player.currentTeam.name,
+            country: player.nationality,
+            isMe: true,
+            score: playerScore,
+            chance: wonBallonDor ? (Math.floor(Math.random() * 30) + 40) : (Math.floor(Math.random() * 20) + 5)
+        };
+        
+        let allCandidates = [...top4, myCandidate];
+        
+        // Ajustar chances para somar 100% ou perto disso e fazer sentido
+        allCandidates.sort((a, b) => b.chance - a.chance);
+        
+        // Se wonBallonDor, garantir que o player é o #1
+        if (wonBallonDor) {
+            allCandidates = allCandidates.filter(c => c.name !== player.name);
+            allCandidates.unshift(myCandidate);
+        } else {
+            // Se não ganhou, garantir que o player não está em #1 (ou pelo menos chance menor que o primeiro)
+            allCandidates.sort((a, b) => b.chance - a.chance);
+            if (allCandidates[0].name === player.name) {
+                let temp = allCandidates[0];
+                allCandidates[0] = allCandidates[1];
+                allCandidates[1] = temp;
+                
+                // swap chances
+                let tempC = allCandidates[0].chance;
+                allCandidates[0].chance = allCandidates[1].chance + 10;
+                allCandidates[1].chance = tempC;
+            }
+        }
+        
+        // recalcular total de chances para ser relativo se quiser, ou só deixar fixo.
+        const totalChance = allCandidates.reduce((sum, c) => sum + c.chance, 0);
+        allCandidates.forEach(c => {
+            c.chance = Math.round((c.chance / totalChance) * 100);
+        });
+
+        if (wonBallonDor) {
+          individualAwards.push("Bola de Ouro");
+        }
+        
+        ballonDorCandidates = allCandidates;
+    }
+
   } else {
     if (goals >= 15 && Math.random() > 0.4) {
       individualAwards.push(getArtilheiroString("Torneio de Base"));
@@ -824,11 +976,39 @@ export const simulateSeason = (
   }
   
   let finalPoints = 0;
+  
+  const artilheiroCount = individualAwards.filter(a => a.includes("Artilheiro")).length;
+  finalPoints += artilheiroCount * 10;
+  
+  const muralhaCount = individualAwards.filter(a => a.includes("Muralha")).length;
+  finalPoints += muralhaCount * 5;
+  
+  const chuteiraCount = individualAwards.filter(a => a.includes("Chuteira de Ouro")).length;
+  finalPoints += chuteiraCount * 5;
+
+  let wonWC = false;
+  let wonCL = false;
+
   finals.forEach(f => {
-    if (f.won) finalPoints += 4;
+    if (f.won) {
+      finalPoints += 8; // Campeão
+      if (f.type === "Copa do Mundo") wonWC = true;
+      if (f.type === "Champions League") wonCL = true;
+    }
   });
 
-  const points = basePoints + finalPoints;
+  if (player.isPro && leaguePosition === 1) {
+    finalPoints += 8; // Campeão da liga
+  }
+
+  let points = basePoints + finalPoints;
+
+  if (wonWC) {
+    points = Math.round(points * 1.5);
+  }
+  if (wonCL) {
+    points = Math.round(points * 1.4);
+  }
 
   const newAttributes = applyGrowth(player.attributes, decline); // Only decline applied here
 
@@ -886,7 +1066,7 @@ export const simulateSeason = (
     }
   }
 
-  const seasonStat: SeasonStat = {
+  const seasonStatObj: SeasonStat = {
     age: player.age,
     team: player.currentTeam,
     matches,
@@ -899,9 +1079,11 @@ export const simulateSeason = (
     nationalTeamCall,
     finals,
     individualAwards,
+    ballonDorCandidates,
     injured,
     injuryDays: injured ? injuryDays : undefined,
     seasonEndingInjury: seasonEndingInjury || undefined,
+    isBenched: isBenched || undefined,
     isolated,
     depressed,
     leaguePosition,
@@ -930,7 +1112,7 @@ export const simulateSeason = (
     attributes: newAttributes,
     relationships: newRelationships,
     history: player.history, // history is not updated yet, will be appended after point distribution
-    retired: player.age >= 38 || (player.age >= 34 && Math.random() > 0.7),
+    retired: player.age >= 56,
     contractYears: player.isPro ? Math.max(0, (player.contractYears || 0) - 1) : 0,
     personal: {
       ...player.personal,
@@ -944,7 +1126,7 @@ export const simulateSeason = (
     delete baseUpdatedPlayer.chats["treinador"];
   }
 
-  return { baseUpdatedPlayer, seasonStat, transfer, earnedPoints: points, proContractOffer };
+  return { baseUpdatedPlayer, seasonStat: seasonStatObj, transfer, earnedPoints: points, proContractOffer };
 };
 
 // -----------------------------------------------------------------------------
@@ -973,7 +1155,22 @@ export const getContractEndOffers = (player: Player, currentOvr: number): Team[]
   // O próprio clube sempre aparece na lista - é a opção de renovação.
   const offers: Team[] = [player.currentTeam];
 
-  if (numOffers > 1) {
+  // Adiciona clubes dos quais o jogador é ídolo (se não for o atual)
+  if (player.idolClubs && player.idolClubs.length > 0) {
+    for (const idolClubName of player.idolClubs) {
+      if (idolClubName !== player.currentTeam.name) {
+        const idolTeam = TEAMS.find(t => t.name === idolClubName);
+        if (idolTeam && !offers.some(o => o.id === idolTeam.id)) {
+          offers.push(idolTeam);
+        }
+      }
+    }
+  }
+
+  // Se já temos ofertas suficientes (ou a mais por causa dos ídolos), ajustar numOffers para no mínimo o que temos
+  numOffers = Math.max(numOffers, offers.length);
+
+  if (numOffers > offers.length) {
     // Quanto maior o OVR do jogador, mais forte é o perfil dos clubes
     // interessados (níveis mais altos entram no sorteio).
     let candidateLevels: number[];
@@ -1001,4 +1198,83 @@ export const getContractEndOffers = (player: Player, currentOvr: number): Team[]
   }
 
   return offers;
+};
+
+export const updateIdolStatus = (
+  player: Player,
+  newStat: SeasonStat,
+  finalsStatsBonus?: { goals?: number; assists?: number; type?: string }[]
+): { idolClubs: string[], newIdol?: { club: string, reason: string } } => {
+  const currentIdols = new Set(player.idolClubs || []);
+  const club = player.currentTeam.name;
+
+  if (currentIdols.has(club) || !player.isPro) return { idolClubs: Array.from(currentIdols) };
+
+  const history = [newStat, ...player.history].filter(s => s.team.name === club);
+
+  // 1. Jogar 6 Temporadas como titular pelo clube.
+  const starterSeasons = history.filter(s => !s.isBenched).length;
+  if (starterSeasons >= 6) {
+    currentIdols.add(club);
+    return { idolClubs: Array.from(currentIdols), newIdol: { club, reason: "Você completou 6 temporadas como titular pelo clube, demonstrando dedicação e lealdade!" } };
+  }
+
+  // 2. Ganhar 2 Copa Continental pelo clube.
+  // 3. Ganhar 4 Liga Nacional pelo clube.
+  let continentalWins = 0;
+  let nationalLeagueWins = 0;
+  history.forEach(s => {
+    if (s.leaguePosition === 1) nationalLeagueWins++;
+    if (s.finals) {
+      // Need to find what continental cup name is for this club
+      const continentalName = "Copa Continental"; // We can just check if any final name contains "Champions League", "Libertadores" etc
+      const isContinental = (name: string) => name.includes("Champions League") || name.includes("Libertadores");
+      if (s.finals.some(f => f.won && isContinental(f.type))) {
+        continentalWins++;
+      }
+    }
+  });
+
+  if (continentalWins >= 2) {
+    currentIdols.add(club);
+    return { idolClubs: Array.from(currentIdols), newIdol: { club, reason: "Suas atuações históricas e 2 conquistas continentais te eternizaram na história do clube!" } };
+  }
+  
+  if (nationalLeagueWins >= 4) {
+    currentIdols.add(club);
+    return { idolClubs: Array.from(currentIdols), newIdol: { club, reason: "Hegemonia nacional! Suas 4 conquistas de Liga Nacional te tornaram uma lenda do clube!" } };
+  }
+
+  // 4. Fazer Hat-trick (3 gols) ou 3 assitencias em final de qualquer competição pelo clube.
+  if (finalsStatsBonus) {
+    for (const f of finalsStatsBonus) {
+      if (f.goals && f.goals >= 3) {
+        currentIdols.add(club);
+        return { idolClubs: Array.from(currentIdols), newIdol: { club, reason: `Uma atuação mágica! Seu hat-trick em uma final te colocou no panteão dos ídolos do clube!` } };
+      }
+      if (f.assists && f.assists >= 3) {
+        currentIdols.add(club);
+        return { idolClubs: Array.from(currentIdols), newIdol: { club, reason: `O maestro das decisões! 3 assistências em uma final te tornaram ídolo!` } };
+      }
+    }
+  }
+
+  // 5. Ser artilheiro da Copa Continental ou Mundial pelo clube.
+  const isContinentalOrWorldScorer = (awards?: string[]) => {
+    if (!awards) return false;
+    return awards.find(a => 
+      a.includes("Artilheiro da Copa Libertadores") ||
+      a.includes("Artilheiro da Champions League") ||
+      a.includes("Artilheiro da AFC Champions League") ||
+      a.includes("Artilheiro do Mundial de Clubes")
+    );
+  };
+  
+  const topScorerAward = isContinentalOrWorldScorer(newStat.individualAwards);
+  if (topScorerAward) {
+    currentIdols.add(club);
+    return { idolClubs: Array.from(currentIdols), newIdol: { club, reason: `Sua marca letal (${topScorerAward}) te elevou ao status de lenda máxima do clube!` } };
+  }
+
+  return { idolClubs: Array.from(currentIdols) };
 };
