@@ -331,7 +331,7 @@ function AnimatedActionQuality({ rollValue, chance }: { rollValue: number, chanc
 
   useEffect(() => {
     let startTime: number;
-    const duration = 1500;
+    const duration = 950;
     let lastChange = 0;
     
     const animate = (timestamp: number) => {
@@ -354,7 +354,7 @@ function AnimatedActionQuality({ rollValue, chance }: { rollValue: number, chanc
   }, [rollValue, chance]);
 
   const colorClass = done ? getQualityColor(currentWord) : "text-slate-300 opacity-50";
-  const scaleClass = done ? "scale-110 transition-transform duration-300" : "scale-100";
+  const scaleClass = done ? "scale-110 transition-transform duration-200" : "scale-100";
 
   return <span className={`inline-block font-black text-2xl md:text-3xl uppercase tracking-widest ${colorClass} ${scaleClass}`}>{currentWord}</span>;
 }
@@ -606,7 +606,7 @@ export function InteractiveMatchModal({
       setDiceRollInfo(null);
       setCurrentScenario(null);
       setStatus("SIMULATING");
-    }, 4500);
+    }, 2000);
   };
 
   const getEventColor = (type: MatchEvent["type"]) => {
@@ -692,7 +692,7 @@ export function InteractiveMatchModal({
         </div>
 
         {/* Match Events Scroll */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-3 font-mono text-sm bg-[#0a0f1c]">
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-3 font-mono text-sm bg-[#0a0f1c]">
           {events.length === 0 && status === "INTRO" && (
             <div className="h-full flex flex-col items-center justify-center text-slate-500 space-y-4">
               <Trophy className="w-16 h-16 opacity-20" />
@@ -726,7 +726,7 @@ export function InteractiveMatchModal({
             <div className="space-y-4 animate-in slide-in-from-bottom-4">
               <div className="flex items-center gap-2 text-blue-400 font-bold justify-center mb-2">
                 <AlertCircle className="w-5 h-5 animate-bounce" />
-                Sua chance de brilhar! Escolha uma jogada:
+                Escolha:
               </div>
               <div className={`grid gap-4 ${currentActions.length === 3 ? "grid-cols-1 sm:grid-cols-3" : "grid-cols-2"}`}>
                 {currentActions.map((action) => {
@@ -755,16 +755,10 @@ export function InteractiveMatchModal({
 
           
           {status === "ROLLING_DICE" && diceRollInfo && (
-            <div className="flex flex-col items-center justify-center p-8 space-y-8 animate-in fade-in duration-300">
-              <div className="text-lg font-bold text-slate-400 tracking-widest uppercase">Executando a jogada...</div>
+            <div className="flex flex-col items-center justify-center p-4 animate-in fade-in duration-200">
               
-              <div className="h-32 flex items-center justify-center w-full">
+              <div className="h-28 flex items-center justify-center w-full">
                 <AnimatedActionQuality rollValue={diceRollInfo.rollValue} chance={diceRollInfo.chance} />
-              </div>
-              
-              <div className="bg-slate-800/50 border border-slate-700/50 px-6 py-4 rounded-2xl text-center w-full max-w-xs transition-opacity duration-1000 delay-1500 opacity-80">
-                <div className="text-xs text-slate-400 mb-1">Dificuldade da Jogada</div>
-                <div className="text-lg font-bold text-slate-200">{diceRollInfo.chance}% de chance</div>
               </div>
             </div>
           )}
