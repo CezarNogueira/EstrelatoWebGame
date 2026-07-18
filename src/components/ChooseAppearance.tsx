@@ -1,18 +1,18 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { MALE_AVATARS, sanitizeAvatar } from "../data";
+import { PLAYER_AVATARS, sanitizeAvatar } from "../data";
 import { useState } from "react";
 
 export function ChooseAppearance({ onSelect, playerName }: { onSelect: (avatarUrl: string) => void; playerName: string }) {
   const [avatarIndex, setAvatarIndex] = useState(0);
 
-  const currentAvatar = sanitizeAvatar(MALE_AVATARS[avatarIndex], playerName) || "";
+  const currentAvatar = sanitizeAvatar(PLAYER_AVATARS[avatarIndex], playerName) || "";
 
   const handlePrev = () => {
-    setAvatarIndex((prev) => (prev - 1 + MALE_AVATARS.length) % MALE_AVATARS.length);
+    setAvatarIndex((prev) => (prev - 1 + PLAYER_AVATARS.length) % PLAYER_AVATARS.length);
   };
 
   const handleNext = () => {
-    setAvatarIndex((prev) => (prev + 1) % MALE_AVATARS.length);
+    setAvatarIndex((prev) => (prev + 1) % PLAYER_AVATARS.length);
   };
 
   return (
@@ -34,7 +34,7 @@ export function ChooseAppearance({ onSelect, playerName }: { onSelect: (avatarUr
             <ChevronLeft className="w-5 h-5" />
           </button>
 
-          <div className="w-32 h-32 rounded-full border-4 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+          <div className="w-34 h-40 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shrink-0">
             <img src={currentAvatar} alt="Avatar" className="w-full h-full object-cover" />
           </div>
 
@@ -48,7 +48,7 @@ export function ChooseAppearance({ onSelect, playerName }: { onSelect: (avatarUr
         </div>
 
         <div className="flex gap-2">
-          {MALE_AVATARS.map((_, i) => (
+          {PLAYER_AVATARS.map((_, i) => (
             <span
               key={i}
               className={`w-2 h-2 rounded-full transition-colors ${i === avatarIndex ? "bg-emerald-500" : "bg-slate-700"}`}

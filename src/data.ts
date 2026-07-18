@@ -3,21 +3,47 @@ import { Team, FamilyMember, Friend, Relationships } from "./types";
 import male1 from "./assets/avatars/male1.png";
 import male2 from "./assets/avatars/male2.png";
 import male3 from "./assets/avatars/male3.png";
+import male4 from "./assets/avatars/male4.png";
+import male5 from "./assets/avatars/male5.png";
+import dad1 from "./assets/avatars/dad1.png";
+import dad2 from "./assets/avatars/dad2.png";
+import dad3 from "./assets/avatars/dad3.png";
+import dad4 from "./assets/avatars/dad4.png";
+import dad5 from "./assets/avatars/dad5.png";
+
 import female1 from "./assets/avatars/female1.png";
 import female2 from "./assets/avatars/female2.png";
 import female3 from "./assets/avatars/female3.png";
+import female4 from "./assets/avatars/female4.png";
+import female5 from "./assets/avatars/female5.png";
+import mom1 from "./assets/avatars/mom1.png";
+import mom2 from "./assets/avatars/mom2.png";
+import mom3 from "./assets/avatars/mom3.png";
+import mom4 from "./assets/avatars/mom4.png";
+import mom5 from "./assets/avatars/mom5.png";
+
 import coachAvatar from "./assets/avatars/oldmale.png";
 
-export const MALE_AVATARS = [male1, male2, male3];
-export const FEMALE_AVATARS = [female1, female2, female3];
-export const PLAYER_AVATARS = MALE_AVATARS; // jogador é sempre masculino
+import player1 from "./assets/avatars/player1.png";
+import player2 from "./assets/avatars/player2.png";
+import player3 from "./assets/avatars/player3.png";
+import player4 from "./assets/avatars/player4.png";
+import player5 from "./assets/avatars/player5.png";
 
-// Agora `gender` é respeitado de fato. Se não vier gender, cai no masculino
-// (mantendo compatibilidade com quem chama sem esse argumento).
+export const MALE_AVATARS = [male1, male2, male3, male4, male5];
+export const DAD_AVATARS = [dad1, dad2, dad3, dad4, dad5];
+export const FEMALE_AVATARS = [female1, female2, female3, female4, female5];
+export const MOM_AVATARS = [mom1, mom2, mom3, mom4, mom5];
+export const PLAYER_AVATARS = [player1, player2, player3, player4, player5];
+
 export const getRandomAvatar = (gender?: "male" | "female") => {
   const pool = gender === "female" ? FEMALE_AVATARS : MALE_AVATARS;
   return pool[Math.floor(Math.random() * pool.length)];
 };
+
+export function randomItem<T>(array: T[]): T {
+  return array[Math.floor(Math.random() * array.length)];
+}
 
 export const getCoachAvatar = () => coachAvatar;
 
@@ -918,7 +944,7 @@ function generateFamily(nationality: string): FamilyMember[] {
       role: "Pai",
       age: randomIntBetween(38, 60),
       affinity: randomIntBetween(40, 100),
-      avatarUrl: getRandomAvatar("male"),
+      avatarUrl: randomItem(DAD_AVATARS),
     });
   }
 
@@ -929,7 +955,7 @@ function generateFamily(nationality: string): FamilyMember[] {
       role: "Mãe",
       age: randomIntBetween(36, 58),
       affinity: randomIntBetween(45, 100),
-      avatarUrl: getRandomAvatar("female"),
+      avatarUrl: randomItem(MOM_AVATARS),
     });
   }
 
@@ -941,7 +967,7 @@ function generateFamily(nationality: string): FamilyMember[] {
         id: nextRelationshipId("fam"),
         name: generatePersonName(nationality, isBrother ? "male" : "female"),
         role: isBrother ? "Irmão" : "Irmã",
-        age: randomIntBetween(6, 32),
+        age: randomIntBetween(14, 32),
         affinity: randomIntBetween(50, 100),
         avatarUrl: getRandomAvatar(isBrother ? "male" : "female"),
       });
