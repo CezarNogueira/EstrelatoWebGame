@@ -251,8 +251,8 @@ export const calculateMarketValue = (ovr: number, age: number): number => {
   else if (age < 24) multiplier = 1.4;
   else if (age < 28) multiplier = 1.1;
   else if (age < 32) multiplier = 0.8;
-  else if (age < 35) multiplier = 0.5;
-  else multiplier = 0.3;
+  else if (age < 35) multiplier = 0.2;
+  else multiplier = 0.1;
 
   return Math.floor(value * multiplier);
 };
@@ -978,20 +978,20 @@ export const simulateSeason = (
   let finalPoints = 0;
   
   const artilheiroCount = individualAwards.filter(a => a.includes("Artilheiro")).length;
-  finalPoints += artilheiroCount * 10;
+  finalPoints += artilheiroCount * 4;
   
   const muralhaCount = individualAwards.filter(a => a.includes("Muralha")).length;
-  finalPoints += muralhaCount * 5;
+  finalPoints += muralhaCount * 2;
   
   const chuteiraCount = individualAwards.filter(a => a.includes("Chuteira de Ouro")).length;
-  finalPoints += chuteiraCount * 5;
+  finalPoints += chuteiraCount * 2;
 
   let wonWC = false;
   let wonCL = false;
 
   finals.forEach(f => {
     if (f.won) {
-      finalPoints += 8; // Campeão
+      finalPoints += 6; // Campeão
       if (f.type === "Copa do Mundo") wonWC = true;
       if (f.type === "Champions League") wonCL = true;
     }
@@ -1004,15 +1004,14 @@ export const simulateSeason = (
   let points = basePoints + finalPoints;
 
   if (wonWC) {
-    points = Math.round(points * 1.5);
+    points = Math.round(points * 1.3);
   }
   if (wonCL) {
-    points = Math.round(points * 1.4);
+    points = Math.round(points * 1.2);
   }
 
-  const newAttributes = applyGrowth(player.attributes, decline); // Only decline applied here
+  const newAttributes = applyGrowth(player.attributes, decline);
 
-  // Decrease relationships affinity over the season
   let moodChange = 0;
 
   for (const f of finals) {
@@ -1053,7 +1052,7 @@ export const simulateSeason = (
       proContractOffer = true;
     }
   } else {
-    if (currentOvr > player.currentTeam.level * 12 + 45) { // Needs to be better than current tier
+    if (currentOvr > player.currentTeam.level * 12 + 45) {
       const betterTeams = TEAMS.filter((t) => t.level === player.currentTeam.level + 1 || t.level === player.currentTeam.level + 2);
       if (betterTeams.length > 0 && Math.random() > 0.3) {
          transfer = betterTeams[randomInt(0, betterTeams.length - 1)];
@@ -1075,7 +1074,7 @@ export const simulateSeason = (
     tackles,
     cleanSheets,
     rating: currentOvr,
-    attributeChanges: decline, // will be augmented with distributed points later
+    attributeChanges: decline,
     nationalTeamCall,
     finals,
     individualAwards,
