@@ -888,16 +888,16 @@ export const simulateSeason = (
 
     if (isCandidate) {
         const competitors = [
-            { name: "Vinícius Júnior", club: "Real Madrid", country: "Brasil", ovr: 92, score: 95 },
-            { name: "Kylian Mbappé", club: "Real Madrid", country: "França", ovr: 93, score: 94 },
-            { name: "Erling Haaland", club: "Manchester City", country: "Noruega", ovr: 92, score: 93 },
-            { name: "Jude Bellingham", club: "Real Madrid", country: "Inglaterra", ovr: 91, score: 90 },
-            { name: "Harry Kane", club: "Bayern München", country: "Inglaterra", ovr: 91, score: 88 },
-            { name: "Phil Foden", club: "Manchester City", country: "Inglaterra", ovr: 89, score: 86 },
-            { name: "Rodri", club: "Manchester City", country: "Espanha", ovr: 90, score: 87 },
-            { name: "Bukayo Saka", club: "Arsenal", country: "Inglaterra", ovr: 88, score: 84 },
-            { name: "Lamine Yamal", club: "Barcelona", country: "Espanha", ovr: 86, score: 82 },
-            { name: "Florian Wirtz", club: "Bayer Leverkusen", country: "Alemanha", ovr: 88, score: 85 }
+            { name: "Neto Santos", club: "Real Madrid", country: "Brasil", ovr: 94, score: 95 },
+            { name: "Brendo Silva", club: "Real Madrid", country: "Brasil", ovr: 94, score: 94 },
+            { name: "Bernardo Couto", club: "Manchester City", country: "Portugal", ovr: 92, score: 93 },
+            { name: "Harry Glow", club: "Real Madrid", country: "Inglaterra", ovr: 91, score: 90 },
+            { name: "Robin Backroom", club: "Bayern München", country: "Inglaterra", ovr: 91, score: 88 },
+            { name: "Phil Lend", club: "Manchester City", country: "Inglaterra", ovr: 89, score: 86 },
+            { name: "Natan Luwis", club: "Manchester City", country: "Espanha", ovr: 90, score: 87 },
+            { name: "Renan Sultado", club: "Arsenal", country: "Itália", ovr: 94, score: 84 },
+            { name: "Laro Aldo", club: "Barcelona", country: "Espanha", ovr: 93, score: 82 },
+            { name: "Flop Bouer", club: "Bayer Leverkusen", country: "Alemanha", ovr: 92, score: 85 }
         ];
         
         // Shuffle and pick 4
@@ -991,14 +991,14 @@ export const simulateSeason = (
 
   finals.forEach(f => {
     if (f.won) {
-      finalPoints += 6; // Campeão
+      finalPoints += 4; // Campeão
       if (f.type === "Copa do Mundo") wonWC = true;
       if (f.type === "Champions League") wonCL = true;
     }
   });
 
   if (player.isPro && leaguePosition === 1) {
-    finalPoints += 8; // Campeão da liga
+    finalPoints += 1; // Campeão da liga
   }
 
   let points = basePoints + finalPoints;
