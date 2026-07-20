@@ -57,10 +57,10 @@ export const calculateOverall = (attr: Attributes, pos: Position): number => {
   
   switch (pos) {
     case "ATA":
-      weights = { pace: 2, shooting: 3, passing: 0.5, dribbling: 1, defending: 0.2, physical: 1.5 };
+      weights = { pace: 2, shooting: 3, passing: 0.5, dribbling: 1, defending: 0, physical: 1.5 };
       break;
     case "PON":
-      weights = { pace: 3, shooting: 1.5, passing: 1.5, dribbling: 3, defending: 0.2, physical: 0.5 };
+      weights = { pace: 3, shooting: 1.5, passing: 1.5, dribbling: 3, defending: 0.1, physical: 0.2 };
       break;
     case "MEI":
       weights = { pace: 1.5, shooting: 1.5, passing: 3, dribbling: 3, defending: 0.5, physical: 0.5 };
@@ -72,10 +72,10 @@ export const calculateOverall = (attr: Attributes, pos: Position): number => {
       weights = { pace: 1, shooting: 0.5, passing: 2, dribbling: 1, defending: 3, physical: 2.5 };
       break;
     case "ZAG":
-      weights = { pace: 1, shooting: 0.2, passing: 1, dribbling: 0.5, defending: 4, physical: 3 };
+      weights = { pace: 1, shooting: 0.1, passing: 1, dribbling: 0.5, defending: 3, physical: 3 };
       break;
     case "LAT":
-      weights = { pace: 3, shooting: 0.5, passing: 2, dribbling: 1.5, defending: 2.5, physical: 1.5 };
+      weights = { pace: 3, shooting: 0.4, passing: 2, dribbling: 1.5, defending: 2.5, physical: 1.5 };
       break;
   }
 
@@ -106,9 +106,9 @@ type PositionStatWeights = {
 };
 
 export const POSITION_STAT_WEIGHTS: Record<Position, PositionStatWeights> = {
-  ATA: { goals: 1.20, assists: 0.55, tackles: 0.05, cleanSheets: 0.25 },
+  ATA: { goals: 1.20, assists: 0.55, tackles: 0.01, cleanSheets: 0.25 },
   PON: { goals: 1.15, assists: 0.85, tackles: 0.20, cleanSheets: 0.25 },
-  MEI: { goals: 0.75, assists: 1.40, tackles: 0.25, cleanSheets: 0.35 },
+  MEI: { goals: 0.75, assists: 1.40, tackles: 0.25, cleanSheets: 0.25 },
   MC:  { goals: 0.30, assists: 0.75, tackles: 0.70, cleanSheets: 0.50 },
   VOL: { goals: 0.12, assists: 0.45, tackles: 1.00, cleanSheets: 0.75 },
   LAT: { goals: 0.10, assists: 0.60, tackles: 0.85, cleanSheets: 0.75 },
