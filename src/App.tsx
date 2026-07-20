@@ -823,7 +823,46 @@ export default function App() {
     }
   };
 
-  const handleContractSigned = (salary: number, years: number) => {
+  const handleContractCanceled = () => {
+    if (!pendingSimulationPhase || !pendingContractNegotiation) return;
+
+    const stateToPass = { ...pendingSimulationPhase };
+    let p = stateToPass.baseUpdatedPlayer;
+    const type = pendingContractNegotiation.type;
+    let wasMidSeasonTransfer = false;
+
+    if (type === "TRANSFER" && p.contractYears > 0 && p.currentTeam.id !== "none") {
+      wasMidSeasonTransfer = true;
+      if (p.history.length > 0) {
+        p.history[0].pressMessage = `"${p.name} recusa proposta e decide permanecer no ${p.currentTeam.name}!"`;
+      }
+    } else {
+      p.currentTeam = { id: "none", name: "Sem Clube", level: 0, country: "BR" };
+      p.contractYears = 0;
+      p.salary = 0;
+      p.squadRole = "ROTATION";
+      if (p.history.length > 0) {
+        p.history[0].pressMessage = `"${p.name} não chega a um acordo e fica sem clube!"`;
+      }
+    }
+    
+    if (type === "PRO") {
+      p.isPro = true;
+    }
+
+    stateToPass.baseUpdatedPlayer = p;
+    setPendingContractNegotiation(null);
+
+    if (type === "PRO") {
+      proceedToTransfer(stateToPass);
+    } else if (wasMidSeasonTransfer) {
+      checkRenewalOrFinish(stateToPass);
+    } else {
+      checkPartyOrFinish(stateToPass);
+    }
+  };
+
+  const handleContractSigned = (salary: number, years: number, extras?: { signingBonus: number; releaseClause: number; role: "STARTER" | "COMPETING" | "ROTATION" }) => {
     if (!pendingSimulationPhase || !pendingContractNegotiation) return;
 
     const stateToPass = { ...pendingSimulationPhase };
@@ -831,6 +870,10 @@ export default function App() {
 
     p.salary = salary;
     p.contractYears = years;
+    if (extras) {
+      p.squadRole = extras.role;
+      p.money += extras.signingBonus;
+    }
 
     if (pendingContractNegotiation.type === "PRO") {
       p.isPro = true;
@@ -933,6 +976,7 @@ export default function App() {
               team={pendingContractNegotiation.team}
               type={pendingContractNegotiation.type}
               onComplete={handleContractSigned}
+              onCancel={handleContractCanceled}
             />
           )}
 
@@ -1134,7 +1178,7 @@ export default function App() {
               </div>
             </div>
           )}
-          <Dashboard player={player} onSimulate={handleSimulate} onUpdatePlayer={setPlayer} onTriggerRomanceEvent={setPendingRomanceEvent} />
+          <Dashboard player={player} onSimulate={handleSimulate} onUpdatePlayer={(p) => { setPlayer(p); if (p.retired) setScreen("CAREER_SUMMARY"); }} onTriggerRomanceEvent={setPendingRomanceEvent} />
 
       {pendingBallonDor && (
         <BallonDorModal

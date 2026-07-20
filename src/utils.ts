@@ -505,6 +505,43 @@ export const simulateSeason = (
   player: Player,
   prePlayedFinals?: { type: string; won: boolean; goals?: number; assists?: number }[]
 ): { baseUpdatedPlayer: Player; seasonStat: SeasonStat; transfer?: Team; earnedPoints: number; proContractOffer?: boolean } => {
+  if (player.currentTeam.id === "none") {
+    const stat: SeasonStat = {
+      age: player.age,
+      team: { id: "none", name: "Sem Clube", level: 0, country: "BR" },
+      matches: 0,
+      goals: 0,
+      assists: 0,
+      tackles: 0,
+      cleanSheets: 0,
+      rating: calculateOverall(player.attributes, player.position),
+      attributeChanges: {},
+      finals: [],
+      pressMessage: `"${player.name} ficou a temporada toda sem clube."`
+    };
+    
+    const healthDecline = getSeasonHealthDecline(player.age);
+    const newHealth = Math.max(0, Math.min(100, player.personal.health - healthDecline));
+    
+    const baseUpdatedPlayer: Player = {
+      ...player,
+      age: player.age + 1,
+      retired: player.age >= 56,
+      contractYears: 0,
+      personal: {
+        ...player.personal,
+        health: newHealth,
+        mood: Math.max(0, player.personal.mood - 15),
+      }
+    };
+    
+    return {
+      baseUpdatedPlayer,
+      seasonStat: stat,
+      earnedPoints: 0,
+    };
+  }
+
   const currentOvr = calculateOverall(player.attributes, player.position);
 
   const healthDecline = getSeasonHealthDecline(player.age);
@@ -685,7 +722,9 @@ export const simulateSeason = (
     const teamLvl = player.currentTeam.level;
     const requiredOvr = minOvrForStarter[teamLvl] || 64;
 
-    if (currentOvr < requiredOvr) {
+    if (player.squadRole === "STARTER") {
+      isBenched = false; // Always plays
+    } else if (currentOvr < requiredOvr) {
       isBenched = true;
       matches = Math.round(matches * 0.25);
       performanceRatio = performanceRatio * 0.8;
@@ -1152,7 +1191,8 @@ export const getContractEndOffers = (player: Player, currentOvr: number): Team[]
   numOffers = Math.max(1, Math.min(5, numOffers));
 
   // O próprio clube sempre aparece na lista - é a opção de renovação.
-  const offers: Team[] = [player.currentTeam];
+  // Exceto se o jogador estiver Sem Clube!
+  const offers: Team[] = player.currentTeam.id === "none" ? [] : [player.currentTeam];
 
   // Adiciona clubes dos quais o jogador é ídolo (se não for o atual)
   if (player.idolClubs && player.idolClubs.length > 0) {

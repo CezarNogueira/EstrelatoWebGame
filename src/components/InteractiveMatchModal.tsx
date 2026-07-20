@@ -664,7 +664,7 @@ export function InteractiveMatchModal({
                 <span className="text-emerald-400 font-bold text-sm">Seu Time</span>
               </div>
               {!isNational && player.currentTeam.logo && (
-                <img src={player.currentTeam.logo} alt={playerTeamName} className="w-12 h-auto object-contain rounded-full p-1 shadow-md flex-shrink-0" />
+                <img src={player.currentTeam.logo} alt={playerTeamName} className="w-12 h-auto object-contain p-1 shadow-md flex-shrink-0" />
               )}
             </div>
             
@@ -681,7 +681,7 @@ export function InteractiveMatchModal({
 
             <div className="text-left flex-1 overflow-hidden flex items-center justify-start gap-3">
               {!isNational && TEAMS.find(t => t.name === opponentName)?.logo && (
-                <img src={TEAMS.find(t => t.name === opponentName)?.logo} alt={opponentName} className="w-12 h-auto object-contain rounded-full p-1 shadow-md flex-shrink-0" />
+                <img src={TEAMS.find(t => t.name === opponentName)?.logo} alt={opponentName} className="w-12 h-auto object-contain p-1 shadow-md flex-shrink-0" />
               )}
               <div>
                 <h2 className="text-lg font-black text-slate-100">{opponentName}</h2>

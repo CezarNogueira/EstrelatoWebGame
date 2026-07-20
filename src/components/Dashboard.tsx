@@ -52,6 +52,7 @@ export function Dashboard({
   const [showTrainingCenter, setShowTrainingCenter] = useState(false);
   const [showPhone, setShowPhone] = useState(false);
   const [showRelationships, setShowRelationships] = useState(false);
+  const [showRetireConfirm, setShowRetireConfirm] = useState(false);
   const [pendingFriendEvent, setPendingFriendEvent] = useState<Friend | null>(null);
   const [pendingFamilyEvent, setPendingFamilyEvent] = useState<{event: FamilyEvent, personId: string, personName: string, type: "family" | "friend" | "girlfriend"} | null>(null);
 
@@ -471,8 +472,8 @@ export function Dashboard({
         
         {/* Header Profile */}
         <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
-          <div className="flex items-center gap-6">
-            <div className="relative shrink-0">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-6 w-full md:w-auto">
+            <div className="relative shrink-0 mx-auto sm:mx-0">
               <div className="w-24 h-24 bg-slate-800 rounded-full flex items-center justify-center border-4 border-slate-950 shadow-inner overflow-hidden">
                 {player.avatarUrl ? (
                   <img src={player.avatarUrl} alt={player.name} className="w-full h-full object-cover" />
@@ -506,7 +507,7 @@ export function Dashboard({
                   {title}
                 </span>
               </div>
-              <div className="flex flex-wrap items-center gap-4 mt-2 text-slate-400 font-medium">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 mt-2 text-slate-400 font-medium">
                 <span className="flex items-center gap-1"><Calendar className="w-4 h-4"/> {player.age} anos</span>
                 <span>•</span>
                 <span>{player.currentTeam.name}</span>
@@ -518,7 +519,7 @@ export function Dashboard({
 
               {/* Personal Attributes */}
               {player.personal && (
-                <div className="flex gap-4 mt-4">
+                <div className="flex justify-center sm:justify-start gap-4 mt-4">
                   <div className="flex flex-col">
                     <span className="text-[10px] text-slate-500 font-bold uppercase">Humor</span>
                     <span className="text-sm font-bold text-blue-400">{Math.round(player.personal.mood)}%</span>
@@ -586,40 +587,57 @@ export function Dashboard({
               </button>
 
               <button
-                onClick={() => setShowPhone(true)}
-                className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-700 relative"
-              >
-                <div className="relative">
-                  <Smartphone className="w-4 h-4" />
-                  {hasUnreadMessages && (
-                    <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-slate-800"></div>
-                  )}
-                </div>
-                Celular
-              </button>
-
+                    onClick={() => setShowPhone(true)}
+                    className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-700 relative"
+                  >
+                    <div className="relative">
+                      <Smartphone className="w-4 h-4" />
+                      {hasUnreadMessages && player.mode !== "QUICK" && (
+                        <div className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border border-slate-800"></div>
+                      )}
+                    </div>
+                    Celular
+                  </button>
               {player.mode !== "QUICK" && (
-                <button
-                  onClick={() => setShowCityMap(true)}
-                  className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-700"
-                >
-                  <MapPin className="w-4 h-4" />
-                  Mapa da Cidade
-                </button>
+                  <button
+                    onClick={() => setShowCityMap(true)}
+                    className="w-full py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 border border-slate-700"
+                  >
+                    <MapPin className="w-4 h-4" />
+                    Mapa da Cidade
+                  </button>
               )}
 
               {!player.retired && (
-                <button
-                  onClick={() => {
-                    if (window.confirm("Tem certeza que deseja se aposentar agora? Esta ação é irreversível.")) {
-                      onUpdatePlayer({ ...player, retired: true });
-                    }
-                  }}
-                  className="w-full py-3 bg-red-900/20 hover:bg-red-900/40 text-red-400 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 border border-red-900/50"
-                >
-                  <Calendar className="w-4 h-4" />
-                  Aposentar-se
-                </button>
+                <>
+                  {!showRetireConfirm ? (
+                    <button
+                      onClick={() => setShowRetireConfirm(true)}
+                      className="w-full py-3 bg-red-900/20 hover:bg-red-900/40 text-red-400 font-bold text-sm rounded-xl transition-all flex items-center justify-center gap-2 border border-red-900/50"
+                    >
+                      <Calendar className="w-4 h-4" />
+                      Aposentar-se
+                    </button>
+                  ) : (
+                    <div className="w-full p-3 bg-red-900/20 border border-red-900/50 rounded-xl flex flex-col gap-2">
+                      <span className="text-xs text-red-400 font-medium text-center">Tem certeza? Irreversível.</span>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => onUpdatePlayer({ ...player, retired: true })}
+                          className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-lg transition-all"
+                        >
+                          Sim, Aposentar
+                        </button>
+                        <button
+                          onClick={() => setShowRetireConfirm(false)}
+                          className="flex-1 py-2 bg-slate-700 hover:bg-slate-600 text-white font-bold text-xs rounded-lg transition-all"
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -644,14 +662,14 @@ export function Dashboard({
                         key={player.age - idx} // Use age as stable key for history
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="bg-slate-950 border border-slate-800 p-4 rounded-2xl flex items-center gap-4"
+                        className="bg-slate-950 border border-slate-800 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-4"
                       >
-                        <div className="flex flex-col items-center justify-center w-16 h-16 bg-slate-900 rounded-xl shrink-0 border border-slate-800">
+                        <div className="flex items-center sm:flex-col sm:justify-center w-full sm:w-16 h-auto sm:h-16 bg-slate-900 rounded-xl shrink-0 border border-slate-800 p-2 sm:p-0 gap-2 sm:gap-0">
                           <span className="text-xs text-slate-500 font-bold uppercase">Idade</span>
                           <span className="text-xl font-black text-slate-200">{stat.age}</span>
                         </div>
                         
-                        <div className="flex-1">
+                        <div className="flex-1 w-full min-w-0">
                           <div className="flex flex-wrap items-center gap-2 text-sm font-bold text-white mb-1">
                             <span>{stat.team.name}</span>
                             <span className="px-2 py-0.5 bg-slate-800 rounded-md text-slate-400 text-xs font-mono">OVR {stat.rating}</span>
@@ -716,7 +734,8 @@ export function Dashboard({
                           )}
                         </div>
 
-                        <div className="text-right shrink-0">
+                        <div className="w-full sm:w-auto text-left sm:text-right shrink-0 mt-2 sm:mt-0 bg-emerald-500/10 sm:bg-transparent p-2 sm:p-0 rounded-lg sm:rounded-none flex sm:block items-center justify-between">
+                          <span className="text-emerald-400 font-bold text-xs sm:hidden">PONTOS GANHOS</span>
                           <div className="text-emerald-500 font-bold text-sm">
                             +{Object.values(stat.attributeChanges).reduce((a, b) => (a || 0) + (b || 0), 0)} pts
                           </div>

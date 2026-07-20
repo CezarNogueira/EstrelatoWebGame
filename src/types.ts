@@ -147,6 +147,7 @@ export type Player = {
   marketValue: number;
   salary: number;
   contractYears: number;
+  squadRole?: "STARTER" | "COMPETING" | "ROTATION";
   money: number;
   assets: string[];
   hasPersonalTrainer: boolean;
