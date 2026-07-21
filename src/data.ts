@@ -834,9 +834,9 @@ type NamePool = { male: string[]; female: string[]; surnames: string[] };
 
 const NAME_POOLS: Record<string, NamePool> = {
   "Brasil": {
-    male: ["João", "Pedro", "Carlos", "Marcos", "Rafael", "Lucas", "Antônio", "Paulo"],
-    female: ["Maria", "Ana", "Juliana", "Fernanda", "Camila", "Patrícia", "Beatriz", "Larissa"],
-    surnames: ["Silva", "Souza", "Oliveira", "Santos", "Pereira", "Costa", "Almeida", "Ribeiro"],
+    male: ["João", "Pedro", "Carlos", "Marcos", "Rafael", "Lucas", "Antônio", "Paulo", "Brendo", "Thiago"],
+    female: ["Maria", "Ana", "Juliana", "Fernanda", "Camila", "Patrícia", "Beatriz", "Larissa", "Giovanna", "Luiza", "Sofia"],
+    surnames: ["Silva", "Souza", "Oliveira", "Santos", "Pereira", "Costa", "Almeida", "Ribeiro", "Ferreira", "Pimentel", "Nogueira", "Carneiro", "Dantas"],
   },
   "Argentina": {
     male: ["Diego", "Mateo", "Facundo", "Nicolás", "Franco", "Santiago", "Ezequiel", "Agustín"],
@@ -908,9 +908,6 @@ export function generatePersonName(nationality: string, gender: "male" | "female
   return `${first} ${last}`;
 }
 
-// Sorteia a composição familiar do jogador para a carreira. Cinco cenários
-// possíveis: pais e irmãos, apenas pais (sem irmãos), apenas pai, apenas
-// mãe, ou completamente órfão (sem nenhum familiar).
 function generateFamily(nationality: string): FamilyMember[] {
   const roll = Math.random() * 100;
   const members: FamilyMember[] = [];
@@ -1006,9 +1003,6 @@ function generateFriends(nationality: string): Friend[] {
   return [];
 }
 
-// Ponto de entrada usado ao criar o jogador: sorteia a família e os amigos
-// da carreira. A namorada começa sempre nula - só existe se surgir de um
-// RomanceEvent durante a carreira.
 export function generateRelationships(nationality: string): Relationships {
   return {
     family: generateFamily(nationality),

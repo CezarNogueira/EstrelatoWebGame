@@ -57,19 +57,19 @@ export const calculateOverall = (attr: Attributes, pos: Position): number => {
   
   switch (pos) {
     case "ATA":
-      weights = { pace: 2, shooting: 3, passing: 0.5, dribbling: 1, defending: 0, physical: 1.5 };
+      weights = { pace: 2, shooting: 3, passing: 1, dribbling: 1, defending: 0.01, physical: 1.5 };
       break;
     case "PON":
-      weights = { pace: 3, shooting: 1.5, passing: 1.5, dribbling: 3, defending: 0.1, physical: 0.2 };
+      weights = { pace: 3, shooting: 1, passing: 2, dribbling: 3, defending: 0.1, physical: 0.2 };
       break;
     case "MEI":
-      weights = { pace: 1.5, shooting: 1.5, passing: 3, dribbling: 3, defending: 0.5, physical: 0.5 };
+      weights = { pace: 1, shooting: 1, passing: 3, dribbling: 2, defending: 0.5, physical: 0.5 };
       break;
     case "MC":
-      weights = { pace: 1, shooting: 1, passing: 3, dribbling: 2, defending: 2, physical: 1.5 };
+      weights = { pace: 1, shooting: 1, passing: 2, dribbling: 2, defending: 2, physical: 1 };
       break;
     case "VOL":
-      weights = { pace: 1, shooting: 0.5, passing: 2, dribbling: 1, defending: 3, physical: 2.5 };
+      weights = { pace: 0.5, shooting: 0.5, passing: 2, dribbling: 1, defending: 3, physical: 3 };
       break;
     case "ZAG":
       weights = { pace: 1, shooting: 0.1, passing: 1, dribbling: 0.5, defending: 3, physical: 3 };
@@ -107,12 +107,12 @@ type PositionStatWeights = {
 
 export const POSITION_STAT_WEIGHTS: Record<Position, PositionStatWeights> = {
   ATA: { goals: 1.20, assists: 0.55, tackles: 0.01, cleanSheets: 0.25 },
-  PON: { goals: 1.15, assists: 0.85, tackles: 0.20, cleanSheets: 0.25 },
+  PON: { goals: 1.15, assists: 0.95, tackles: 0.20, cleanSheets: 0.25 },
   MEI: { goals: 0.75, assists: 1.40, tackles: 0.25, cleanSheets: 0.25 },
   MC:  { goals: 0.30, assists: 0.75, tackles: 0.70, cleanSheets: 0.50 },
   VOL: { goals: 0.12, assists: 0.45, tackles: 1.00, cleanSheets: 0.75 },
   LAT: { goals: 0.10, assists: 0.60, tackles: 0.85, cleanSheets: 0.75 },
-  ZAG: { goals: 0.04, assists: 0.30, tackles: 1.25, cleanSheets: 1.00 },
+  ZAG: { goals: 0.04, assists: 0.30, tackles: 1.20, cleanSheets: 1.00 },
 };
 
 // Positions whose value is primarily defensive - used to gate defensive-only
@@ -185,15 +185,16 @@ export const getPlayerTitle = (age: number, ovr: number): string => {
   if (ovr > 85) return "Extraordinário";
   if (age <= 19) return "Jovem Promessa";
   if (age < 24 && ovr > 78) return "Promessa";
-  if (age > 25 && ovr < 80) return "Mediano";
+  if (age > 27 && ovr < 80) return "Mediano";
   return "Padrão";
 };
 
 export const getSeasonHealthDecline = (age: number): number => {
   if (age <= 18) return 1;
-  if (age <= 23) return 4;
+  if (age <= 23) return 2;
   if (age <= 29) return 9;
-  return 15;
+  if (age <= 39) return 12;
+  return 25;
 };
 
 export const generateGrowthPoints = (age: number): { points: number, decline: Partial<Attributes> } => {
@@ -206,14 +207,14 @@ export const generateGrowthPoints = (age: number): { points: number, decline: Pa
     points = randomInt(4, 8);
   } else if (age < 29) {
     points = randomInt(1, 4);
-  } else if (age < 33) {
+  } else if (age < 34) {
     points = 0;
     const attrs: (keyof Attributes)[] = ["pace", "shooting", "passing", "dribbling", "defending", "physical"];
-    attrs.forEach((attr) => decline[attr] = randomInt(-2, 0));
+    attrs.forEach((attr) => decline[attr] = randomInt(-8, 0));
   } else {
     points = 0;
     const attrs: (keyof Attributes)[] = ["pace", "shooting", "passing", "dribbling", "defending", "physical"];
-    attrs.forEach((attr) => decline[attr] = randomInt(-4, -1));
+    attrs.forEach((attr) => decline[attr] = randomInt(-12, -1));
   }
   
   return { points, decline };
@@ -267,11 +268,11 @@ export const autoDistributePoints = (
 
   // Define weights based on position
   const weights: Record<Position, (keyof Attributes)[]> = {
-    "ATA": ["shooting", "pace", "dribbling", "physical", "passing", "defending"],
+    "ATA": ["shooting", "pace", "dribbling", "physical", "passing"],
     "PON": ["pace", "dribbling", "shooting", "passing", "physical", "defending"],
     "MEI": ["passing", "dribbling", "shooting", "pace", "physical", "defending"],
     "MC":  ["passing", "physical", "dribbling", "defending", "pace", "shooting"],
-    "VOL": ["defending", "physical", "passing", "pace", "dribbling", "shooting"],
+    "VOL": ["defending", "physical", "passing", "dribbling", "pace", "shooting"],
     "ZAG": ["defending", "physical", "pace", "passing", "dribbling", "shooting"],
     "LAT": ["pace", "defending", "passing", "dribbling", "physical", "shooting"],
   };
@@ -393,8 +394,6 @@ export const generatePressMessage = (
       messages.push(`"${player.name} segue ganhando experiência. A torcida pede mais minutos em campo!"`);
     } else if (player.age > 33) {
       messages.push(`"A experiência de ${player.name} ajuda o time, mas o rendimento físico gera debates na imprensa."`);
-    } else {
-      messages.push(`"Temporada regular de ${player.name}. Especialistas cobram mais protagonismo."`);
     }
   }
 
