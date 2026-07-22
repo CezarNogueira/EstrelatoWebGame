@@ -324,9 +324,9 @@ export const generateGrowthPoints = (age: number): { points: number, decline: Pa
   const decline: Partial<Attributes> = {};
   
   if (age < 18) {
-    points = randomInt(8, 15);
+    points = randomInt(8, 18);
   } else if (age < 24) {
-    points = randomInt(4, 8);
+    points = randomInt(2, 4);
   } else if (age < 29) {
     points = randomInt(1, 4);
   } else if (age < 34) {
@@ -371,7 +371,7 @@ export const calculateMarketValue = (ovr: number, age: number): number => {
 
   let multiplier = 1;
   if (age < 20) multiplier = 1.8;
-  else if (age < 24) multiplier = 1.4;
+  else if (age < 24) multiplier = 1.2;
   else if (age < 28) multiplier = 1.1;
   else if (age < 32) multiplier = 0.8;
   else if (age < 35) multiplier = 0.2;

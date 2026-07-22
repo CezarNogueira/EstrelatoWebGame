@@ -115,6 +115,7 @@ export function Dashboard({
 
   const ovr = calculateOverall(player.attributes, player.position);
   const title = getPlayerTitle(player.age, ovr);
+  const showDefensiveStats = !["ATA", "PON", "MEI", "MC"].includes(player.position);
   const theme = getLeagueTheme(player.currentTeam, player.isPro);
   
   const minOvrForStarter: Record<number, number> = {
@@ -694,8 +695,12 @@ export function Dashboard({
                             <span>{stat.matches} Jogos</span>
                             <span>{stat.goals} Gols</span>
                             <span>{stat.assists} Assists</span>
-                            <span className="text-blue-400">{stat.tackles ?? 0} Desarmes</span>
-                            <span className="text-emerald-400">{stat.cleanSheets ?? 0} Sem Sofrer</span>
+                            {showDefensiveStats && (
+                              <>
+                                <span>{stat.tackles ?? 0} Desarmes</span>
+                                <span>{stat.cleanSheets ?? 0} Sem Sofrer</span>
+                              </>
+                            )}
                           </div>
                           <div className="flex flex-wrap gap-2 mt-2">
                             {stat.leagueName && (

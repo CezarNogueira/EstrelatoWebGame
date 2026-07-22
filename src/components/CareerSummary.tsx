@@ -2,6 +2,8 @@ import { Player } from "../types";
 import { Trophy, Goal, Calendar, Medal, Shield, ShieldCheck } from "lucide-react";
 
 export function CareerSummary({ player, onRestart }: { player: Player; onRestart: () => void }) {
+  const showDefensiveStats = !["ATA", "PON", "MEI", "MC"].includes(player.position);
+
   const totalMatches = player.history.reduce((sum, stat) => sum + stat.matches, 0);
   const totalGoals = player.history.reduce((sum, stat) => sum + stat.goals, 0);
   const totalAssists = player.history.reduce((sum, stat) => sum + stat.assists, 0);
@@ -44,7 +46,11 @@ export function CareerSummary({ player, onRestart }: { player: Player; onRestart
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 w-full max-w-4xl">
+        <div
+          className={`grid grid-cols-2 gap-4 w-full max-w-4xl ${
+            showDefensiveStats ? "sm:grid-cols-3 lg:grid-cols-6" : "sm:grid-cols-4"
+          }`}
+        >
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col items-center gap-2">
             <Calendar className="w-8 h-8 text-slate-400" />
             <span className="text-3xl font-black">{totalMatches}</span>
@@ -60,16 +66,20 @@ export function CareerSummary({ player, onRestart }: { player: Player; onRestart
             <span className="text-3xl font-black">{totalAssists}</span>
             <span className="text-slate-500 font-bold uppercase text-xs">Assistências</span>
           </div>
-          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col items-center gap-2">
-            <Shield className="w-8 h-8 text-blue-400" />
-            <span className="text-3xl font-black">{totalTackles}</span>
-            <span className="text-slate-500 font-bold uppercase text-xs">Desarmes</span>
-          </div>
-          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col items-center gap-2">
-            <ShieldCheck className="w-8 h-8 text-emerald-400" />
-            <span className="text-3xl font-black">{totalCleanSheets}</span>
-            <span className="text-slate-500 font-bold uppercase text-xs">Sem Sofrer</span>
-          </div>
+          {showDefensiveStats && (
+            <>
+              <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col items-center gap-2">
+                <Shield className="w-8 h-8 text-blue-400" />
+                <span className="text-3xl font-black">{totalTackles}</span>
+                <span className="text-slate-500 font-bold uppercase text-xs">Desarmes</span>
+              </div>
+              <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col items-center gap-2">
+                <ShieldCheck className="w-8 h-8 text-emerald-400" />
+                <span className="text-3xl font-black">{totalCleanSheets}</span>
+                <span className="text-slate-500 font-bold uppercase text-xs">Sem Sofrer</span>
+              </div>
+            </>
+          )}
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col items-center gap-2">
             <Trophy className="w-8 h-8 text-amber-400" />
             <span className="text-3xl font-black">{totalTeamTitles + totalIndividualAwards}</span>
@@ -119,9 +129,9 @@ export function CareerSummary({ player, onRestart }: { player: Player; onRestart
 
         <button
           onClick={onRestart}
-          className="w-full sm:w-auto mt-4 mb-10 px-12 py-4 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold text-xl rounded-2xl transition-all active:scale-95 shadow-[0_0_40px_-10px_rgba(16,185,129,0.5)]"
+          className="w-full sm:w-auto mt-4 mb-10 px-12 py-4 bg-emerald-800 hover:bg-emerald-700 text-slate-100 font-bold text-xl rounded-2xl transition-all active:scale-95 shadow-[0_0_40px_-10px_rgba(16,185,129,0.5)]"
         >
-          Iniciar Nova Carreira
+          Menu Inicial
         </button>
       </div>
     </div>
