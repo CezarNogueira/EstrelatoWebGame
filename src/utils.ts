@@ -1250,11 +1250,11 @@ export const updateIdolStatus = (
 
   const history = [newStat, ...player.history].filter(s => s.team.name === club);
 
-  // 1. Jogar 6 Temporadas como titular pelo clube.
+  // 1. Jogar 15 Temporadas como titular pelo clube.
   const starterSeasons = history.filter(s => !s.isBenched).length;
-  if (starterSeasons >= 6) {
+  if (starterSeasons >= 15) {
     currentIdols.add(club);
-    return { idolClubs: Array.from(currentIdols), newIdol: { club, reason: "Você completou 6 temporadas como titular pelo clube, demonstrando dedicação e lealdade!" } };
+    return { idolClubs: Array.from(currentIdols), newIdol: { club, reason: "Você completou 15 temporadas como titular pelo clube, demonstrando dedicação e lealdade, se tornando um ídolo!" } };
   }
 
   // 2. Ganhar 2 Copa Continental pelo clube.
@@ -1264,8 +1264,7 @@ export const updateIdolStatus = (
   history.forEach(s => {
     if (s.leaguePosition === 1) nationalLeagueWins++;
     if (s.finals) {
-      // Need to find what continental cup name is for this club
-      const continentalName = "Copa Continental"; // We can just check if any final name contains "Champions League", "Libertadores" etc
+      const continentalName = "Copa Continental";
       const isContinental = (name: string) => name.includes("Champions League") || name.includes("Libertadores");
       if (s.finals.some(f => f.won && isContinental(f.type))) {
         continentalWins++;
@@ -1275,12 +1274,12 @@ export const updateIdolStatus = (
 
   if (continentalWins >= 2) {
     currentIdols.add(club);
-    return { idolClubs: Array.from(currentIdols), newIdol: { club, reason: "Suas atuações históricas e 2 conquistas continentais te eternizaram na história do clube!" } };
+    return { idolClubs: Array.from(currentIdols), newIdol: { club, reason: "2 conquistas continentais te eternizaram na história do clube como um ídolo!" } };
   }
   
   if (nationalLeagueWins >= 4) {
     currentIdols.add(club);
-    return { idolClubs: Array.from(currentIdols), newIdol: { club, reason: "Hegemonia nacional! Suas 4 conquistas de Liga Nacional te tornaram uma lenda do clube!" } };
+    return { idolClubs: Array.from(currentIdols), newIdol: { club, reason: "Hegemonia nacional! Suas 4 conquistas de Liga Nacional te tornaram um ídolo do clube!" } };
   }
 
   // 4. Fazer Hat-trick (3 gols) ou 3 assitencias em final de qualquer competição pelo clube.

@@ -125,7 +125,6 @@ export function Dashboard({
   };
   const requiredOvr = minOvrForStarter[player.currentTeam.level] || 64;
   const isBenched = player.isPro && ovr < requiredOvr;
-  const situation = isBenched ? "Banco" : "Titular";
 
   const hasUnreadMessages = player.chats ? Object.values(player.chats).some(c => c.hasUnread) : false;
 
@@ -513,8 +512,6 @@ export function Dashboard({
                 <span>{player.currentTeam.name}</span>
                 <span>•</span>
                 <span className={player.isPro ? "text-emerald-400" : "text-blue-400"}>{player.isPro ? getLeagueName(player.currentTeam) : "Base"}</span>
-                <span className="hidden sm:block">•</span>
-                <span className="text-yellow-500 font-bold hidden sm:block">{situation}</span>
               </div>
               {/* Personal Attributes */}
               {player.personal && (

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Player, Position } from "../types";
 import { calculateOverall } from "../utils";
 import { Trophy, Goal, Activity, FastForward, Play, AlertCircle, Shield, UserCheck, Rocket, MoveRight, Target, Crosshair } from "lucide-react";
-import { TEAMS, EUROPEAN_NATIONALITIES, AMERICAN_NATIONALITIES } from "../data";
+import { TEAMS, EUROPEAN_NATIONALITIES, AMERICAN_NATIONALITIES, NATIONALITIES } from "../data";
 
 // -----------------------------------------------------------------------------
 // Cenários de jogada
@@ -403,7 +403,10 @@ export function InteractiveMatchModal({
 
     if (finalType.includes("Mundial")) {
       category = "mundial";
-      ops = ["Real Madrid", "Manchester City", "Bayern de Munique", "Liverpool", "Barcelona", "Chelsea", "Inter de Milão", "Boca Juniors"];
+      // Qualquer time nível 5 (o mais alto) do mundo pode ser sorteado como
+      // adversário no Mundial de Clubes, exceto o próprio time do jogador.
+      ops = TEAMS.filter(t => t.level >= 4 && t.id !== player.currentTeam.id).map(t => t.name);
+      if (ops.length === 0) ops = ["Real Madrid", "M. City", "B. de Munique"];
     } else if (finalType.includes("Eurocopa")) {
       // Eurocopa - só seleções europeias disputam.
       category = `selecao-${finalType}`;
@@ -413,24 +416,24 @@ export function InteractiveMatchModal({
       category = `selecao-${finalType}`;
       ops = AMERICAN_NATIONALITIES.filter(c => c !== player.nationality);
     } else if (isNational) {
-      // Copa do Mundo (ou fallback genérico) - qualquer seleção pode aparecer.
+      // Copa do Mundo (ou fallback genérico) - qualquer seleção cadastrada em
+      // data.ts pode aparecer, exceto a do próprio jogador.
       category = `selecao-${finalType}`;
-      ops = ["França", "Alemanha", "Argentina", "Espanha", "Inglaterra", "Itália", "Portugal", "Holanda", "Uruguai", "Brasil"];
-      ops = ops.filter(c => c !== player.nationality); // simple avoidance
+      ops = NATIONALITIES.filter(c => c !== player.nationality);
     } else if (finalType.includes("Libertadores")) {
       category = "libertadores";
-      const libertadoresTeams = ["Boca Juniors", "River Plate", "Peñarol", "Nacional", "Independiente", "Colo-Colo"];
-      const brTeams = TEAMS.filter(t => t.country === "BR" && t.level >= 2 && t.id !== player.currentTeam.id).map(t => t.name);
-      ops = [...libertadoresTeams, ...brTeams];
+      // Países sul-americanos cadastrados em TEAMS
+      const LIBERTADORES_COUNTRIES = ["BR", "AR", "UY"];
+      ops = TEAMS.filter(
+        t => LIBERTADORES_COUNTRIES.includes(t.country) && t.level >= 3 && t.id !== player.currentTeam.id
+      ).map(t => t.name);
+      if (ops.length === 0) ops = ["Boca Juniors", "River Plate", "Peñarol"]; // fallback de segurança
     } else if (finalType.includes("Champions") || (finalType.includes("Continental") && !isNational)) {
       // A Champions League é uma competição europeia - só clubes da Europa
-      // (EN/ES/IT/DE/FR/PT/NL) podem entrar nesse sorteio. Antes, o filtro
-      // usava "país !== BR", o que deixava clubes sul-americanos (ex: Boca
-      // Juniors), sauditas ou norte-americanos entrarem como adversários.
       category = "continental";
       const UEFA_COUNTRIES = ["EN", "ES", "IT", "DE", "FR", "PT", "NL"];
-      ops = TEAMS.filter(t => UEFA_COUNTRIES.includes(t.country) && t.level >= 3 && t.id !== player.currentTeam.id).map(t => t.name);
-      if (ops.length === 0) ops = ["Bayern de Munique", "Real Madrid", "PSG", "Manchester City", "Juventus"];
+      ops = TEAMS.filter(t => UEFA_COUNTRIES.includes(t.country) && t.level >= 4 && t.id !== player.currentTeam.id).map(t => t.name);
+      if (ops.length === 0) ops = ["B. de Munique", "Real Madrid", "PSG", "M. City", "Juventus"];
     } else {
       category = `domestico-${player.currentTeam.country}`;
       const domestic = TEAMS.filter(t => t.country === player.currentTeam.country && t.id !== player.currentTeam.id);
@@ -438,15 +441,8 @@ export function InteractiveMatchModal({
         ops = domestic.map(t => t.name);
       }
     }
-
-    // Nunca deixa o adversário ser o próprio time (ou a própria seleção) do
-    // jogador. Algumas listas são fixas (Mundial de Clubes, Libertadores) e
-    // não filtravam isso por id/nome, o que permitia sorteios como
-    // "Barcelona x Barcelona" quando o jogador defendia esse mesmo clube.
     ops = ops.filter(name => name !== playerTeamName);
     if (ops.length === 0) {
-      // Pool ficou vazio (só existia o próprio time/seleção nele) - usa um
-      // adversário genérico em vez de deixar o jogador enfrentar a si mesmo.
       ops = ["Rival"];
     }
 
@@ -554,7 +550,7 @@ export function InteractiveMatchModal({
 
           return nextMin;
         });
-      }, 150); // Speed of the match (150ms per minute)
+      }, 60); // Velocidade da partida (60ms por minuto)
     }
     
     return () => clearInterval(timer);
@@ -650,7 +646,7 @@ export function InteractiveMatchModal({
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/95 p-4 backdrop-blur-sm">
-      <div className="bg-slate-900 border-2 border-slate-700 rounded-3xl shadow-2xl max-w-2xl w-full flex flex-col h-[85vh] max-h-[800px] overflow-hidden">
+      <div className="bg-slate-900 border-2 border-slate-900 rounded-3xl shadow-2xl max-w-2xl w-full flex flex-col h-[85vh] max-h-[800px] overflow-hidden">
         
         {/* Header / Scoreboard */}
         <div className="bg-slate-950 p-6 border-b border-slate-800 text-center relative shrink-0">
@@ -658,34 +654,32 @@ export function InteractiveMatchModal({
             Final: {finalType}
           </div>
           <div className="flex justify-center items-center gap-4 mt-4">
-            <div className="text-right flex-1 overflow-hidden flex items-center justify-end gap-3">
-              <div>
-                <h2 className="text-xl font-black text-slate-100">{playerTeamName}</h2>
-                <span className="text-emerald-400 font-bold text-sm">Seu Time</span>
-              </div>
+            <div className="text-right flex-1 overflow-hidden flex flex-col items-center justify-end gap-3">
               {!isNational && player.currentTeam.logo && (
                 <img src={player.currentTeam.logo} alt={playerTeamName} className="w-12 h-auto object-contain p-1 shadow-md flex-shrink-0" />
               )}
+              <div>
+                <h2 className="text-xs sm:text-xl font-black text-slate-100">{playerTeamName}</h2>
+              </div>
             </div>
             
             <div className="flex flex-col items-center flex-shrink-0">
-              <div className="bg-slate-900 border-2 border-slate-700 px-4 py-2 rounded-2xl flex items-center gap-4 text-4xl font-black text-white min-w-[140px] justify-center">
+              <div className="bg-slate-900 border-2 border-slate-800 px-4 py-2 rounded-2xl flex items-center justify-center gap-4 text-xl sm:text-4xl font-black text-white min-w-[80px]">
                 <span>{scoreUs}</span>
                 <span className="text-slate-600">-</span>
                 <span>{scoreThem}</span>
               </div>
-              <div className="mt-2 font-mono text-xl text-blue-400 font-bold">
+              <div className="mt-2 font-mono text-xl text-slate-100 font-bold">
                 {minute}'
               </div>
             </div>
 
-            <div className="text-left flex-1 overflow-hidden flex items-center justify-start gap-3">
+            <div className="text-left flex-1 overflow-hidden flex flex flex-col items-center justify-start gap-3">
               {!isNational && TEAMS.find(t => t.name === opponentName)?.logo && (
                 <img src={TEAMS.find(t => t.name === opponentName)?.logo} alt={opponentName} className="w-12 h-auto object-contain p-1 shadow-md flex-shrink-0" />
               )}
               <div>
-                <h2 className="text-lg font-black text-slate-100">{opponentName}</h2>
-                <span className="text-red-400 font-bold text-sm">Adversário</span>
+                <h2 className="text-xs sm:text-xl font-black text-slate-100">{opponentName}</h2>
               </div>
             </div>
           </div>
@@ -696,7 +690,6 @@ export function InteractiveMatchModal({
           {events.length === 0 && status === "INTRO" && (
             <div className="h-full flex flex-col items-center justify-center text-slate-500 space-y-4">
               <Trophy className="w-16 h-16 opacity-20" />
-              <p>Aguardando o apito inicial para {playerTeamName} x {opponentName}...</p>
             </div>
           )}
           {events.map((ev, i) => (
@@ -716,7 +709,7 @@ export function InteractiveMatchModal({
                 setStatus("SIMULATING");
                 addEvent("Apita o árbitro! Começa a grande final!", "neutral");
               }}
-              className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black rounded-2xl transition-all text-xl flex items-center justify-center gap-2"
+              className="w-full py-4 bg-emerald-800 hover:bg-emerald-700 text-slate-100 font-black rounded-2xl transition-all text-xl flex items-center justify-center gap-2"
             >
               <Play className="w-6 h-6" fill="currentColor" /> Iniciar Partida
             </button>
