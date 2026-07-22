@@ -1,32 +1,29 @@
 import { Player } from "../types";
 import { formatCurrency } from "../utils";
-import {
-  Home, Castle, Car, Ship, Shirt, Watch, Dumbbell, X, Plane, Palmtree, Ghost, Brush, UserPlus,
-  Building2, Gem, Footprints, Wine, Mic2, TreePine, Store as StoreIcon, PartyPopper, Globe,
+import { 
+  Home, Castle, Brush, Shirt, Watch, Gem, Footprints,
+  Smartphone, Headphones, Glasses, Sparkles, ShoppingBag, Laptop, Tv, Bike, Camera, Wine, X
 } from "lucide-react";
 
 export const STORE_ITEMS = [
-  // Ativos permanentes (comprados uma única vez)
-  { id: "Casa", name: "Casa", price: 500000, icon: Home, description: "Custo: 40k/ano", socialGain: 5 },
-  { id: "Mansão", name: "Mansão", price: 5000000, icon: Castle, description: "Custo: 100k/ano", socialGain: 20 },
-  { id: "Carro de Luxo", name: "Carro de Luxo", price: 200000, icon: Car, description: "Custo: 50k/ano", socialGain: 8 },
-  { id: "Jetski", name: "Jetski", price: 30000, icon: Ship, description: "Custo: 5k/ano", socialGain: 3 },
-  { id: "Iate", name: "Iate", price: 2000000, icon: Ship, description: "Custo: 600k/ano", socialGain: 18 },
-  { id: "Helicóptero", name: "Helicóptero", price: 800000, icon: Plane, description: "Custo: 80k/ano", socialGain: 13 },
-  { id: "Avião Particular", name: "Avião Particular", price: 15000000, icon: Plane, description: "Custo: 1M/ano", socialGain: 25 },
-  { id: "Ilha Privativa", name: "Ilha Privativa", price: 50000000, icon: Palmtree, description: "Custo: 2M/ano", socialGain: 25 },
-  { id: "Cavalo de Raça", name: "Cavalo de Raça", price: 500000, icon: Ghost, description: "Custo: 50k/ano", socialGain: 10 },
-  { id: "Obras de Arte", name: "Obras de Arte", price: 1000000, icon: Brush, socialGain: 11 },
+  // Ativos permanentes (comprados uma única vez) - ordenados do mais barato para o mais caro
+  { id: "Smartphone", name: "Smartphone Topo de Linha", price: 8000, icon: Smartphone, socialGain: 2 },
   { id: "Ternos", name: "Ternos de Grife", price: 10000, icon: Shirt, socialGain: 4 },
+  { id: "Fone Premium", name: "Fone de Ouvido Premium", price: 15000, icon: Headphones, socialGain: 3 },
+  { id: "Óculos de Grife", name: "Óculos de Grife", price: 20000, icon: Glasses, socialGain: 3 },
+  { id: "Perfume Importado", name: "Perfume Importado", price: 25000, icon: Sparkles, socialGain: 3 },
   { id: "Relógios", name: "Relógios de Luxo", price: 50000, icon: Watch, socialGain: 6 },
-  { id: "Cobertura de Luxo", name: "Cobertura de Luxo", price: 3000000, icon: Building2, description: "Custo: 90k/ano", socialGain: 16 },
-  { id: "Coleção de Carros Antigos", name: "Coleção de Carros Antigos", price: 4000000, icon: Car, description: "Custo: 120k/ano", socialGain: 19 },
-  { id: "Joias Exclusivas", name: "Joias Exclusivas", price: 300000, icon: Gem, socialGain: 9 },
+  { id: "Bolsa de Grife", name: "Bolsa de Grife", price: 60000, icon: ShoppingBag, socialGain: 6 },
+  { id: "Notebook Gamer", name: "Notebook Gamer", price: 70000, icon: Laptop, socialGain: 5 },
   { id: "Coleção de Tênis", name: "Coleção de Tênis Raros", price: 80000, icon: Footprints, socialGain: 5 },
-  { id: "Adega de Vinhos", name: "Adega de Vinhos Raros", price: 250000, icon: Wine, description: "Custo: 20k/ano", socialGain: 7 },
-  { id: "Estúdio de Gravação", name: "Estúdio de Gravação", price: 600000, icon: Mic2, description: "Custo: 30k/ano", socialGain: 12 },
-  { id: "Fazenda", name: "Fazenda de Luxo", price: 1500000, icon: TreePine, description: "Custo: 70k/ano", socialGain: 12 },
-  { id: "Marca Própria", name: "Marca de Roupas Própria", price: 2000000, icon: StoreIcon, description: "Custo: 100k/ano", socialGain: 20 },
+  { id: "TV Última Geração", name: "TV de Última Geração", price: 90000, icon: Tv, socialGain: 5 },
+  { id: "Bicicleta Elétrica", name: "Bicicleta Elétrica", price: 120000, icon: Bike, socialGain: 6 },
+  { id: "Câmera Profissional", name: "Câmera Profissional", price: 150000, icon: Camera, socialGain: 6 },
+  { id: "Joias Exclusivas", name: "Joias Exclusivas", price: 300000, icon: Gem, socialGain: 9 },
+  { id: "Adega Climatizada", name: "Adega Climatizada", price: 400000, icon: Wine, socialGain: 8 },
+  { id: "Casa", name: "Casa", price: 500000, icon: Home, description: "Custo: 40k/ano", socialGain: 5 },
+  { id: "Obras de Arte", name: "Obras de Arte", price: 1000000, icon: Brush, socialGain: 11 },
+  { id: "Mansão", name: "Mansão", price: 5000000, icon: Castle, description: "Custo: 100k/ano", socialGain: 20 },
 ];
 
 export function StoreModal({ 
