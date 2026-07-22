@@ -501,7 +501,7 @@ export function Dashboard({
             </div>
             
             <div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-col items-center gap-2 sm:flex-row">
                 <h1 className="text-3xl font-black tracking-tight">{player.name}</h1>
                 <span className="px-3 py-1 bg-slate-800 text-emerald-400 text-xs font-bold uppercase rounded-full border border-emerald-500/30">
                   {title}
@@ -513,18 +513,17 @@ export function Dashboard({
                 <span>{player.currentTeam.name}</span>
                 <span>•</span>
                 <span className={player.isPro ? "text-emerald-400" : "text-blue-400"}>{player.isPro ? getLeagueName(player.currentTeam) : "Base"}</span>
-                <span>•</span>
-                <span className="text-yellow-500 font-bold">{situation}</span>
+                <span className="hidden sm:block">•</span>
+                <span className="text-yellow-500 font-bold hidden sm:block">{situation}</span>
               </div>
-
               {/* Personal Attributes */}
               {player.personal && (
                 <div className="flex justify-center sm:justify-start gap-4 mt-4">
-                  <div className="flex flex-col">
+                  <div className="flex flex-col items-center">
                     <span className="text-[10px] text-slate-500 font-bold uppercase">Humor</span>
                     <span className="text-sm font-bold text-blue-400">{Math.round(player.personal.mood)}%</span>
                   </div>
-                  <div className="flex flex-col">
+                  <div className="flex flex-col items-center">
                     <span className="text-[10px] text-slate-500 font-bold uppercase">Saúde</span>
                     <span className={`text-sm font-bold ${
                       player.personal.health <= 25
@@ -536,7 +535,7 @@ export function Dashboard({
                       {Math.round(player.personal.health)}%
                     </span>
                   </div>
-                  <div className="flex flex-col">
+                  <div className="flex flex-col items-center">
                     <span className="text-[10px] text-slate-500 font-bold uppercase">Social</span>
                     <span className="text-sm font-bold text-purple-400">{Math.round(player.personal.social)}%</span>
                   </div>
@@ -547,7 +546,7 @@ export function Dashboard({
 
           <div className="flex flex-col items-center">
             <span className="text-sm font-bold text-slate-400 tracking-wider uppercase">Overall</span>
-            <span className="text-6xl font-black text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.3)]">
+            <span className="text-6xl font-black text-emerald-400">
               {ovr}
             </span>
           </div>
@@ -626,7 +625,7 @@ export function Dashboard({
                           onClick={() => onUpdatePlayer({ ...player, retired: true })}
                           className="flex-1 py-2 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-lg transition-all"
                         >
-                          Sim, Aposentar
+                          Sim
                         </button>
                         <button
                           onClick={() => setShowRetireConfirm(false)}
@@ -659,7 +658,7 @@ export function Dashboard({
                   ) : (
                     player.history.map((stat, idx) => (
                       <motion.div
-                        key={player.age - idx} // Use age as stable key for history
+                        key={player.age - idx}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         className="bg-slate-950 border border-slate-800 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-4"
