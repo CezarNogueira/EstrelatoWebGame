@@ -1141,7 +1141,7 @@ export const simulateSeason = (
   let finalPoints = 0;
   
   const artilheiroCount = individualAwards.filter(a => a.includes("Artilheiro")).length;
-  finalPoints += artilheiroCount * 4;
+  finalPoints += artilheiroCount * 2;
   
   const muralhaCount = individualAwards.filter(a => a.includes("Muralha")).length;
   finalPoints += muralhaCount * 2;
