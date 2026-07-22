@@ -319,7 +319,7 @@ export function RelationshipsModal({ player, onClose, onUpdatePlayer, onTriggerR
         className="w-full flex items-center gap-4 p-4 hover:bg-[#202c33]/50 transition-colors text-left relative"
       >
         <div className={`w-12 h-12 rounded-full ${bgColor} flex items-center justify-center font-bold text-white shrink-0 overflow-hidden`}>
-          {avatarUrl ? <img src={sanitizeAvatar(avatarUrl, name)} alt={name} className="w-full h-full object-cover" /> : icon}
+          {avatarUrl ? <img src={sanitizeAvatar(avatarUrl, name)} alt={name} draggable="false" className="w-full h-full object-cover" /> : icon}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex justify-between items-baseline mb-0.5">
@@ -355,7 +355,7 @@ export function RelationshipsModal({ player, onClose, onUpdatePlayer, onTriggerR
                 <ChevronLeft className="w-6 h-6" />
               </button>
               <div className="w-10 h-10 rounded-full bg-emerald-600 flex items-center justify-center font-bold text-white shrink-0 overflow-hidden">
-                {selectedPerson.avatarUrl ? <img src={sanitizeAvatar(selectedPerson.avatarUrl, selectedPerson.name)} alt={selectedPerson.name} className="w-full h-full object-cover" /> : getInitials(selectedPerson.name)}
+                {selectedPerson.avatarUrl ? <img src={sanitizeAvatar(selectedPerson.avatarUrl, selectedPerson.name)} alt={selectedPerson.name} draggable="false" className="w-full h-full object-cover" /> : getInitials(selectedPerson.name)}
               </div>
               <div className="flex-1">
                 <h3 className="text-slate-100 font-medium leading-tight">{selectedPerson.name}</h3>

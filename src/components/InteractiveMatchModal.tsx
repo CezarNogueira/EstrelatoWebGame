@@ -664,7 +664,7 @@ export function InteractiveMatchModal({
           <div className="flex justify-center items-center gap-4 mt-4">
             <div className="text-right flex-1 overflow-hidden flex flex-col items-center justify-end gap-3">
               {playerTeamLogo && (
-                <img src={playerTeamLogo} alt={playerTeamName} className="w-20 h-auto object-contain p-1 shadow-md flex-shrink-0" />
+                <img src={playerTeamLogo} alt={playerTeamName} draggable="false" className="w-20 h-auto object-contain p-1 shadow-md flex-shrink-0" />
               )}
               <div>
                 <h2 className="text-xs sm:text-xl font-black text-slate-100">{playerTeamName}</h2>
@@ -684,7 +684,7 @@ export function InteractiveMatchModal({
 
             <div className="text-left flex-1 overflow-hidden flex flex flex-col items-center justify-start gap-3">
               {opponentLogo && (
-                <img src={opponentLogo} alt={opponentName} className="w-20 h-auto object-contain p-1 shadow-md flex-shrink-0" />
+                <img src={opponentLogo} alt={opponentName} draggable="false" className="w-20 h-auto object-contain p-1 shadow-md flex-shrink-0" />
               )}
               <div>
                 <h2 className="text-xs sm:text-xl font-black text-slate-100">{opponentName}</h2>

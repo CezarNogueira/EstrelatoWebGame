@@ -15,7 +15,7 @@ export function NewFriendModal({
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/90 p-4">
       <div className="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl max-w-md w-full space-y-6 text-center">
         <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto overflow-hidden">
-          {friend.avatarUrl ? <img src={sanitizeAvatar(friend.avatarUrl, friend.name)} alt={friend.name} className="w-full h-full object-cover" /> : <UserPlus className="w-8 h-8" />}
+          {friend.avatarUrl ? <img src={sanitizeAvatar(friend.avatarUrl, friend.name)} alt={friend.name} draggable="false" className="w-full h-full object-cover" /> : <UserPlus className="w-8 h-8" />}
         </div>
         <div>
           <h3 className="text-xl font-black text-emerald-400">Novo Amigo!</h3>

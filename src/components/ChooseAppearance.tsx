@@ -34,8 +34,8 @@ export function ChooseAppearance({ onSelect, playerName }: { onSelect: (avatarUr
             <ChevronLeft className="w-5 h-5" />
           </button>
 
-          <div className="w-34 h-40 rounded-full border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shrink-0">
-            <img src={currentAvatar} alt="Avatar" className="w-full h-full object-cover" />
+          <div className="w-32 h-32 rounded-lg border-2 border-slate-700 bg-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+            <img src={currentAvatar} alt="Avatar" className="mt-4 object-cover" />
           </div>
 
           <button

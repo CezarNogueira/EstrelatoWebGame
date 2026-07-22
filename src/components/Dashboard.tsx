@@ -471,7 +471,7 @@ export function Dashboard({
         />
       )}
 
-      <div className="max-w-5xl mx-auto space-y-8">
+      <div className="max-w-5xl mx-auto space-y-8 select-none">
         
         {/* Header Profile */}
         <div
@@ -480,9 +480,9 @@ export function Dashboard({
         >
           <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-6 w-full md:w-auto">
             <div className="relative shrink-0 mx-auto sm:mx-0">
-              <div className="w-24 h-24 bg-slate-800 rounded-full flex items-center justify-center border-4 border-slate-950 shadow-inner overflow-hidden">
+              <div className="w-30 h-30 rounded-lg flex items-center justify-center overflow-hidden">
                 {player.avatarUrl ? (
-                  <img src={player.avatarUrl} alt={player.name} className="w-full h-full object-cover" />
+                  <img src={player.avatarUrl} alt={player.name} draggable="false" className="mt-4 object-cover" />
                 ) : (
                   <User className="w-12 h-12 text-slate-600" />
                 )}
@@ -495,7 +495,8 @@ export function Dashboard({
                   <img 
                     src={player.currentTeam.logo} 
                     alt="Logo do time"
-                    className="w-20 h-auto rounded-none object-contain" 
+                    draggable="false"
+                    className="w-20 h-auto mb-1 mr-1 rounded-none object-contain" 
                   />
                 ) : (
                   <div 
