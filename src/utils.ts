@@ -210,11 +210,11 @@ export const generateGrowthPoints = (age: number): { points: number, decline: Pa
   } else if (age < 34) {
     points = 0;
     const attrs: (keyof Attributes)[] = ["pace", "shooting", "passing", "dribbling", "defending", "physical"];
-    attrs.forEach((attr) => decline[attr] = randomInt(-8, 0));
+    attrs.forEach((attr) => decline[attr] = randomInt(-4, 0));
   } else {
     points = 0;
     const attrs: (keyof Attributes)[] = ["pace", "shooting", "passing", "dribbling", "defending", "physical"];
-    attrs.forEach((attr) => decline[attr] = randomInt(-12, -1));
+    attrs.forEach((attr) => decline[attr] = randomInt(-8, 0));
   }
   
   return { points, decline };
@@ -268,7 +268,7 @@ export const autoDistributePoints = (
 
   // Define weights based on position
   const weights: Record<Position, (keyof Attributes)[]> = {
-    "ATA": ["shooting", "pace", "dribbling", "physical", "passing"],
+    "ATA": ["shooting", "pace", "dribbling", "physical", "passing", "defending"],
     "PON": ["pace", "dribbling", "shooting", "passing", "physical", "defending"],
     "MEI": ["passing", "dribbling", "shooting", "pace", "physical", "defending"],
     "MC":  ["passing", "physical", "dribbling", "defending", "pace", "shooting"],
@@ -1039,7 +1039,7 @@ export const simulateSeason = (
   });
 
   if (player.isPro && leaguePosition === 1) {
-    finalPoints += 1; // Campeão da liga
+    finalPoints += 2; // Campeão da liga
   }
 
   let points = basePoints + finalPoints;

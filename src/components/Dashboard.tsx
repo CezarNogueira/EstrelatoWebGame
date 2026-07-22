@@ -559,8 +559,8 @@ export function Dashboard({
                   <Zap className="w-5 h-5 text-emerald-500" />
                   Atributos
                 </h2>
-                <div className="px-3 py-1 bg-emerald-500/20 text-emerald-400 font-bold rounded-lg border border-emerald-500/30 text-sm">
-                  {player.position} {ovr}
+                <div className="px-3 py-1 text-emerald-400 font-bold text-sm">
+                  {player.position}
                 </div>
               </div>
               <div className="space-y-4">
@@ -733,7 +733,7 @@ export function Dashboard({
                         <div className="w-full sm:w-auto text-left sm:text-right shrink-0 mt-2 sm:mt-0 bg-emerald-500/10 sm:bg-transparent p-2 sm:p-0 rounded-lg sm:rounded-none flex sm:block items-center justify-between">
                           <span className="text-emerald-400 font-bold text-xs sm:hidden">PONTOS GANHOS</span>
                           <div className="text-emerald-500 font-bold text-sm">
-                            +{Object.values(stat.attributeChanges).reduce((a, b) => (a || 0) + (b || 0), 0)} pts
+                            {Object.values(stat.attributeChanges).reduce((a, b) => (a || 0) + (b || 0), 0)} pts
                           </div>
                         </div>
                       </motion.div>
