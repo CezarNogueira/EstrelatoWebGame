@@ -1051,16 +1051,20 @@ export const simulateSeason = (
 
     if (isCandidate) {
         const competitors = [
-            { name: "Neto Santos", club: "Real Madrid", country: "Brasil", ovr: 94, score: 95 },
-            { name: "Brendo Silva", club: "Real Madrid", country: "Brasil", ovr: 94, score: 94 },
-            { name: "Bernardo Couto", club: "Manchester City", country: "Portugal", ovr: 92, score: 93 },
+            { name: "Neto Santos", club: "Real Madrid", country: "Brasil", ovr: 94, score: 91 },
+            { name: "Brendo Silva", club: "Real Madrid", country: "Brasil", ovr: 94, score: 91 },
+            { name: "Bernardo Couto", club: "M. City", country: "Portugal", ovr: 92, score: 92 },
             { name: "Harry Glow", club: "Real Madrid", country: "Inglaterra", ovr: 91, score: 90 },
             { name: "Robin Backroom", club: "Bayern München", country: "Inglaterra", ovr: 91, score: 88 },
-            { name: "Phil Lend", club: "Manchester City", country: "Inglaterra", ovr: 89, score: 86 },
-            { name: "Natan Luwis", club: "Manchester City", country: "Espanha", ovr: 90, score: 87 },
+            { name: "Phil Lend", club: "M. City", country: "Inglaterra", ovr: 89, score: 86 },
+            { name: "Natan Luwis", club: "M. City", country: "Espanha", ovr: 90, score: 87 },
             { name: "Renan Sultado", club: "Arsenal", country: "Itália", ovr: 94, score: 84 },
+            { name: "Luiz Pilotti", club: "Real Madrid", country: "Itália", ovr: 94, score: 91 },
             { name: "Laro Aldo", club: "Barcelona", country: "Espanha", ovr: 93, score: 82 },
-            { name: "Flop Bouer", club: "Bayer Leverkusen", country: "Alemanha", ovr: 92, score: 85 }
+            { name: "Flop Bouer", club: "B. Leverkusen", country: "Alemanha", ovr: 92, score: 85 },
+            { name: "Guilherme Damas", club: "Corinthias", country: "Brasil", ovr: 90, score: 91 },
+            { name: "Thiago Luiz", club: "Palmeiras", country: "Brasil", ovr: 90, score: 91 },
+            { name: "Miguel de Souza", club: "Cruzeiro", country: "Brasil", ovr: 90, score: 91 },
         ];
         
         // Shuffle and pick 4
