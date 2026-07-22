@@ -33,6 +33,128 @@ export const getLeagueName = (team: Team): string => {
   }
 };
 
+export type LeagueTheme = {
+  name: string;
+  pageGradient: string;
+  cardGradient: string;
+  border: string;
+  accent: string;
+  accentSoft: string;
+};
+
+const DEFAULT_THEME: LeagueTheme = {
+  name: "Padrão",
+  pageGradient: "radial-gradient(circle at 50% 0%, #1e293b 0%, #020617 60%)",
+  cardGradient: "linear-gradient(160deg, #1e293b 0%, #0f172a 100%)",
+  border: "#1e293b",
+  accent: "#10b981",
+  accentSoft: "rgba(16, 185, 129, 0.3)",
+};
+
+const LEAGUE_THEMES: Record<string, LeagueTheme> = {
+  BR: {
+    name: "Brasileirão",
+    pageGradient: "radial-gradient(circle at 50% 0%, #064e3b 0%, #020617 65%)",
+    cardGradient: "linear-gradient(160deg, #052e2b 0%, #0a1a2f 100%)",
+    border: "#0f3d33",
+    accent: "#22c55e",
+    accentSoft: "rgba(34, 197, 94, 0.3)",
+  },
+  EN: {
+    name: "Premier League",
+    pageGradient: "radial-gradient(circle at 50% 0%, #3b0764 0%, #020617 65%)",
+    cardGradient: "linear-gradient(160deg, #2e1065 0%, #150a30 100%)",
+    border: "#3b1a6b",
+    accent: "#a855f7",
+    accentSoft: "rgba(168, 85, 247, 0.3)",
+  },
+  IT: {
+    name: "Serie A",
+    pageGradient: "radial-gradient(circle at 50% 0%, #064e3b 0%, #0c0a09 65%)",
+    cardGradient: "linear-gradient(160deg, #052e26 0%, #1c1917 100%)",
+    border: "#164e3f",
+    accent: "#34d399",
+    accentSoft: "rgba(52, 211, 153, 0.3)",
+  },
+  ES: {
+    name: "La Liga",
+    pageGradient: "radial-gradient(circle at 50% 0%, #7c2d12 0%, #1c0a02 65%)",
+    cardGradient: "linear-gradient(160deg, #6c1d0f 0%, #20100a 100%)",
+    border: "#7a2e10",
+    accent: "#f97316",
+    accentSoft: "rgba(249, 115, 22, 0.3)",
+  },
+  DE: {
+    name: "Bundesliga",
+    pageGradient: "radial-gradient(circle at 50% 0%, #500724 0%, #0a0a0a 65%)",
+    cardGradient: "linear-gradient(160deg, #3f0620 0%, #171717 100%)",
+    border: "#5b0a2e",
+    accent: "#ec4899",
+    accentSoft: "rgba(236, 72, 153, 0.3)",
+  },
+  FR: {
+    name: "Ligue 1",
+    pageGradient: "radial-gradient(circle at 50% 0%, #7c2d12 0%, #0a0a0a 65%)",
+    cardGradient: "linear-gradient(160deg, #431407 0%, #171717 100%)",
+    border: "#5c2410",
+    accent: "#fb923c",
+    accentSoft: "rgba(251, 146, 60, 0.3)",
+  },
+  PT: {
+    name: "Primeira Liga",
+    pageGradient: "radial-gradient(circle at 50% 0%, #14532d 0%, #020617 65%)",
+    cardGradient: "linear-gradient(160deg, #0d3d21 0%, #0f172a 100%)",
+    border: "#155232",
+    accent: "#4ade80",
+    accentSoft: "rgba(74, 222, 128, 0.3)",
+  },
+  NL: {
+    name: "Eredivisie",
+    pageGradient: "radial-gradient(circle at 50% 0%, #7c2d12 0%, #020617 65%)",
+    cardGradient: "linear-gradient(160deg, #5b230d 0%, #0f172a 100%)",
+    border: "#6b2c10",
+    accent: "#fb923c",
+    accentSoft: "rgba(251, 146, 60, 0.3)",
+  },
+  US: {
+    name: "MLS",
+    pageGradient: "radial-gradient(circle at 50% 0%, #1e3a8a 0%, #020617 65%)",
+    cardGradient: "linear-gradient(160deg, #1e3a5f 0%, #0f172a 100%)",
+    border: "#1e40af",
+    accent: "#60a5fa",
+    accentSoft: "rgba(96, 165, 250, 0.3)",
+  },
+  SA: {
+    name: "Saudi Pro League",
+    pageGradient: "radial-gradient(circle at 50% 0%, #14532d 0%, #1c1917 65%)",
+    cardGradient: "linear-gradient(160deg, #163a20 0%, #292524 100%)",
+    border: "#365314",
+    accent: "#eab308",
+    accentSoft: "rgba(234, 179, 8, 0.3)",
+  },
+  AR: {
+    name: "Liga Profesional Argentina",
+    pageGradient: "radial-gradient(circle at 50% 0%, #075985 0%, #020617 65%)",
+    cardGradient: "linear-gradient(160deg, #0c4a6e 0%, #0f172a 100%)",
+    border: "#0e5b85",
+    accent: "#38bdf8",
+    accentSoft: "rgba(56, 189, 248, 0.3)",
+  },
+  UY: {
+    name: "Primera División Uruguaya",
+    pageGradient: "radial-gradient(circle at 50% 0%, #155e75 0%, #020617 65%)",
+    cardGradient: "linear-gradient(160deg, #134e5e 0%, #0f172a 100%)",
+    border: "#1c5f6f",
+    accent: "#22d3ee",
+    accentSoft: "rgba(34, 211, 238, 0.3)",
+  },
+};
+
+export const getLeagueTheme = (team: Team | undefined, isPro: boolean): LeagueTheme => {
+  if (!isPro || !team?.country) return DEFAULT_THEME;
+  return LEAGUE_THEMES[team.country] || DEFAULT_THEME;
+};
+
 export const getRelativeLevel = (team: Team): number => {
   if (!team.country) return team.level;
   const sameCountryTeams = TEAMS.filter(t => t.country === team.country && t.division !== 2);

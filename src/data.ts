@@ -242,6 +242,17 @@ import RennaisLogo from "./assets/teamsFR/rennais.png";
 import StadebretoisLogo from "./assets/teamsFR/stadebretois.png";
 import ToulouseLogo from "./assets/teamsFR/toulouse.png";
 import AuxerreLogo from "./assets/teamsFR/auxerre.png";
+// Logos das Seleções
+import AlemanhaLogo from "./assets/countryTeams/alemania.png";
+import ArgentinaLogo from "./assets/countryTeams/argentina.png";
+import BrasilLogo from "./assets/countryTeams/brasil.png";
+import EspanhaLogo from "./assets/countryTeams/espana.png";
+import FrancaLogo from "./assets/countryTeams/francia.png";
+import InglaterraLogo from "./assets/countryTeams/inglaterra.png";
+import HolandaLogo from "./assets/countryTeams/paisesbajos.png";
+import PortugalLogo from "./assets/countryTeams/portugal.png";
+import UruguaiLogo from "./assets/countryTeams/uruguay.png";
+import ItaliaLogo from "./assets/countryTeams/italia.png";
 
 export const NATIONALITIES = [
   "Brasil",
@@ -272,24 +283,24 @@ export const TEAMS: Team[] = [
   { id: "br12", name: "Vasco", level: 2, country: "BR", logo: VascodaGamaLogo },
   { id: "br13", name: "Bahia", level: 2, country: "BR", logo: BahiaLogo },
   { id: "br14", name: "Santos", level: 2, country: "BR", logo: SantosLogo },
-  { id: "br15", name: "Remo", level: 1, country: "BR", logo: RemoLogo },
-  { id: "br16", name: "Chapecoense", level: 1, country: "BR", logo: ChapecoenseLogo },
-  { id: "br17", name: "Mirassol", level: 1, country: "BR", logo: MirassolLogo },
-  { id: "br18", name: "Vitória", level: 1, country: "BR", logo: VitoriaLogo },
-  { id: "br35", name: "Bragantino", level: 3, country: "BR", logo: BragantinoLogo },
-  { id: "br20", name: "Coritiba", level: 1, country: "BR", logo: CoritibaLogo },
+  { id: "br15", name: "Remo", level: 2, country: "BR", logo: RemoLogo },
+  { id: "br16", name: "Chapecoense", level: 2, country: "BR", logo: ChapecoenseLogo },
+  { id: "br17", name: "Mirassol", level: 2, country: "BR", logo: MirassolLogo },
+  { id: "br18", name: "Vitória", level: 2, country: "BR", logo: VitoriaLogo },
+  { id: "br19", name: "Bragantino", level: 3, country: "BR", logo: BragantinoLogo },
+  { id: "br20", name: "Coritiba", level: 2, country: "BR", logo: CoritibaLogo },
   // BRASIL (BR) - Div 2
   { id: "br21", name: "At. Goianiense", level: 1, country: "BR", division: 2, logo: AtleticoGoianienseLogo },
   { id: "br22", name: "Ponte Preta", level: 1, country: "BR", division: 2, logo: PontePretaLogo },
   { id: "br23", name: "Vila Nova", level: 1, country: "BR", division: 2, logo: VilaNovaLogo },
   { id: "br24", name: "Goiás", level: 1, country: "BR", division: 2, logo: GoiasLogo },
-  { id: "br25", name: "Am. Mineiro", level: 1, country: "BR", division: 2, logo: AmericaMineiroLogo },
+  { id: "br25", name: "Am. Mineiro", level: 2, country: "BR", division: 2, logo: AmericaMineiroLogo },
   { id: "br26", name: "Criciúma", level: 1, country: "BR", division: 2, logo: CriciumaLogo },
   { id: "br27", name: "Avaí", level: 1, country: "BR", division: 2, logo: AvaiLogo },
-  { id: "br28", name: "Ceará", level: 1, country: "BR", division: 2, logo: CearaLogo },
+  { id: "br28", name: "Ceará", level: 2, country: "BR", division: 2, logo: CearaLogo },
   { id: "br29", name: "CRB", level: 1, country: "BR", division: 2, logo: CRBLogo },
   { id: "br30", name: "Novorizontino", level: 1, country: "BR", division: 2, logo: NovorizontinoLogo },
-  { id: "br31", name: "S. Recife", level: 1, country: "BR", division: 2, logo: SportRecifeLogo },
+  { id: "br31", name: "S. Recife", level: 2, country: "BR", division: 2, logo: SportRecifeLogo },
   { id: "br32", name: "At. Club", level: 1, country: "BR", division: 2, logo: AthleticClubLogo },
   { id: "br33", name: "Fortaleza", level: 2, country: "BR", division: 2, logo: FortalezaLogo },
   { id: "br34", name: "Cuiaba", level: 1, country: "BR", division: 2, logo: CuiabaLogo },
@@ -303,8 +314,8 @@ export const TEAMS: Team[] = [
   { id: "en41", name: "M. City", level: 5, color: "#FF0000", country: "EN", logo: ManchesterCityLogo },
   { id: "en42", name: "Arsenal", level: 5, color: "#0000FF", country: "EN", logo: ArsenalLogo },
   { id: "en43", name: "Liverpool", level: 5, color: "#008000", country: "EN", logo: LiverpoolLogo },
-  { id: "en44", name: "M. United", level: 4, color: "#FFFFFF", country: "EN", logo: ManchesterUnitedLogo },
-  { id: "en45", name: "Chelsea", level: 4, color: "#000000", country: "EN", logo: ChelseaLogo },
+  { id: "en44", name: "M. United", level: 5, color: "#FFFFFF", country: "EN", logo: ManchesterUnitedLogo },
+  { id: "en45", name: "Chelsea", level: 5, color: "#000000", country: "EN", logo: ChelseaLogo },
   { id: "en46", name: "Tottenham", level: 4, color: "#FFFF00", country: "EN", logo: TottenhamLogo },
   { id: "en47", name: "Newcastle", level: 4, color: "#800080", country: "EN", logo: NewcastleLogo },
   { id: "en48", name: "A. Villa", level: 4, color: "#FFA500", country: "EN", logo: AstonVillaLogo },
@@ -321,26 +332,26 @@ export const TEAMS: Team[] = [
   { id: "en59", name: "Southampton", level: 2, color: "#008000", country: "EN", logo: SouthamptonLogo },
   { id: "en60", name: "I. Town", level: 2, color: "#FFFFFF", country: "EN", logo: IpswichTownLogo },
   // INGLATERRA (EN) - Div 2
-  { id: "en61", name: "L. United", level: 1, color: "#FF0000", country: "EN", division: 2, logo: LeedsLogo },
-  { id: "en62", name: "Sunderland", level: 1, color: "#0000FF", country: "EN", division: 2, logo: SunderlandLogo },
-  { id: "en63", name: "S. United", level: 1, color: "#008000", country: "EN", division: 2, logo: SheffieldLogo },
-  { id: "en64", name: "W. Bromwich", level: 1, color: "#FFFFFF", country: "EN", division: 2, logo: WestBrownwichLogo },
-  { id: "en65", name: "N. City", level: 1, color: "#000000", country: "EN", division: 2, logo: NorwichLogo },
-  { id: "en66", name: "Burnley", level: 1, color: "#FFFF00", country: "EN", division: 2, logo: BurnleyLogo },
-  { id: "en67", name: "B. Wanderers", level: 1, color: "#800080", country: "EN", division: 2, logo: BoltonWanderersLogo },
-  { id: "en68", name: "Middlesbrough", level: 1, color: "#FFA500", country: "EN", division: 2, logo: MiddlesbroughLogo },
-  { id: "en69", name: "C. City", level: 1, color: "#FF0000", country: "EN", division: 2, logo: CoventryLogo },
-  { id: "en70", name: "P. North End", level: 1, color: "#0000FF", country: "EN", division: 2, logo: PrestonLogo },
-  { id: "en71", name: "Hull City", level: 1, color: "#008000", country: "EN", division: 2, logo: HullCityLogo },
-  { id: "en72", name: "C. City", level: 1, color: "#FFFFFF", country: "EN", division: 2, logo: CardiffCityLogo },
-  { id: "en73", name: "B. City", level: 1, color: "#000000", country: "EN", division: 2, logo: BristolCityLogo },
-  { id: "en74", name: "S. City", level: 1, color: "#FFFF00", country: "EN", division: 2, logo: SwanseaCityLogo },
-  { id: "en75", name: "Watford", level: 1, color: "#800080", country: "EN", division: 2, logo: WatfordLogo },
-  { id: "en76", name: "Stoke City", level: 1, color: "#FFA500", country: "EN", division: 2, logo: StokeCityLogo },
-  { id: "en77", name: "QPR", level: 1, color: "#FF0000", country: "EN", division: 2, logo: QPRLogo },
-  { id: "en78", name: "B. Rovers", level: 1, color: "#0000FF", country: "EN", division: 2, logo: BlackburnRoversLogo },
-  { id: "en79", name: "L. City", level: 1, color: "#008000", country: "EN", division: 2, logo: LincolnCityLogo },
-  { id: "en80", name: "Millwall", level: 1, color: "#FFFFFF", country: "EN", division: 2, logo: MillwallLogo },
+  { id: "en61", name: "L. United", level: 2, color: "#FF0000", country: "EN", division: 2, logo: LeedsLogo },
+  { id: "en62", name: "Sunderland", level: 2, color: "#0000FF", country: "EN", division: 2, logo: SunderlandLogo },
+  { id: "en63", name: "S. United", level: 2, color: "#008000", country: "EN", division: 2, logo: SheffieldLogo },
+  { id: "en64", name: "W. Bromwich", level: 2, color: "#FFFFFF", country: "EN", division: 2, logo: WestBrownwichLogo },
+  { id: "en65", name: "N. City", level: 2, color: "#000000", country: "EN", division: 2, logo: NorwichLogo },
+  { id: "en66", name: "Burnley", level: 2, color: "#FFFF00", country: "EN", division: 2, logo: BurnleyLogo },
+  { id: "en67", name: "B. Wanderers", level: 2, color: "#800080", country: "EN", division: 2, logo: BoltonWanderersLogo },
+  { id: "en68", name: "Middlesbrough", level: 2, color: "#FFA500", country: "EN", division: 2, logo: MiddlesbroughLogo },
+  { id: "en69", name: "C. City", level: 2, color: "#FF0000", country: "EN", division: 2, logo: CoventryLogo },
+  { id: "en70", name: "P. North End", level: 2, color: "#0000FF", country: "EN", division: 2, logo: PrestonLogo },
+  { id: "en71", name: "Hull City", level: 2, color: "#008000", country: "EN", division: 2, logo: HullCityLogo },
+  { id: "en72", name: "C. City", level: 2, color: "#FFFFFF", country: "EN", division: 2, logo: CardiffCityLogo },
+  { id: "en73", name: "B. City", level: 2, color: "#000000", country: "EN", division: 2, logo: BristolCityLogo },
+  { id: "en74", name: "S. City", level: 2, color: "#FFFF00", country: "EN", division: 2, logo: SwanseaCityLogo },
+  { id: "en75", name: "Watford", level: 2, color: "#800080", country: "EN", division: 2, logo: WatfordLogo },
+  { id: "en76", name: "Stoke City", level: 2, color: "#FFA500", country: "EN", division: 2, logo: StokeCityLogo },
+  { id: "en77", name: "QPR", level: 2, color: "#FF0000", country: "EN", division: 2, logo: QPRLogo },
+  { id: "en78", name: "B. Rovers", level: 2, color: "#0000FF", country: "EN", division: 2, logo: BlackburnRoversLogo },
+  { id: "en79", name: "L. City", level: 2, color: "#008000", country: "EN", division: 2, logo: LincolnCityLogo },
+  { id: "en80", name: "Millwall", level: 2, color: "#FFFFFF", country: "EN", division: 2, logo: MillwallLogo },
  // ITÁLIA (IT) - Div 1
   { id: "it81", name: "Inter", level: 4, color: "#FF0000", country: "IT", logo: InterLogo },
   { id: "it82", name: "Milan", level: 4, color: "#0000FF", country: "IT", logo: MilanLogo },
@@ -780,6 +791,27 @@ export const NATIONALITY_COUNTRY_MAP: Record<string, string> = {
   "Uruguai": "UY",
 };
 
+export const NATIONAL_TEAMS: Team[] = [
+  { id: "BR", name: "Brasil", country: "BR", level: 5, logo: BrasilLogo },
+  { id: "AR", name: "Argentina", country: "AR", level: 5, logo: ArgentinaLogo },
+  { id: "FR", name: "França", country: "FR", level: 5, logo: FrancaLogo },
+  { id: "EN", name: "Inglaterra", country: "EN", level: 5, logo: InglaterraLogo },
+  { id: "ES", name: "Espanha", country: "ES", level: 5, logo: EspanhaLogo },
+  { id: "IT", name: "Itália", country: "IT", level: 5, logo: ItaliaLogo },
+  { id: "DE", name: "Alemanha", country: "DE", level: 5, logo: AlemanhaLogo },
+  { id: "PT", name: "Portugal", country: "PT", level: 5, logo: PortugalLogo },
+  { id: "NL", name: "Holanda", country: "NL", level: 5, logo: HolandaLogo },
+  { id: "UY", name: "Uruguai", country: "UY", level: 5, logo: UruguaiLogo },
+];
+
+export function getNationalTeam(nationality: string): Team | undefined {
+  return NATIONAL_TEAMS.find((t) => t.name === nationality);
+}
+
+export function getNationalTeamLogo(nationality: string): string | undefined {
+  return getNationalTeam(nationality)?.logo;
+}
+
 // Nationalities grouped by continent, so the national-team continental cup
 // (played between World Cups) can be named correctly: Eurocopa for European
 // nations, Copa América for the Americas.
@@ -789,22 +821,13 @@ export const AMERICAN_NATIONALITIES = ["Brasil", "Argentina", "Uruguai"];
 export function getNationalContinentalCup(nationality: string): string {
   if (EUROPEAN_NATIONALITIES.includes(nationality)) return "Eurocopa";
   if (AMERICAN_NATIONALITIES.includes(nationality)) return "Copa América";
-  return "Copa Continental (Seleção)"; // fallback for any nationality outside the two groups
+  return "Copa Continental (Seleção)";
 }
 
-// Weight used to make the roulette draw from a country's clubs with a
-// realistic bias: small/mid clubs (low level) are common outcomes, while
-// giants (level 4-5) are rare - a 14-year-old should only very occasionally
-// start their career at a club like Real Madrid or Flamengo.
 function getRouletteWeight(level: number): number {
   return 1;
 }
 
-// Builds the pool of clubs the Roulette should draw from for a given
-// nationality. Returns every club from that country, but repeated
-// proportionally to getRouletteWeight, so a plain uniform pick over the
-// returned array (as Roulette.tsx does) still lands on big clubs only very
-// rarely, while any team - including the giants - remains possible.
 export function getInitialTeamsForNationality(nationality: string): Team[] {
   const countryCode = NATIONALITY_COUNTRY_MAP[nationality];
   const pool = countryCode ? TEAMS.filter((t) => t.country === countryCode) : TEAMS;
@@ -834,9 +857,9 @@ type NamePool = { male: string[]; female: string[]; surnames: string[] };
 
 const NAME_POOLS: Record<string, NamePool> = {
   "Brasil": {
-    male: ["João", "Pedro", "Carlos", "Marcos", "Rafael", "Lucas", "Antônio", "Paulo", "Brendo", "Thiago"],
-    female: ["Maria", "Ana", "Juliana", "Fernanda", "Camila", "Patrícia", "Beatriz", "Larissa", "Giovanna", "Luiza", "Sofia"],
-    surnames: ["Silva", "Souza", "Oliveira", "Santos", "Pereira", "Costa", "Almeida", "Ribeiro", "Ferreira", "Pimentel", "Nogueira", "Carneiro", "Dantas"],
+    male: ["João", "Pedro", "Carlos", "Marcos", "Rafael", "Lucas", "Antônio", "Paulo", "Brendo", "Thiago", "Cezar", "Antonio", "Joaquim", "Enzo"],
+    female: ["Maria", "Ana", "Juliana", "Fernanda", "Camila", "Patrícia", "Beatriz", "Larissa", "Giovanna", "Luiza", "Sofia", "Brenda", "Renata", "Aurora", "Clara", "Lorena", "Joaquina"],
+    surnames: ["Silva", "Souza", "Oliveira", "Santos", "Pereira", "Costa", "Almeida", "Ribeiro", "Ferreira", "Pimentel", "Nogueira", "Carneiro", "Dantas", "Carvalho"],
   },
   "Argentina": {
     male: ["Diego", "Mateo", "Facundo", "Nicolás", "Franco", "Santiago", "Ezequiel", "Agustín"],
@@ -849,7 +872,7 @@ const NAME_POOLS: Record<string, NamePool> = {
     surnames: ["Martin", "Bernard", "Dubois", "Thomas", "Robert", "Petit", "Moreau", "Simon"],
   },
   "Inglaterra": {
-    male: ["James", "Oliver", "George", "Harry", "Jack", "Thomas", "William", "Charlie"],
+    male: ["James", "Oliver", "George", "Harry", "Jack", "Thomas", "William", "Charlie", "Ronnie"],
     female: ["Emma", "Olivia", "Amelia", "Sophie", "Charlotte", "Grace", "Isla", "Emily"],
     surnames: ["Smith", "Jones", "Taylor", "Brown", "Wilson", "Evans", "Thomas", "Roberts"],
   },
@@ -871,7 +894,7 @@ const NAME_POOLS: Record<string, NamePool> = {
   "Portugal": {
     male: ["João", "Miguel", "Tiago", "Rui", "André", "Bruno", "Diogo", "Gonçalo"],
     female: ["Beatriz", "Inês", "Mariana", "Catarina", "Sofia", "Rita", "Carolina", "Matilde"],
-    surnames: ["Ferreira", "Costa", "Rodrigues", "Martins", "Alves", "Carvalho", "Gomes", "Lopes"],
+    surnames: ["Ferreira", "Costa", "Rodrigues", "Martins", "Alves", "Carvalho", "Gomes", "Lopes", "Mendes"],
   },
   "Holanda": {
     male: ["Daan", "Sem", "Lucas", "Bram", "Milan", "Thijs", "Levi", "Finn"],

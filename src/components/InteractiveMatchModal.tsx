@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Player, Position } from "../types";
 import { calculateOverall } from "../utils";
 import { Trophy, Goal, Activity, FastForward, Play, AlertCircle, Shield, UserCheck, Rocket, MoveRight, Target, Crosshair } from "lucide-react";
-import { TEAMS, EUROPEAN_NATIONALITIES, AMERICAN_NATIONALITIES, NATIONALITIES } from "../data";
+import { TEAMS, NATIONAL_TEAMS, EUROPEAN_NATIONALITIES, AMERICAN_NATIONALITIES, NATIONALITIES } from "../data";
 
 // -----------------------------------------------------------------------------
 // Cenários de jogada
@@ -395,6 +395,14 @@ export function InteractiveMatchModal({
   const isNational = finalType.includes("Copa do Mundo") || finalType.includes("Eurocopa") || finalType.includes("Copa América") || finalType.includes("Copa Continental (Seleção)");
   const playerTeamName = isNational ? player.nationality : player.currentTeam.name;
 
+  const playerTeamLogo = isNational
+    ? NATIONAL_TEAMS.find(t => t.name === player.nationality)?.logo
+    : player.currentTeam.logo;
+
+  const opponentLogo = isNational
+    ? NATIONAL_TEAMS.find(t => t.name === opponentName)?.logo
+    : TEAMS.find(t => t.name === opponentName)?.logo;
+
   useEffect(() => {
     let ops = TEAMS.map(t => t.name);
     // `category` groups finals that draw from the same pool of possible
@@ -655,8 +663,8 @@ export function InteractiveMatchModal({
           </div>
           <div className="flex justify-center items-center gap-4 mt-4">
             <div className="text-right flex-1 overflow-hidden flex flex-col items-center justify-end gap-3">
-              {!isNational && player.currentTeam.logo && (
-                <img src={player.currentTeam.logo} alt={playerTeamName} className="w-12 h-auto object-contain p-1 shadow-md flex-shrink-0" />
+              {playerTeamLogo && (
+                <img src={playerTeamLogo} alt={playerTeamName} className="w-20 h-auto object-contain p-1 shadow-md flex-shrink-0" />
               )}
               <div>
                 <h2 className="text-xs sm:text-xl font-black text-slate-100">{playerTeamName}</h2>
@@ -675,8 +683,8 @@ export function InteractiveMatchModal({
             </div>
 
             <div className="text-left flex-1 overflow-hidden flex flex flex-col items-center justify-start gap-3">
-              {!isNational && TEAMS.find(t => t.name === opponentName)?.logo && (
-                <img src={TEAMS.find(t => t.name === opponentName)?.logo} alt={opponentName} className="w-12 h-auto object-contain p-1 shadow-md flex-shrink-0" />
+              {opponentLogo && (
+                <img src={opponentLogo} alt={opponentName} className="w-20 h-auto object-contain p-1 shadow-md flex-shrink-0" />
               )}
               <div>
                 <h2 className="text-xs sm:text-xl font-black text-slate-100">{opponentName}</h2>

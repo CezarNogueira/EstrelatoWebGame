@@ -1,6 +1,6 @@
 import { RomanceEvent } from "../types";
 import { FamilyEvent, Player, SeasonStat } from "../types";
-import { calculateOverall, getPlayerTitle, formatCurrency, getLeagueName } from "../utils";
+import { calculateOverall, getPlayerTitle, formatCurrency, getLeagueName, getLeagueTheme } from "../utils";
 import { ArrowRight, Calendar, Goal, User, Users, Zap, FileSignature, ShoppingBag, Shield, ShieldCheck, MapPin, Smartphone } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { useState } from "react";
@@ -115,6 +115,7 @@ export function Dashboard({
 
   const ovr = calculateOverall(player.attributes, player.position);
   const title = getPlayerTitle(player.age, ovr);
+  const theme = getLeagueTheme(player.currentTeam, player.isPro);
   
   const minOvrForStarter: Record<number, number> = {
     1: 64,
@@ -332,7 +333,10 @@ export function Dashboard({
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50 p-4 sm:p-8 font-sans">
+    <div
+      className="min-h-screen text-slate-50 p-4 sm:p-8 font-sans transition-colors duration-700"
+      style={{ background: theme.pageGradient }}
+    >
       {pendingDiscussionEvent && (
         <DiscussionEventModal
           personName={pendingDiscussionEvent.name}
@@ -470,7 +474,10 @@ export function Dashboard({
       <div className="max-w-5xl mx-auto space-y-8">
         
         {/* Header Profile */}
-        <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
+        <div
+          className="border p-6 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl transition-colors duration-700"
+          style={{ backgroundImage: theme.cardGradient, borderColor: theme.border }}
+        >
           <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-6 w-full md:w-auto">
             <div className="relative shrink-0 mx-auto sm:mx-0">
               <div className="w-24 h-24 bg-slate-800 rounded-full flex items-center justify-center border-4 border-slate-950 shadow-inner overflow-hidden">
@@ -481,18 +488,18 @@ export function Dashboard({
                 )}
               </div>
               <div 
-                className="absolute -bottom-2 -right-2 w-8 h-auto shadow-md overflow-hidden flex items-center justify-center"
+                className="absolute -bottom-2 -right-2 w-10 h-auto shadow-md overflow-hidden flex items-center justify-center"
                 title={player.currentTeam.name}
               >
                 {player.currentTeam.logo ? (
                   <img 
                     src={player.currentTeam.logo} 
                     alt="Logo do time"
-                    className="w-16 h-auto rounded-none object-contain" 
+                    className="w-20 h-auto rounded-none object-contain" 
                   />
                 ) : (
                   <div 
-                    className="w-16 h-auto rounded-full border-4 border-slate-950"
+                    className="w-20 h-auto rounded-full border-4 border-slate-950"
                     style={{ backgroundColor: player.currentTeam.color }}
                   />
                 )}
@@ -502,7 +509,10 @@ export function Dashboard({
             <div>
               <div className="flex flex-col items-center gap-2 sm:flex-row">
                 <h1 className="text-3xl font-black tracking-tight">{player.name}</h1>
-                <span className="px-3 py-1 bg-slate-800 text-emerald-400 text-xs font-bold uppercase rounded-full border border-emerald-500/30">
+                <span
+                  className="px-3 py-1 bg-slate-800 text-xs font-bold uppercase rounded-full border transition-colors duration-700"
+                  style={{ color: theme.accent, borderColor: theme.accentSoft }}
+                >
                   {title}
                 </span>
               </div>
@@ -543,7 +553,7 @@ export function Dashboard({
 
           <div className="flex flex-col items-center">
             <span className="text-sm font-bold text-slate-400 tracking-wider uppercase">Overall</span>
-            <span className="text-6xl font-black text-emerald-400">
+            <span className="text-6xl font-black transition-colors duration-700" style={{ color: theme.accent }}>
               {ovr}
             </span>
           </div>
@@ -553,13 +563,16 @@ export function Dashboard({
           
           {/* Attributes Column */}
           <div className="md:col-span-1 space-y-6">
-            <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-lg">
+            <div
+              className="border p-6 rounded-3xl shadow-lg transition-colors duration-700"
+              style={{ backgroundImage: theme.cardGradient, borderColor: theme.border }}
+            >
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-emerald-500" />
+                  <Zap className="w-5 h-5" style={{ color: theme.accent }} />
                   Atributos
                 </h2>
-                <div className="px-3 py-1 text-emerald-400 font-bold text-sm">
+                <div className="px-3 py-1 font-bold text-sm" style={{ color: theme.accent }}>
                   {player.position}
                 </div>
               </div>
@@ -640,9 +653,12 @@ export function Dashboard({
 
           {/* Career Logs Column */}
           <div className="md:col-span-2">
-            <div className="bg-slate-900 border border-slate-800 p-6 rounded-3xl shadow-lg h-[600px] flex flex-col">
+            <div
+              className="border p-6 rounded-3xl shadow-lg h-[600px] flex flex-col transition-colors duration-700"
+              style={{ backgroundImage: theme.cardGradient, borderColor: theme.border }}
+            >
               <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                <Goal className="w-5 h-5 text-emerald-500" />
+                <Goal className="w-5 h-5" style={{ color: theme.accent }} />
                 Histórico da Carreira
               </h2>
               
