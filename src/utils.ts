@@ -867,7 +867,10 @@ export const simulateSeason = (
     if (nationalContinentalGoals >= 10) individualAwards.push(getArtilheiroString(natContCup));
     if (wcGoals >= 10) individualAwards.push("Artilheiro da Copa do Mundo");
 
-    if (goals >= 35 && Math.random() > 0.3) {
+    // Chuteira de Ouro (European Golden Shoe) é prêmio exclusivo das principais
+    // ligas europeias - não deve valer para Brasileirão, MLS, Saudi Pro League etc.
+    const GOLDEN_SHOE_COUNTRIES = ["EN", "ES", "IT", "DE", "FR", "PT", "NL"];
+    if (!isDiv2 && GOLDEN_SHOE_COUNTRIES.includes(player.currentTeam.country) && goals >= 35 && Math.random() > 0.3) {
       individualAwards.push("Chuteira de Ouro");
     }
 
