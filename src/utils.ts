@@ -1,4 +1,4 @@
-import { Attributes, Player, Position, SeasonStat, Team } from "./types";
+import { Attributes, LeagueMatch, LeagueSeasonState, LeagueStanding, Player, Position, SeasonStat, Team } from "./types";
 import { TEAMS, getNationalContinentalCup } from "./data";
 
 export const getLeagueName = (team: Team): string => {
@@ -1444,3 +1444,223 @@ export const updateIdolStatus = (
 
   return { idolClubs: Array.from(currentIdols) };
 };
+
+// =============================================================================
+// LIGA PONTO A PONTO (turno e returno) - Fase 1
+// =============================================================================
+// Motor de simulação da liga do jogador rodada a rodada: gera o calendário de
+// jogos (turno e returno), simula partidas de times que não são o do jogador
+// e mantém a tabela de classificação sempre atualizada. A partida do próprio
+// jogador fica pendente na rodada até ser resolvida (jogada ou simulada) por
+// quem estiver controlando o fluxo do jogo.
+
+export function getTeamsInSameLeague(allTeams: Team[], reference: Team): Team[] {
+  const division = reference.division || 1;
+  return allTeams.filter((t) => t.country === reference.country && (t.division || 1) === division);
+}
+
+// Gera o calendário de turno e returno pelo método do círculo. Para N times
+// (par), gera 2*(N-1) rodadas - para uma liga de 20 times, são 38 rodadas.
+export function generateLeagueFixtures(teams: Team[]): LeagueMatch[] {
+  const list = [...teams];
+  const hasBye = list.length % 2 !== 0;
+  if (hasBye) {
+    list.push({ id: "__bye__", name: "BYE", level: 0, country: "" } as Team);
+  }
+  const n = list.length;
+  const roundsFirstLeg = n - 1;
+  const half = n / 2;
+
+  const firstLeg: LeagueMatch[] = [];
+  let arr = list.slice();
+
+  for (let round = 0; round < roundsFirstLeg; round++) {
+    for (let i = 0; i < half; i++) {
+      const teamA = arr[i];
+      const teamB = arr[n - 1 - i];
+      if (teamA.id === "__bye__" || teamB.id === "__bye__") continue;
+      // Alterna o mando de campo entre rodadas para não repetir sempre o mesmo padrão.
+      const teamAIsHome = (round + i) % 2 === 0;
+      const home = teamAIsHome ? teamA : teamB;
+      const away = teamAIsHome ? teamB : teamA;
+      firstLeg.push({
+        id: `r${round + 1}-${home.id}-${away.id}`,
+        round: round + 1,
+        home,
+        away,
+        played: false,
+        isPlayerMatch: false,
+      });
+    }
+    // Rotaciona os times mantendo o primeiro fixo (método do círculo).
+    const fixed = arr[0];
+    const rest = arr.slice(1);
+    rest.unshift(rest.pop()!);
+    arr = [fixed, ...rest];
+  }
+
+  // Returno: mesmos confrontos com mando de campo invertido.
+  const secondLeg: LeagueMatch[] = firstLeg.map((m) => ({
+    id: `r${m.round + roundsFirstLeg}-${m.away.id}-${m.home.id}`,
+    round: m.round + roundsFirstLeg,
+    home: m.away,
+    away: m.home,
+    played: false,
+    isPlayerMatch: false,
+  }));
+
+  return [...firstLeg, ...secondLeg];
+}
+
+// Simula o placar de uma partida entre dois times com base no nível (1-5
+// estrelas) de cada um, com vantagem de mando de campo e uma distribuição
+// pseudo-Poisson para os gols.
+export function simulateLeagueMatchResult(home: Team, away: Team): { homeGoals: number; awayGoals: number } {
+  const poisson = (lambda: number) => {
+    const l = Math.exp(-lambda);
+    let k = 0;
+    let p = 1;
+    do {
+      k++;
+      p *= Math.random();
+    } while (p > l);
+    return k - 1;
+  };
+
+  const homeAdvantage = 0.3;
+  const diff = (home.level + homeAdvantage) - away.level;
+  const baseGoals = 1.3;
+  const homeExpected = Math.max(0.25, baseGoals + diff * 0.25);
+  const awayExpected = Math.max(0.25, baseGoals - diff * 0.25);
+
+  return { homeGoals: poisson(homeExpected), awayGoals: poisson(awayExpected) };
+}
+
+export function initLeagueStandings(teams: Team[]): LeagueStanding[] {
+  return teams.map((team) => ({
+    teamId: team.id,
+    team,
+    points: 0,
+    played: 0,
+    wins: 0,
+    draws: 0,
+    losses: 0,
+    goalsFor: 0,
+    goalsAgainst: 0,
+  }));
+}
+
+export function applyLeagueResultToStandings(standings: LeagueStanding[], match: LeagueMatch): LeagueStanding[] {
+  if (match.homeGoals === undefined || match.awayGoals === undefined) return standings;
+  const homeGoals = match.homeGoals;
+  const awayGoals = match.awayGoals;
+
+  return standings.map((s) => {
+    if (s.teamId === match.home.id) {
+      const won = homeGoals > awayGoals;
+      const draw = homeGoals === awayGoals;
+      return {
+        ...s,
+        played: s.played + 1,
+        goalsFor: s.goalsFor + homeGoals,
+        goalsAgainst: s.goalsAgainst + awayGoals,
+        wins: s.wins + (won ? 1 : 0),
+        draws: s.draws + (draw ? 1 : 0),
+        losses: s.losses + (!won && !draw ? 1 : 0),
+        points: s.points + (won ? 3 : draw ? 1 : 0),
+      };
+    }
+    if (s.teamId === match.away.id) {
+      const won = awayGoals > homeGoals;
+      const draw = homeGoals === awayGoals;
+      return {
+        ...s,
+        played: s.played + 1,
+        goalsFor: s.goalsFor + awayGoals,
+        goalsAgainst: s.goalsAgainst + homeGoals,
+        wins: s.wins + (won ? 1 : 0),
+        draws: s.draws + (draw ? 1 : 0),
+        losses: s.losses + (!won && !draw ? 1 : 0),
+        points: s.points + (won ? 3 : draw ? 1 : 0),
+      };
+    }
+    return s;
+  });
+}
+
+export function sortLeagueStandings(standings: LeagueStanding[]): LeagueStanding[] {
+  return [...standings].sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    const gdA = a.goalsFor - a.goalsAgainst;
+    const gdB = b.goalsFor - b.goalsAgainst;
+    if (gdB !== gdA) return gdB - gdA;
+    if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
+    return a.team.name.localeCompare(b.team.name);
+  });
+}
+
+// Cria o estado inicial da liga do jogador para a temporada: calendário
+// completo (38 rodadas para 20 times) e tabela zerada, já marcando quais
+// partidas envolvem o time do jogador.
+export function createLeagueSeasonState(
+  leagueName: string,
+  playerTeam: Team,
+  allTeams: Team[]
+): LeagueSeasonState {
+  const teams = getTeamsInSameLeague(allTeams, playerTeam);
+  const fixtures = generateLeagueFixtures(teams).map((m) => ({
+    ...m,
+    isPlayerMatch: m.home.id === playerTeam.id || m.away.id === playerTeam.id,
+  }));
+  const totalRounds = fixtures.reduce((max, m) => Math.max(max, m.round), 0);
+
+  return {
+    leagueName,
+    country: playerTeam.country,
+    division: playerTeam.division || 1,
+    teams,
+    fixtures,
+    standings: initLeagueStandings(teams),
+    currentRound: 1,
+    totalRounds,
+  };
+}
+
+// Simula todas as partidas de uma rodada, EXCETO a do jogador (que fica
+// pendente para ser resolvida separadamente - jogada interativamente ou
+// simulada sob demanda). Retorna o novo estado da liga.
+export function simulateLeagueRound(state: LeagueSeasonState, round: number): LeagueSeasonState {
+  let standings = state.standings;
+  const fixtures = state.fixtures.map((m) => {
+    if (m.round !== round || m.played || m.isPlayerMatch) return m;
+    const result = simulateLeagueMatchResult(m.home, m.away);
+    const updated: LeagueMatch = { ...m, played: true, homeGoals: result.homeGoals, awayGoals: result.awayGoals };
+    standings = applyLeagueResultToStandings(standings, updated);
+    return updated;
+  });
+  return { ...state, fixtures, standings };
+}
+
+// Resolve a partida do jogador na rodada atual com um placar já definido
+// (vindo da InteractiveMatchModal, quando ele decide jogar, ou de um sorteio
+// rápido, quando decide simular) e atualiza a tabela.
+export function resolvePlayerLeagueMatch(
+  state: LeagueSeasonState,
+  round: number,
+  homeGoals: number,
+  awayGoals: number
+): LeagueSeasonState {
+  let standings = state.standings;
+  const fixtures = state.fixtures.map((m) => {
+    if (m.round !== round || !m.isPlayerMatch) return m;
+    const updated: LeagueMatch = { ...m, played: true, homeGoals, awayGoals };
+    standings = applyLeagueResultToStandings(standings, updated);
+    return updated;
+  });
+  return { ...state, fixtures, standings };
+}
+
+export function getPlayerLeaguePosition(state: LeagueSeasonState, playerTeamId: string): number {
+  const sorted = sortLeagueStandings(state.standings);
+  return sorted.findIndex((s) => s.teamId === playerTeamId) + 1;
+}

@@ -150,6 +150,46 @@ export type ChatState = {
   hasUnread: boolean;
 };
 
+// -----------------------------------------------------------------------------
+// Liga ponto a ponto (pontos corridos)
+// -----------------------------------------------------------------------------
+// Estrutura de dados para simular a liga do jogador rodada a rodada (turno e
+// returno, 38 jogos para uma liga de 20 times), em vez de sortear a posição
+// final de forma abstrata.
+export type LeagueStanding = {
+  teamId: string;
+  team: Team;
+  points: number;
+  played: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  goalsFor: number;
+  goalsAgainst: number;
+};
+
+export type LeagueMatch = {
+  id: string;
+  round: number; // 1-indexed
+  home: Team;
+  away: Team;
+  played: boolean;
+  homeGoals?: number;
+  awayGoals?: number;
+  isPlayerMatch: boolean; // o time do jogador está envolvido nesta partida
+};
+
+export type LeagueSeasonState = {
+  leagueName: string;
+  country: string;
+  division: number;
+  teams: Team[];
+  fixtures: LeagueMatch[];
+  standings: LeagueStanding[];
+  currentRound: number; // próxima rodada ainda não disputada
+  totalRounds: number;
+};
+
 export type Player = {
   name: string;
   mode?: "STORY" | "QUICK";
