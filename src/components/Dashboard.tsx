@@ -1,7 +1,9 @@
 import { RomanceEvent } from "../types";
 import { FamilyEvent, Player, SeasonStat } from "../types";
 import { calculateOverall, getPlayerTitle, formatCurrency, getLeagueName, getLeagueTheme } from "../utils";
-import { ArrowRight, Calendar, Goal, User, Users, Zap, FileSignature, ShoppingBag, Shield, ShieldCheck, MapPin, Smartphone } from "lucide-react";
+import { ArrowRight, Calendar, Goal, User, Users, Zap, FileSignature, ShoppingBag, Shield, ShieldCheck, MapPin, Smartphone, Crosshair, Target, MoveRight, Activity, Rocket } from "lucide-react";
+import { PLAY_STYLES } from "../data";
+import { PlayStyle } from "../types";
 import { motion, AnimatePresence } from "motion/react";
 import { useState } from "react";
 import { StoreModal, STORE_ITEMS } from "./StoreModal";
@@ -16,6 +18,15 @@ import { NightclubModal } from "./NightclubModal";
 import { TrainingCenterModal } from "./TrainingCenterModal";
 import { PhoneModal } from "./PhoneModal";
 import { DiscussionEventModal } from "./DiscussionEventModal";
+
+const PLAYSTYLE_ICONS: Record<PlayStyle, typeof Crosshair> = {
+  chute_colocado: Crosshair,
+  forca_aerea: Target,
+  tiki_taka: MoveRight,
+  cruzamento_preciso: Activity,
+  veloz: Rocket,
+  xerife: Shield,
+};
 
 function AttributeBar({ label, value }: { label: string; value: number }) {
   return (
@@ -585,6 +596,27 @@ export function Dashboard({
                 <AttributeBar label="Drible" value={player.attributes.dribbling} />
                 <AttributeBar label="Defesa" value={player.attributes.defending} />
                 <AttributeBar label="Físico" value={player.attributes.physical} />
+
+                {player.playStyles && player.playStyles.length > 0 && (
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-800/80">
+                    <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">PlayStyles</span>
+                    <div className="flex items-center gap-2">
+                      {player.playStyles.map((id) => {
+                        const info = PLAY_STYLES.find((s) => s.id === id);
+                        const Icon = PLAYSTYLE_ICONS[id];
+                        return (
+                          <div
+                            key={id}
+                            title={info?.name}
+                            className="w-8 h-8 rounded-lg flex items-center justify-center bg-emerald-500/10 border border-emerald-500/40 text-emerald-300"
+                          >
+                            <Icon className="w-4 h-4" />
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 

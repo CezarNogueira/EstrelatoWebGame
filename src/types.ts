@@ -49,6 +49,17 @@ export type SeasonStat = {
 
 export type Position = "ATA" | "PON" | "MEI" | "MC" | "VOL" | "ZAG" | "LAT";
 
+// PlayStyles (inspirado no EAFC): habilidades especiais que garantem o
+// sucesso em jogadas raras específicas dentro das partidas/finais
+// interativas. O jogador escolhe o primeiro PlayStyle ao atingir Overall 85.
+export type PlayStyle =
+  | "chute_colocado"
+  | "forca_aerea"
+  | "tiki_taka"
+  | "cruzamento_preciso"
+  | "veloz"
+  | "xerife";
+
 export type RomanceChoiceTone = "safe" | "risky" | "neutral" | "positive";
 
 export type RomanceChoice = {
@@ -165,4 +176,5 @@ export type Player = {
     social: number;
   };
   idolClubs?: string[];
+  playStyles?: PlayStyle[];
 };

@@ -1,4 +1,4 @@
-import { Team, FamilyMember, Friend, Relationships } from "./types";
+import { Team, FamilyMember, Friend, Relationships, PlayStyle } from "./types";
 
 import male1 from "./assets/avatars/male1.png";
 import male2 from "./assets/avatars/male2.png";
@@ -253,6 +253,59 @@ import HolandaLogo from "./assets/countryTeams/paisesbajos.png";
 import PortugalLogo from "./assets/countryTeams/portugal.png";
 import UruguaiLogo from "./assets/countryTeams/uruguay.png";
 import ItaliaLogo from "./assets/countryTeams/italia.png";
+
+// -----------------------------------------------------------------------------
+// PlayStyles
+// -----------------------------------------------------------------------------
+// Desbloqueados quando o jogador atinge Overall 85. Cada um garante o sucesso
+// em uma jogada rara específica dentro das partidas/finais interativas -
+// sem o PlayStyle correspondente, a chance de acerto nessas jogadas raras
+// cai para apenas 10%.
+export type PlayStyleInfo = {
+  id: PlayStyle;
+  name: string;
+  shortDescription: string;
+  description: string;
+};
+
+export const PLAY_STYLES: PlayStyleInfo[] = [
+  {
+    id: "chute_colocado",
+    name: "Chute Colocado",
+    shortDescription: "Gol garantido de fora da área",
+    description: "Quando a bola sobra de longe, fora da área, você garante um chute colocado certeiro no ângulo.",
+  },
+  {
+    id: "forca_aerea",
+    name: "Força Aérea",
+    shortDescription: "Gol garantido de cabeça",
+    description: "Quando a bola é cruzada para você dentro da área, você garante o gol de cabeça.",
+  },
+  {
+    id: "tiki_taka",
+    name: "Tiki-Taka",
+    shortDescription: "Passe decisivo garantido",
+    description: "Nos momentos de passe mais difíceis, entre linhas, você garante um passe certeiro que rasga a defesa adversária.",
+  },
+  {
+    id: "cruzamento_preciso",
+    name: "Cruzamento Preciso",
+    shortDescription: "Cruzamento difícil garantido",
+    description: "Mesmo em ângulos fechadíssimos, você garante o acerto no cruzamento mais difícil para o companheiro.",
+  },
+  {
+    id: "veloz",
+    name: "Veloz",
+    shortDescription: "Supera qualquer marcador",
+    description: "Em disputas de corrida contra a marcação, você garante que vai superar o adversário em velocidade.",
+  },
+  {
+    id: "xerife",
+    name: "Xerife",
+    shortDescription: "Desarme garantido",
+    description: "Como marcador, você garante o desarme em disputas de bola contra o atacante adversário.",
+  },
+];
 
 export const NATIONALITIES = [
   "Brasil",

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Attributes, FinalResult, Player, Position, RomanceEvent, SeasonStat, Team } from "./types";
+import { Attributes, FinalResult, Player, PlayStyle, Position, RomanceEvent, SeasonStat, Team } from "./types";
 import { StartScreen } from "./components/StartScreen";
 import { ChooseNationality } from "./components/ChooseNationality";
 import { ChooseAppearance } from "./components/ChooseAppearance";
@@ -22,7 +22,8 @@ import { RomanceEventModal } from "./components/RomanceEventModal";
 import { generateRomanceEvent } from "./data/romanceEvents";
 import { MentalHealthModal } from "./components/MentalHealthModal";
 import { HeartCrack, Heart } from "lucide-react";
-import { generateRelationships, generateFriend } from "./data";
+import { generateRelationships, generateFriend, PLAY_STYLES } from "./data";
+import { PlayStyleModal } from "./components/Playstylesmodal";
 import { simulateSeason, applyGrowth, autoDistributePoints, generatePressMessage, calculateMarketValue, calculateOverall, formatCurrency, getReachedFinals, getContractEndOffers, addMessageToChat, updateIdolStatus } from "./utils";
 import { IdolModal } from "./components/IdolModal";
 import { NewFriendModal } from "./components/NewFriendModal";
@@ -637,6 +638,7 @@ export default function App() {
   const [pendingMuralha, setPendingMuralha] = useState<any>(null);
 
   const [pendingSponsorChoice, setPendingSponsorChoice] = useState<boolean>(false);
+  const [pendingPlayStyleChoice, setPendingPlayStyleChoice] = useState<boolean>(false);
 
   const checkSponsorOrFinish = (stateToPass: any) => {
     const p = stateToPass.baseUpdatedPlayer;
@@ -645,6 +647,34 @@ export default function App() {
       setPendingSimulationPhase(stateToPass);
       return;
     }
+    checkPlayStyleOrFinish(stateToPass);
+  };
+
+  // PlayStyles (Chute Colocado, Força Aérea, Tiki-Taka, Cruzamento Preciso,
+  // Veloz e Xerife) são desbloqueados assim que o jogador atinge Overall 85.
+  // A escolha acontece apenas uma vez, na primeira temporada em que o
+  // Overall alcançar esse patamar.
+  const checkPlayStyleOrFinish = (stateToPass: any) => {
+    const p = stateToPass.baseUpdatedPlayer;
+    const currentOvr = calculateOverall(p.attributes, p.position);
+    if (!p.retired && currentOvr >= 85 && (!p.playStyles || p.playStyles.length === 0)) {
+      setPendingPlayStyleChoice(true);
+      setPendingSimulationPhase(stateToPass);
+      return;
+    }
+    checkBallonDorOrFinish(stateToPass);
+  };
+
+  const handlePlayStyleSelected = (styleId: PlayStyle) => {
+    if (!pendingSimulationPhase) return;
+    const stateToPass = { ...pendingSimulationPhase };
+    const p = stateToPass.baseUpdatedPlayer;
+    p.playStyles = [...(p.playStyles || []), styleId];
+    const styleName = PLAY_STYLES.find((s) => s.id === styleId)?.name || styleId;
+    if (p.history.length > 0) {
+      p.history[0].pressMessage = `"Estilo definido! ${p.name} revela seu PlayStyle: ${styleName}."`;
+    }
+    setPendingPlayStyleChoice(false);
     checkBallonDorOrFinish(stateToPass);
   };
 
@@ -1152,6 +1182,13 @@ export default function App() {
                 </button>
               </div>
             </div>
+          )}
+
+          {pendingPlayStyleChoice && pendingSimulationPhase && (
+            <PlayStyleModal
+              player={pendingSimulationPhase.baseUpdatedPlayer}
+              onSelect={handlePlayStyleSelected}
+            />
           )}
 
           {transferOffer && (
