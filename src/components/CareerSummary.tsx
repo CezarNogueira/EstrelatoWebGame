@@ -1,5 +1,101 @@
-import { Player } from "../types";
-import { Trophy, Goal, Calendar, Medal, Shield, ShieldCheck } from "lucide-react";
+import { Player, SeasonStat } from "../types";
+import { Trophy, Goal, Calendar, Medal, Shield, ShieldCheck, Star, Award } from "lucide-react";
+
+const POSITION_LABEL: Record<string, string> = {
+  ATA: "atacante",
+  PON: "ponta",
+  MEI: "meia",
+  MC: "meio-campista",
+  VOL: "volante",
+  ZAG: "zagueiro",
+  LAT: "lateral",
+};
+
+function getRatingColor(rating: number) {
+  if (rating >= 90) return "bg-yellow-500/15 border-yellow-500/50 text-yellow-300";
+  if (rating >= 80) return "bg-emerald-500/15 border-emerald-500/50 text-emerald-300";
+  if (rating >= 70) return "bg-blue-500/15 border-blue-500/50 text-blue-300";
+  return "bg-slate-700/30 border-slate-600/50 text-slate-300";
+}
+
+function seasonWonTitle(stat: SeasonStat) {
+  const wonFinal = !!stat.finals?.some((f) => f.won);
+  const wonLeague = stat.leaguePosition === 1 && !!stat.leagueName;
+  return wonFinal || wonLeague;
+}
+
+// Gera a mensagem final de despedida com base no que o jogador construiu na
+// carreira (títulos, prêmios individuais, artilharia, assistências, lesões
+// etc) e na sua posição em campo. Cobre 10 perfis de carreira diferentes.
+function getFarewellMessage(
+  player: Player,
+  stats: {
+    totalGoals: number;
+    totalAssists: number;
+    totalTackles: number;
+    totalCleanSheets: number;
+    totalTeamTitles: number;
+    totalIndividualAwards: number;
+    ballonDorCount: number;
+    peakRating: number;
+    seasonEndingInjuries: number;
+    injuredSeasons: number;
+  }
+) {
+  const { name, position } = player;
+  const posLabel = POSITION_LABEL[position] || "jogador";
+  const isAttacker = ["ATA", "PON", "MEI"].includes(position);
+  const isDefensive = ["ZAG", "LAT", "VOL"].includes(position);
+  const {
+    totalGoals,
+    totalAssists,
+    totalTackles,
+    totalTeamTitles,
+    totalIndividualAwards,
+    ballonDorCount,
+    peakRating,
+    seasonEndingInjuries,
+    injuredSeasons,
+  } = stats;
+
+  if (ballonDorCount >= 3) {
+    return `${name} encerra a carreira como uma lenda absoluta do futebol: são ${ballonDorCount} Bolas de Ouro que colocam seu nome ao lado dos maiores de todos os tempos`;
+  }
+
+  if (ballonDorCount >= 1) {
+    return `${name} pendura as chuteiras como um dos nomes mais respeitados do futebol mundial`;
+  }
+
+  if (totalTeamTitles >= 15) {
+    return `${name} se despede como um verdadeiro colecionador de taças: foram ${totalTeamTitles} títulos conquistados ao longo de sua carreira`;
+  }
+
+  if (peakRating >= 90 && isAttacker) {
+    return `Como ${posLabel} de elite mundial, ${name} encantou torcidas por onde passou e se despede como um verdadeiro ídolo dos gramados`;
+  }
+
+  if (isDefensive && (totalTackles >= 800)) {
+    return `${name} construiu a carreira na base do sacrifício e da liderança defensiva, um ${posLabel} que a torcida jamais vai esquecer.`;
+  }
+
+  if (position === "MEI" && totalAssists >= 150) {
+    return `${name} encerra a carreira como um maestro do meio campo`;
+  }
+
+  if (totalGoals >= 800) {
+    return `${name} encerra a carreira como um dos melhores finalizadores do mundo`;
+  }
+
+  if (seasonEndingInjuries >= 2 || injuredSeasons >= 6) {
+    return `A carreira de ${name} foi marcada por lesões e desafios físicos`;
+  }
+
+  if (totalTeamTitles < 3 && totalIndividualAwards === 0) {
+    return `${name} não foi um nome conhecido e não será lembrado`;
+  }
+
+  return `Obrigado por tudo ${name}`;
+}
 
 export function CareerSummary({ player, onRestart }: { player: Player; onRestart: () => void }) {
   const showDefensiveStats = !["ATA", "PON", "MEI", "MC"].includes(player.position);
@@ -9,7 +105,7 @@ export function CareerSummary({ player, onRestart }: { player: Player; onRestart
   const totalAssists = player.history.reduce((sum, stat) => sum + stat.assists, 0);
   const totalTackles = player.history.reduce((sum, stat) => sum + (stat.tackles || 0), 0);
   const totalCleanSheets = player.history.reduce((sum, stat) => sum + (stat.cleanSheets || 0), 0);
-  
+
   const teamTitles = player.history.reduce((acc, stat) => {
     stat.finals?.forEach(f => {
       if (f.won) {
@@ -31,6 +127,31 @@ export function CareerSummary({ player, onRestart }: { player: Player; onRestart
 
   const totalTeamTitles = Object.values(teamTitles).reduce((a, b) => a + b, 0);
   const totalIndividualAwards = Object.values(individualAwards).reduce((a, b) => a + b, 0);
+  const ballonDorCount = individualAwards["Bola de Ouro"] || 0;
+
+  const seasonEndingInjuries = player.history.filter((s) => s.seasonEndingInjury).length;
+  const injuredSeasons = player.history.filter((s) => s.injured).length;
+
+  // Temporadas em ordem cronológica (a primeira temporada da carreira primeiro).
+  const chronological = [...player.history].reverse();
+  const peakRating = chronological.reduce((max, s) => Math.max(max, s.rating), 0);
+  const peakIndex = chronological.reduce(
+    (bestIdx, s, idx) => (s.rating >= chronological[bestIdx].rating ? idx : bestIdx),
+    0
+  );
+
+  const farewellMessage = getFarewellMessage(player, {
+    totalGoals,
+    totalAssists,
+    totalTackles,
+    totalCleanSheets,
+    totalTeamTitles,
+    totalIndividualAwards,
+    ballonDorCount,
+    peakRating,
+    seasonEndingInjuries,
+    injuredSeasons,
+  });
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950 text-slate-50 p-6">
@@ -41,9 +162,7 @@ export function CareerSummary({ player, onRestart }: { player: Player; onRestart
         
         <div className="space-y-2">
           <h1 className="text-5xl font-black tracking-tight text-white">Fim de Carreira</h1>
-          <p className="text-slate-400 text-lg">
-            Obrigado por tudo, <strong>{player.name}</strong>! O mundo do futebol sentirá sua falta.
-          </p>
+          <p className="text-slate-400 text-lg max-w-2xl mx-auto">{farewellMessage}</p>
         </div>
 
         <div
@@ -84,6 +203,77 @@ export function CareerSummary({ player, onRestart }: { player: Player; onRestart
             <Trophy className="w-8 h-8 text-amber-400" />
             <span className="text-3xl font-black">{totalTeamTitles + totalIndividualAwards}</span>
             <span className="text-slate-500 font-bold uppercase text-xs">Prêmios</span>
+          </div>
+        </div>
+
+        {peakIndex >= 0 && chronological.length > 0 && (
+          <div className="w-full bg-gradient-to-r from-yellow-500/10 via-amber-500/10 to-yellow-500/10 border border-yellow-500/40 rounded-2xl p-4 flex items-center justify-center gap-3 text-left">
+            <Star className="w-6 h-6 text-yellow-400 shrink-0" />
+            <p className="text-sm text-slate-300">
+              <span className="font-bold text-yellow-400">Temporada de Auge:</span> Temporada{" "}
+              {peakIndex + 1} ({chronological[peakIndex].age} anos), pelo {chronological[peakIndex].team.name} - OVR{" "}
+              <span className="font-black text-yellow-300">{chronological[peakIndex].rating}</span>
+            </p>
+          </div>
+        )}
+
+        <div className="w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 text-left">
+          <h3 className="text-xl font-bold text-slate-200 mb-4 flex items-center gap-2 uppercase tracking-wider text-sm">
+            Temporada a Temporada
+          </h3>
+          <div className="space-y-1.5 max-h-[420px] overflow-y-auto custom-scrollbar pr-1">
+            {chronological.map((stat, idx) => {
+              const isPeak = idx === peakIndex;
+              const wonTitle = seasonWonTitle(stat);
+              const hasIndividualAward = !!stat.individualAwards && stat.individualAwards.length > 0;
+              const wonBallonDor = !!stat.individualAwards?.includes("Bola de Ouro");
+
+              return (
+                <div
+                  key={idx}
+                  className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl border transition-colors ${
+                    isPeak
+                      ? "bg-yellow-500/10 border-yellow-500/60"
+                      : "bg-slate-950/60 border-slate-800/80"
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-16 shrink-0">
+                      <span className="text-xs font-bold text-slate-400">Temp. {idx + 1}</span>
+                      <p className="text-[10px] text-slate-600">{stat.age} anos</p>
+                    </div>
+
+                    <div className="flex items-center gap-2 min-w-0">
+                      {stat.team.logo ? (
+                        <img src={stat.team.logo} alt={stat.team.name} className="w-6 h-6 rounded-full object-contain bg-slate-800 shrink-0" />
+                      ) : (
+                        <span
+                          className="w-3 h-3 rounded-full shrink-0"
+                          style={{ backgroundColor: stat.team.color || "#64748b" }}
+                        ></span>
+                      )}
+                      <span className="text-slate-300 font-medium text-sm truncate">{stat.team.name}</span>
+                    </div>
+
+                    <div className="flex items-center gap-1 shrink-0">
+                      {wonTitle && <Trophy className="w-3.5 h-3.5 text-amber-400" />}
+                      {wonBallonDor && <Star className="w-3.5 h-3.5 text-yellow-400" />}
+                      {!wonBallonDor && hasIndividualAward && <Award className="w-3.5 h-3.5 text-yellow-500" />}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="text-xs text-slate-500 font-semibold">
+                      {stat.goals}
+                      <span className="text-slate-600 font-normal"> G</span>
+                    </span>
+                    <span className={`text-xs font-black px-2 py-1 rounded-lg border ${getRatingColor(stat.rating)}`}>
+                      {stat.rating} OVR
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
