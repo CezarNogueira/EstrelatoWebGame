@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Attributes, FinalResult, Player, PlayStyle, Position, RomanceEvent, SeasonStat, Team } from "./types";
+import { Attributes, FinalResult, Player, PlayerPlayStyle, PlayStyle, Position, RomanceEvent, SeasonStat, Team } from "./types";
 import { StartScreen } from "./components/StartScreen";
 import { ChooseNationality } from "./components/ChooseNationality";
 import { ChooseAppearance } from "./components/ChooseAppearance";
@@ -22,7 +22,7 @@ import { RomanceEventModal } from "./components/RomanceEventModal";
 import { generateRomanceEvent } from "./data/romanceEvents";
 import { MentalHealthModal } from "./components/MentalHealthModal";
 import { HeartCrack, Heart } from "lucide-react";
-import { generateRelationships, generateFriend, PLAY_STYLES } from "./data";
+import { generateRelationships, generateFriend, PLAY_STYLES, PLAY_STYLE_MILESTONES, PLAY_STYLE_LEVEL_LABEL, getNextPlayStyleLevel } from "./data";
 import { PlayStyleModal } from "./components/Playstylesmodal";
 import { simulateSeason, applyGrowth, autoDistributePoints, generatePressMessage, calculateMarketValue, calculateOverall, formatCurrency, getReachedFinals, getContractEndOffers, addMessageToChat, updateIdolStatus } from "./utils";
 import { IdolModal } from "./components/IdolModal";
@@ -639,6 +639,7 @@ export default function App() {
 
   const [pendingSponsorChoice, setPendingSponsorChoice] = useState<boolean>(false);
   const [pendingPlayStyleChoice, setPendingPlayStyleChoice] = useState<boolean>(false);
+  const [pendingPlayStyleMilestone, setPendingPlayStyleMilestone] = useState<number | null>(null);
 
   const checkSponsorOrFinish = (stateToPass: any) => {
     const p = stateToPass.baseUpdatedPlayer;
@@ -651,31 +652,74 @@ export default function App() {
   };
 
   // PlayStyles (Chute Colocado, Força Aérea, Tiki-Taka, Cruzamento Preciso,
-  // Veloz e Xerife) são desbloqueados assim que o jogador atinge Overall 85.
-  // A escolha acontece apenas uma vez, na primeira temporada em que o
-  // Overall alcançar esse patamar.
+  // Veloz e Xerife): desbloqueados ao atingir Overall 64 (nível Bronze).
+  // A cada novo marco de Overall (64, 80 e 90) o jogador pode escolher entre
+  // evoluir o nível de um PlayStyle que já possui (Bronze -> Prata -> Dourado)
+  // ou desbloquear um PlayStyle novo (sempre em nível Bronze).
   const checkPlayStyleOrFinish = (stateToPass: any) => {
     const p = stateToPass.baseUpdatedPlayer;
-    const currentOvr = calculateOverall(p.attributes, p.position);
-    if (!p.retired && currentOvr >= 85 && (!p.playStyles || p.playStyles.length === 0)) {
-      setPendingPlayStyleChoice(true);
-      setPendingSimulationPhase(stateToPass);
+    if (p.retired) {
+      checkBallonDorOrFinish(stateToPass);
       return;
     }
+    const currentOvr = calculateOverall(p.attributes, p.position);
+    const milestonesReached: number[] = p.playStyleMilestones || [];
+    const nextMilestone = PLAY_STYLE_MILESTONES.find((m) => currentOvr >= m && !milestonesReached.includes(m));
+
+    if (nextMilestone !== undefined) {
+      const owned: PlayerPlayStyle[] = p.playStyles || [];
+      const hasUnowned = PLAY_STYLES.some((s) => !owned.some((ps) => ps.id === s.id));
+      const hasUpgradable = owned.some((ps) => ps.level !== "dourado");
+
+      if (hasUnowned || hasUpgradable) {
+        setPendingPlayStyleMilestone(nextMilestone);
+        setPendingPlayStyleChoice(true);
+        setPendingSimulationPhase(stateToPass);
+        return;
+      }
+
+      // Nada para fazer nesse marco (todos os PlayStyles já em nível Dourado):
+      // apenas registra o marco como cumprido e segue verificando o próximo.
+      p.playStyleMilestones = [...milestonesReached, nextMilestone];
+      checkPlayStyleOrFinish(stateToPass);
+      return;
+    }
+
     checkBallonDorOrFinish(stateToPass);
   };
 
-  const handlePlayStyleSelected = (styleId: PlayStyle) => {
-    if (!pendingSimulationPhase) return;
+  const handlePlayStyleSelected = (choice: { type: "new"; id: PlayStyle } | { type: "upgrade"; id: PlayStyle }) => {
+    if (!pendingSimulationPhase || pendingPlayStyleMilestone === null) return;
     const stateToPass = { ...pendingSimulationPhase };
     const p = stateToPass.baseUpdatedPlayer;
-    p.playStyles = [...(p.playStyles || []), styleId];
-    const styleName = PLAY_STYLES.find((s) => s.id === styleId)?.name || styleId;
-    if (p.history.length > 0) {
-      p.history[0].pressMessage = `"Estilo definido! ${p.name} revela seu PlayStyle: ${styleName}."`;
+    const owned: PlayerPlayStyle[] = [...(p.playStyles || [])];
+    const styleName = PLAY_STYLES.find((s) => s.id === choice.id)?.name || choice.id;
+
+    if (choice.type === "new") {
+      owned.push({ id: choice.id, level: "bronze" });
+      if (p.history.length > 0) {
+        p.history[0].pressMessage = `"Novo talento revelado! ${p.name} desbloqueia o PlayStyle ${styleName} (Bronze)."`;
+      }
+    } else {
+      const idx = owned.findIndex((ps) => ps.id === choice.id);
+      if (idx >= 0) {
+        const nextLevel = getNextPlayStyleLevel(owned[idx].level);
+        if (nextLevel) {
+          owned[idx] = { ...owned[idx], level: nextLevel };
+          const levelLabel = PLAY_STYLE_LEVEL_LABEL[nextLevel];
+          if (p.history.length > 0) {
+            p.history[0].pressMessage = `"Evolução! ${p.name} aprimora o PlayStyle ${styleName} para o nível ${levelLabel}."`;
+          }
+        }
+      }
     }
+
+    p.playStyles = owned;
+    p.playStyleMilestones = [...(p.playStyleMilestones || []), pendingPlayStyleMilestone];
     setPendingPlayStyleChoice(false);
-    checkBallonDorOrFinish(stateToPass);
+    setPendingPlayStyleMilestone(null);
+    // Reavalia em caso de mais de um marco alcançado na mesma temporada.
+    checkPlayStyleOrFinish(stateToPass);
   };
 
   const checkBallonDorOrFinish = (stateToPass: any) => {
@@ -1184,9 +1228,10 @@ export default function App() {
             </div>
           )}
 
-          {pendingPlayStyleChoice && pendingSimulationPhase && (
+          {pendingPlayStyleChoice && pendingSimulationPhase && pendingPlayStyleMilestone !== null && (
             <PlayStyleModal
               player={pendingSimulationPhase.baseUpdatedPlayer}
+              milestone={pendingPlayStyleMilestone}
               onSelect={handlePlayStyleSelected}
             />
           )}

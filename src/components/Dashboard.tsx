@@ -2,8 +2,8 @@ import { RomanceEvent } from "../types";
 import { FamilyEvent, Player, SeasonStat } from "../types";
 import { calculateOverall, getPlayerTitle, formatCurrency, getLeagueName, getLeagueTheme } from "../utils";
 import { ArrowRight, Calendar, Goal, User, Users, Zap, FileSignature, ShoppingBag, Shield, ShieldCheck, MapPin, Smartphone, Crosshair, Target, MoveRight, Activity, Rocket } from "lucide-react";
-import { PLAY_STYLES } from "../data";
-import { PlayStyle } from "../types";
+import { PLAY_STYLES, PLAY_STYLE_LEVEL_LABEL } from "../data";
+import { PlayStyle, PlayStyleLevel } from "../types";
 import { motion, AnimatePresence } from "motion/react";
 import { useState } from "react";
 import { StoreModal, STORE_ITEMS } from "./StoreModal";
@@ -26,6 +26,12 @@ const PLAYSTYLE_ICONS: Record<PlayStyle, typeof Crosshair> = {
   cruzamento_preciso: Activity,
   veloz: Rocket,
   xerife: Shield,
+};
+
+const LEVEL_COLORS: Record<PlayStyleLevel, { bg: string; border: string; text: string }> = {
+  bronze: { bg: "bg-orange-500/10", border: "border-orange-500/50", text: "text-orange-400" },
+  prata: { bg: "bg-slate-400/10", border: "border-slate-300/50", text: "text-slate-200" },
+  dourado: { bg: "bg-yellow-500/10", border: "border-yellow-400/60", text: "text-yellow-300" },
 };
 
 function AttributeBar({ label, value }: { label: string; value: number }) {
@@ -601,14 +607,15 @@ export function Dashboard({
                   <div className="flex items-center justify-between pt-3 border-t border-slate-800/80">
                     <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">PlayStyles</span>
                     <div className="flex items-center gap-2">
-                      {player.playStyles.map((id) => {
-                        const info = PLAY_STYLES.find((s) => s.id === id);
-                        const Icon = PLAYSTYLE_ICONS[id];
+                      {player.playStyles.map((ps) => {
+                        const info = PLAY_STYLES.find((s) => s.id === ps.id);
+                        const Icon = PLAYSTYLE_ICONS[ps.id];
+                        const color = LEVEL_COLORS[ps.level];
                         return (
                           <div
-                            key={id}
-                            title={info?.name}
-                            className="w-8 h-8 rounded-lg flex items-center justify-center bg-emerald-500/10 border border-emerald-500/40 text-emerald-300"
+                            key={ps.id}
+                            title={`${info?.name} (${PLAY_STYLE_LEVEL_LABEL[ps.level]})`}
+                            className={`w-8 h-8 rounded-lg flex items-center justify-center border ${color.bg} ${color.border} ${color.text}`}
                           >
                             <Icon className="w-4 h-4" />
                           </div>

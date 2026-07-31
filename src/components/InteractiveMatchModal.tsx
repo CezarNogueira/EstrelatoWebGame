@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Player, PlayStyle, Position } from "../types";
 import { calculateOverall } from "../utils";
 import { Trophy, Goal, Activity, FastForward, Play, AlertCircle, Shield, UserCheck, Rocket, MoveRight, Target, Crosshair } from "lucide-react";
-import { TEAMS, NATIONAL_TEAMS, EUROPEAN_NATIONALITIES, AMERICAN_NATIONALITIES, NATIONALITIES } from "../data";
+import { TEAMS, NATIONAL_TEAMS, EUROPEAN_NATIONALITIES, AMERICAN_NATIONALITIES, NATIONALITIES, PLAY_STYLE_LEVEL_CHANCE } from "../data";
 
 // -----------------------------------------------------------------------------
 // Cenários de jogada
@@ -19,6 +19,9 @@ type Scenario =
   | "INFILTRACAO"  // Atacante tentando infiltrar -> Desarmar ou Marcar outro atacante
   | "PENALTI"      // Cobrador oficial do time bate um pênalti
   | "FALTA"        // Cobrador oficial do time bate uma falta perigosa
+  // Jogadas raras ligadas a PlayStyles: sem o PlayStyle correspondente a
+  // chance de sucesso cai para apenas 10%; com o PlayStyle, o sucesso é
+  // garantido (100%).
   | "CHUTE_COLOCADO"     // Chute Colocado - bola sobra de longe, fora da área
   | "FORCA_AEREA"        // Força Aérea - cruzamento na área para cabecear
   | "TIKI_TAKA"          // Tiki-Taka - passe decisivo entre linhas
@@ -53,10 +56,16 @@ const SET_PIECE_OVR_THRESHOLD: Record<number, number> = {
 // equipe, falha = perde a jogada.
 const DEFENSIVE_SCENARIO_SET = new Set<Scenario>(["INFILTRACAO", "XERIFE"]);
 
-function hasPlayStyle(player: Player, style: PlayStyle): boolean {
-  return !!player.playStyles?.includes(style);
+// Retorna a chance (%) de sucesso na jogada rara associada a um PlayStyle:
+// 50% (Bronze), 70% (Prata) ou 90% (Dourado). Sem o PlayStyle, apenas 10%.
+function getPlayStyleChance(player: Player, style: PlayStyle): number {
+  const owned = player.playStyles?.find((ps) => ps.id === style);
+  return owned ? PLAY_STYLE_LEVEL_CHANCE[owned.level] : 10;
 }
 
+// Cenários raros de PlayStyle: sem o PlayStyle correspondente, a chance é
+// travada em 10%; com o PlayStyle, o sucesso é garantido (100%). Por isso
+// esses cenários NÃO passam pelo clamp de 10-90% aplicado às jogadas normais.
 const PLAYSTYLE_SCENARIO_SET = new Set<Scenario>([
   "CHUTE_COLOCADO",
   "FORCA_AEREA",
@@ -80,6 +89,10 @@ interface ActionDef {
   label: string;
   icon: typeof Goal;
   classes: string;
+  // Para cenários ofensivos, indica se um sucesso nessa ação conta como gol
+  // do próprio jogador ou como assistência (jogada finalizada por um
+  // companheiro). Cenários defensivos (INFILTRACAO) não usam este campo,
+  // já que um sucesso ali apenas evita o gol adversário.
   resultType?: "goal" | "assist";
 }
 
@@ -303,7 +316,7 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
     actions: [
       { id: "chute_colocado", label: "Chute Colocado", icon: Crosshair, classes: "bg-red-900/50 hover:bg-red-800/80 border border-red-700 text-red-200", resultType: "goal" },
     ],
-    computeChance: (_actionId, player) => (hasPlayStyle(player, "chute_colocado") ? 90 : 10),
+    computeChance: (_actionId, player) => (getPlayStyleChance(player, "chute_colocado")),
     successText: (_actionId, name) => `GOLAÇO DE FORA DA ÁREA! ${name.toUpperCase()} ACERTA UM CHUTE COLOCADO PERFEITO NO ÂNGULO!`,
     failText: (_actionId, name) => `${name} arrisca de longe, mas a bola vai longe do gol.`,
   },
@@ -313,7 +326,7 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
     actions: [
       { id: "cabecear", label: "Cabecear", icon: Target, classes: "bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-200", resultType: "goal" },
     ],
-    computeChance: (_actionId, player) => (hasPlayStyle(player, "forca_aerea") ? 90 : 10),
+    computeChance: (_actionId, player) => (getPlayStyleChance(player, "forca_aerea")),
     successText: (_actionId, name) => `CABEÇADA MORTAL DE ${name.toUpperCase()}! Sobe mais que todo mundo e é GOL DE CABEÇA!`,
     failText: (_actionId, name) => `${name} sobe bem, mas cabeceia por cima do gol.`,
   },
@@ -323,7 +336,7 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
     actions: [
       { id: "passe_matador", label: "Passe Matador", icon: MoveRight, classes: "bg-emerald-900/50 hover:bg-emerald-800/80 border border-emerald-700 text-emerald-200", resultType: "assist" },
     ],
-    computeChance: (_actionId, player) => (hasPlayStyle(player, "tiki_taka") ? 90 : 10),
+    computeChance: (_actionId, player) => (getPlayStyleChance(player, "tiki_taka")),
     successText: (_actionId, name) => `PASSE DE PRIMEIRA CATEGORIA DE ${name.toUpperCase()}! Encaixa entre os zagueiros e é GOL do companheiro!`,
     failText: (_actionId, name, opponentName) => `${name} tenta o passe entre linhas, mas a zaga do ${opponentName} intercepta.`,
   },
@@ -333,7 +346,7 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
     actions: [
       { id: "cruzamento_dificil", label: "Cruzamento Difícil", icon: Activity, classes: "bg-amber-900/50 hover:bg-amber-800/80 border border-amber-700 text-amber-200", resultType: "assist" },
     ],
-    computeChance: (_actionId, player) => (hasPlayStyle(player, "cruzamento_preciso") ? 90 : 10),
+    computeChance: (_actionId, player) => (getPlayStyleChance(player, "cruzamento_preciso")),
     successText: (_actionId, name) => `CRUZAMENTO DE TIRAR O FÔLEGO DE ${name.toUpperCase()}! Encontra a cabeça do companheiro. GOL!`,
     failText: (_actionId, name) => `${name} tenta o cruzamento quase impossível, mas a bola sai direto pela linha de fundo.`,
   },
@@ -343,7 +356,7 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
     actions: [
       { id: "disparar", label: "Disparar", icon: Rocket, classes: "bg-purple-900/50 hover:bg-purple-800/80 border border-purple-700 text-purple-200", resultType: "goal" },
     ],
-    computeChance: (_actionId, player) => (hasPlayStyle(player, "veloz") ? 90 : 10),
+    computeChance: (_actionId, player) => (getPlayStyleChance(player, "veloz")),
     successText: (_actionId, name) => `${name.toUpperCase()} DISPARA E DEIXA A MARCAÇÃO PARA TRÁS! Fica na cara do gol e é GOL!`,
     failText: (_actionId, name) => `${name} tenta a arrancada, mas é alcançado antes de finalizar.`,
   },
@@ -353,7 +366,7 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
     actions: [
       { id: "desarme_xerife", label: "Desarme de Xerife", icon: Shield, classes: "bg-emerald-900/50 hover:bg-emerald-800/80 border border-emerald-700 text-emerald-200" },
     ],
-    computeChance: (_actionId, player) => (hasPlayStyle(player, "xerife") ? 90 : 10),
+    computeChance: (_actionId, player) => (getPlayStyleChance(player, "xerife")),
     // Sucesso = evita o gol adversário (cenário defensivo, como INFILTRACAO).
     successText: (_actionId, name) => `DESARME DE MESTRE DE ${name.toUpperCase()}! Tira a bola sem cometer falta e ainda sai jogando!`,
     failText: (_actionId, name, opponentName) => `${name} não consegue o desarme e é GOL DO ${opponentName.toUpperCase()}!`,

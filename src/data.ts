@@ -1,4 +1,4 @@
-import { Team, FamilyMember, Friend, Relationships, PlayStyle } from "./types";
+import { Team, FamilyMember, Friend, Relationships, PlayStyle, PlayStyleLevel } from "./types";
 
 import male1 from "./assets/avatars/male1.png";
 import male2 from "./assets/avatars/male2.png";
@@ -306,6 +306,32 @@ export const PLAY_STYLES: PlayStyleInfo[] = [
     description: "Como marcador, você garante o desarme em disputas de bola contra o atacante adversário.",
   },
 ];
+
+// Overalls em que o jogador pode escolher um novo PlayStyle (nível Bronze)
+// ou evoluir o nível de um PlayStyle que já possui.
+export const PLAY_STYLE_MILESTONES = [64, 80, 90] as const;
+
+// Ordem de evolução de nível de um PlayStyle.
+export const PLAY_STYLE_LEVEL_ORDER: PlayStyleLevel[] = ["bronze", "prata", "dourado"];
+
+export const PLAY_STYLE_LEVEL_LABEL: Record<PlayStyleLevel, string> = {
+  bronze: "Bronze",
+  prata: "Prata",
+  dourado: "Dourado",
+};
+
+// Chance de concluir com sucesso a jogada rara associada ao PlayStyle,
+// de acordo com o nível atual. Sem o PlayStyle, a chance é sempre 10%.
+export const PLAY_STYLE_LEVEL_CHANCE: Record<PlayStyleLevel, number> = {
+  bronze: 50,
+  prata: 70,
+  dourado: 90,
+};
+
+export function getNextPlayStyleLevel(level: PlayStyleLevel): PlayStyleLevel | null {
+  const idx = PLAY_STYLE_LEVEL_ORDER.indexOf(level);
+  return idx >= 0 && idx < PLAY_STYLE_LEVEL_ORDER.length - 1 ? PLAY_STYLE_LEVEL_ORDER[idx + 1] : null;
+}
 
 export const NATIONALITIES = [
   "Brasil",

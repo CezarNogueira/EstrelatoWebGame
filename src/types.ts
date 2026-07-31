@@ -51,7 +51,8 @@ export type Position = "ATA" | "PON" | "MEI" | "MC" | "VOL" | "ZAG" | "LAT";
 
 // PlayStyles (inspirado no EAFC): habilidades especiais que garantem o
 // sucesso em jogadas raras específicas dentro das partidas/finais
-// interativas. O jogador escolhe o primeiro PlayStyle ao atingir Overall 85.
+// interativas. Desbloqueados e evoluídos ao atingir certos marcos de Overall
+// (64, 80 e 90).
 export type PlayStyle =
   | "chute_colocado"
   | "forca_aerea"
@@ -59,6 +60,13 @@ export type PlayStyle =
   | "cruzamento_preciso"
   | "veloz"
   | "xerife";
+
+export type PlayStyleLevel = "bronze" | "prata" | "dourado";
+
+export type PlayerPlayStyle = {
+  id: PlayStyle;
+  level: PlayStyleLevel;
+};
 
 export type RomanceChoiceTone = "safe" | "risky" | "neutral" | "positive";
 
@@ -176,5 +184,6 @@ export type Player = {
     social: number;
   };
   idolClubs?: string[];
-  playStyles?: PlayStyle[];
+  playStyles?: PlayerPlayStyle[];
+  playStyleMilestones?: number[]; // marcos de Overall (64, 80, 90) já concedidos
 };
