@@ -624,7 +624,17 @@ export const getReachedFinals = (player: Player, currentOvr: number): string[] =
 
 export const simulateSeason = (
   player: Player,
-  prePlayedFinals?: { type: string; won: boolean; goals?: number; assists?: number }[]
+  prePlayedFinals?: { type: string; won: boolean; goals?: number; assists?: number }[],
+  // Quando a liga do jogador foi simulada rodada a rodada (Fase 2 do modo
+  // História), passamos aqui os números REAIS apurados jogo a jogo, em vez
+  // de deixar o restante da função "inventar" partidas/gols/posição via
+  // sorteio estatístico.
+  leagueSeasonOverride?: {
+    matches: number;
+    goals: number;
+    assists: number;
+    leaguePosition: number;
+  }
 ): { baseUpdatedPlayer: Player; seasonStat: SeasonStat; transfer?: Team; earnedPoints: number; proContractOffer?: boolean } => {
   if (player.currentTeam.id === "none") {
     const stat: SeasonStat = {
@@ -829,7 +839,9 @@ export const simulateSeason = (
     }
   }
 
-  let matches = Math.round(totalTeamMatches * Math.min(1, Math.max(0.6, performanceRatio)));
+  let matches = leagueSeasonOverride
+    ? leagueSeasonOverride.matches
+    : Math.round(totalTeamMatches * Math.min(1, Math.max(0.6, performanceRatio)));
 
   let isBenched = false;
   if (player.isPro) {
@@ -847,7 +859,7 @@ export const simulateSeason = (
       isBenched = false; // Always plays
     } else if (currentOvr < requiredOvr) {
       isBenched = true;
-      matches = Math.round(matches * 0.25);
+      if (!leagueSeasonOverride) matches = Math.round(matches * 0.25);
       performanceRatio = performanceRatio * 0.8;
     }
   }
@@ -858,12 +870,12 @@ export const simulateSeason = (
   if (player.mode !== "QUICK") {
     if (player.personal.mood === 0) {
       depressed = true;
-      matches = 0;
+      if (!leagueSeasonOverride) matches = 0;
       performanceRatio = 0;
     } else if (player.personal.mood < 50) {
       isolated = true;
       const moodFactor = player.personal.mood / 50;
-      matches = Math.round(matches * moodFactor);
+      if (!leagueSeasonOverride) matches = Math.round(matches * moodFactor);
       performanceRatio = performanceRatio * (0.6 + moodFactor * 0.4);
     }
   }
@@ -872,11 +884,16 @@ export const simulateSeason = (
     const matchesLost = seasonEndingInjury
       ? matches
       : Math.round(totalTeamMatches * Math.min(1, injuryDays / 300));
-    matches = Math.max(0, matches - matchesLost);
+    if (!leagueSeasonOverride) matches = Math.max(0, matches - matchesLost);
     performanceRatio = performanceRatio * (0.5 + Math.random() * 0.2);
   }
 
   let { goals, assists, tackles, cleanSheets } = generateSeasonMatchStats(player, matches, performanceRatio);
+  if (leagueSeasonOverride) {
+    // Números reais apurados jogo a jogo na liga, em vez de estimativa estatística.
+    goals = leagueSeasonOverride.goals;
+    assists = leagueSeasonOverride.assists;
+  }
   const cleanSheetRateThisSeason = matches > 0 ? cleanSheets / matches : 0;
 
   let finalBonusGoals = 0;
@@ -895,7 +912,9 @@ export const simulateSeason = (
 
   let leaguePosition: number | undefined;
 
-  if (player.isPro) {
+  if (leagueSeasonOverride) {
+    leaguePosition = leagueSeasonOverride.leaguePosition;
+  } else if (player.isPro) {
     let rand = Math.random();
     // Factor in player performance. High performanceRatio (e.g. 1.2) decreases rand (better chance of winning)
     // Low performanceRatio (e.g. 0.8) increases rand (worse chance)
@@ -1663,4 +1682,25 @@ export function resolvePlayerLeagueMatch(
 export function getPlayerLeaguePosition(state: LeagueSeasonState, playerTeamId: string): number {
   const sorted = sortLeagueStandings(state.standings);
   return sorted.findIndex((s) => s.teamId === playerTeamId) + 1;
+}
+
+// Nome de exibição da liga nacional do time (usado pela LeagueSeasonModal
+// para rotular a tela da temporada rodada a rodada).
+export function getLeagueNameForTeam(team: Team): string {
+  const isDiv2 = team.division === 2;
+  switch (team.country) {
+    case "BR": return isDiv2 ? "Série B" : "Brasileirão";
+    case "EN": return isDiv2 ? "Championship" : "Premier League";
+    case "IT": return isDiv2 ? "Serie B" : "Serie A";
+    case "ES": return isDiv2 ? "La Liga 2" : "La Liga";
+    case "DE": return isDiv2 ? "2. Bundesliga" : "Bundesliga";
+    case "FR": return isDiv2 ? "Ligue 2" : "Ligue 1";
+    case "PT": return isDiv2 ? "Liga Portugal 2" : "Primeira Liga";
+    case "NL": return isDiv2 ? "Eerste Divisie" : "Eredivisie";
+    case "US": return isDiv2 ? "USL Championship" : "MLS";
+    case "SA": return isDiv2 ? "First Division League" : "Saudi Pro League";
+    case "AR": return isDiv2 ? "Primera Nacional" : "Liga Profesional Argentina";
+    case "UY": return isDiv2 ? "Segunda División" : "Primera División Uruguaya";
+    default: return "Liga Nacional";
+  }
 }

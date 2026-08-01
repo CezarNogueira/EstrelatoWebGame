@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Player, PlayStyle, Position } from "../types";
+import { Player, PlayStyle, Position, Team } from "../types";
 import { calculateOverall } from "../utils";
 import { Trophy, Goal, Activity, FastForward, Play, AlertCircle, Shield, UserCheck, Rocket, MoveRight, Target, Crosshair } from "lucide-react";
 import { TEAMS, NATIONAL_TEAMS, EUROPEAN_NATIONALITIES, AMERICAN_NATIONALITIES, NATIONALITIES, PLAY_STYLE_LEVEL_CHANCE } from "../data";
@@ -465,11 +465,29 @@ export function InteractiveMatchModal({
  
   player, 
   finalType, 
-  onComplete 
+  onComplete,
+  explicitOpponent,
+  allowDraw = false,
+  headerLabel,
 }: { 
   player: Player; 
   finalType: string; 
-  onComplete: (won: boolean, playerGoals: number, playerAssists: number) => void;
+  onComplete: (
+    won: boolean,
+    playerGoals: number,
+    playerAssists: number,
+    finalScoreFor?: number,
+    finalScoreAgainst?: number,
+    isDraw?: boolean
+  ) => void;
+  // Quando informado (partidas de liga com adversário já sorteado pelo
+  // calendário), pula o sorteio aleatório de adversário e usa este time.
+  explicitOpponent?: Team;
+  // Partidas de liga podem terminar empatadas (ao contrário de finais, que
+  // vão para os pênaltis). Quando true, pula a disputa de pênaltis.
+  allowDraw?: boolean;
+  // Texto customizado exibido no lugar de "Final: {finalType}" (ex: "Rodada 12 - Brasileirão").
+  headerLabel?: string;
 }) {
   const [status, setStatus] = useState<MatchStatus>("INTRO");
   const [minute, setMinute] = useState(0);
@@ -505,6 +523,24 @@ export function InteractiveMatchModal({
     : TEAMS.find(t => t.name === opponentName)?.logo;
 
   useEffect(() => {
+    if (explicitOpponent) {
+      // Partida de liga: o adversário já vem definido pelo calendário da
+      // rodada, então pulamos todo o sorteio aleatório de adversário.
+      setOpponentName(explicitOpponent.name);
+      setStatus("INTRO");
+      setMinute(0);
+      setScoreUs(0);
+      setScoreThem(0);
+      setEvents([]);
+      setChancesHad(0);
+      setCurrentScenario(null);
+      setMatchGoals(0);
+      setMatchAssists(0);
+      const isIdol = player.idolClubs?.includes(player.currentTeam.name);
+      setTotalChances(isIdol ? 6 : Math.floor(Math.random() * 6) + 1);
+      return;
+    }
+
     let ops = TEAMS.map(t => t.name);
     // `category` groups finals that draw from the same pool of possible
     // opponents, so we know which "recently faced" list applies to this draw.
@@ -585,7 +621,7 @@ export function InteractiveMatchModal({
     // ativamente da jogada, em vez de sempre uma única oportunidade.
     const isIdol = player.idolClubs?.includes(player.currentTeam.name);
     setTotalChances(isIdol && !isNational ? 6 : Math.floor(Math.random() * 6) + 1);
-  }, [finalType, player.currentTeam.country, player.currentTeam.name, player.idolClubs, player.nationality, isNational]);
+  }, [finalType, player.currentTeam.country, player.currentTeam.name, player.idolClubs, player.nationality, isNational, explicitOpponent]);
 
   const eventsEndRef = useRef<HTMLDivElement>(null);
 
@@ -743,6 +779,12 @@ export function InteractiveMatchModal({
     // started, ignore further clicks on this same button until it resolves.
     if (resolvingPenalties) return;
 
+    if (scoreUs === scoreThem && allowDraw) {
+      // Partida de liga: empate é um resultado válido, sem pênaltis.
+      onComplete(false, matchGoals, matchAssists, scoreUs, scoreThem, true);
+      return;
+    }
+
     if (scoreUs === scoreThem) {
       setResolvingPenalties(true);
       const won = Math.random() > 0.5;
@@ -762,7 +804,7 @@ export function InteractiveMatchModal({
     }
     
     let won = scoreUs > scoreThem;
-    onComplete(won, matchGoals, matchAssists);
+    onComplete(won, matchGoals, matchAssists, scoreUs, scoreThem, false);
   };
 
   const currentActions = currentScenario ? SCENARIOS[currentScenario].actions : [];
@@ -774,12 +816,12 @@ export function InteractiveMatchModal({
         {/* Header / Scoreboard */}
         <div className="bg-slate-950 p-6 border-b border-slate-800 text-center relative shrink-0">
           <div className="text-emerald-500 mb-2 font-black uppercase tracking-widest text-sm flex justify-center items-center gap-2">
-            Final: {finalType}
+            {headerLabel || `Final: ${finalType}`}
           </div>
           <div className="flex justify-center items-center gap-4 mt-4">
             <div className="text-right flex-1 overflow-hidden flex flex-col items-center justify-end gap-3">
               {playerTeamLogo && (
-                <img src={playerTeamLogo} alt={playerTeamName} draggable="false" className="w-20 h-auto object-contain p-1 shadow-md flex-shrink-0" />
+                <img src={playerTeamLogo} alt={playerTeamName} draggable="false" className="w-14 h-auto object-contain p-1 shadow-md flex-shrink-0" />
               )}
               <div>
                 <h2 className="text-xs sm:text-xl font-black text-slate-100">{playerTeamName}</h2>
@@ -799,7 +841,7 @@ export function InteractiveMatchModal({
 
             <div className="text-left flex-1 overflow-hidden flex flex flex-col items-center justify-start gap-3">
               {opponentLogo && (
-                <img src={opponentLogo} alt={opponentName} draggable="false" className="w-20 h-auto object-contain p-1 shadow-md flex-shrink-0" />
+                <img src={opponentLogo} alt={opponentName} draggable="false" className="w-14 h-auto object-contain p-1 shadow-md flex-shrink-0" />
               )}
               <div>
                 <h2 className="text-xs sm:text-xl font-black text-slate-100">{opponentName}</h2>
@@ -893,7 +935,13 @@ export function InteractiveMatchModal({
               disabled={resolvingPenalties}
               className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-black rounded-2xl transition-all text-xl"
             >
-              {resolvingPenalties ? "Cobrando pênaltis..." : scoreUs === scoreThem ? "Ir para os Pênaltis" : "Continuar"}
+              {resolvingPenalties
+                ? "Cobrando pênaltis..."
+                : scoreUs === scoreThem && allowDraw
+                ? "Confirmar Empate"
+                : scoreUs === scoreThem
+                ? "Ir para os Pênaltis"
+                : "Continuar"}
             </button>
           )}
         </div>

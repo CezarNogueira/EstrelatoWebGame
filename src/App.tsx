@@ -24,7 +24,8 @@ import { MentalHealthModal } from "./components/MentalHealthModal";
 import { HeartCrack, Heart } from "lucide-react";
 import { generateRelationships, generateFriend, PLAY_STYLES, PLAY_STYLE_MILESTONES, PLAY_STYLE_LEVEL_LABEL, getNextPlayStyleLevel } from "./data";
 import { PlayStyleModal } from "./components/Playstylesmodal";
-import { simulateSeason, applyGrowth, autoDistributePoints, generatePressMessage, calculateMarketValue, calculateOverall, formatCurrency, getReachedFinals, getContractEndOffers, addMessageToChat, updateIdolStatus } from "./utils";
+import { simulateSeason, applyGrowth, autoDistributePoints, generatePressMessage, calculateMarketValue, calculateOverall, formatCurrency, getReachedFinals, getContractEndOffers, addMessageToChat, updateIdolStatus, getLeagueNameForTeam } from "./utils";
+import { LeagueSeasonModal } from "./components/Leagueseasonmodal";
 import { IdolModal } from "./components/IdolModal";
 import { NewFriendModal } from "./components/NewFriendModal";
 import { Friend } from "./types";
@@ -148,6 +149,14 @@ export default function App() {
 
   const [pendingMentalHealthEvent, setPendingMentalHealthEvent] = useState<{ type: "depressed" | "isolated" } | null>(null);
 
+  // Fase 2 - Liga ponto a ponto: enquanto isso for true, a LeagueSeasonModal
+  // assume a tela e roda as 38 rodadas (turno e returno) antes de seguirmos
+  // para o restante do fluxo de fim de temporada (finais de copas, etc).
+  const [showLeagueSeason, setShowLeagueSeason] = useState(false);
+  const [pendingLeagueResult, setPendingLeagueResult] = useState<
+    { matches: number; goals: number; assists: number; leaguePosition: number } | null
+  >(null);
+
   const handleSimulate = () => {
     if (!player) return;
     
@@ -167,6 +176,22 @@ export default function App() {
     if (!player) return;
     setPendingTrainingBuff(trainingBuff);
 
+    // Times profissionais no Modo História jogam a liga rodada a rodada
+    // primeiro. Times de base ou o Modo Rápido seguem direto pro fluxo
+    // estatístico de sempre.
+    if (player.isPro && player.currentTeam.id !== "none" && player.mode === "STORY") {
+      setShowLeagueSeason(true);
+      return;
+    }
+
+    proceedAfterLeagueSeason(trainingBuff, null);
+  };
+
+  const proceedAfterLeagueSeason = (
+    trainingBuff: Partial<Attributes> | undefined,
+    leagueResult: { matches: number; goals: number; assists: number; leaguePosition: number } | null
+  ) => {
+    if (!player) return;
     const currentOvr = calculateOverall(player.attributes, player.position);
     const reached = getReachedFinals(player, currentOvr);
 
@@ -175,9 +200,15 @@ export default function App() {
       setPlayedFinals([]);
       setFinalsGoalsAssists({ goals: 0, assists: 0 });
       setCurrentFinalType(reached[0]);
+      setPendingLeagueResult(leagueResult);
     } else {
-      executeSimulation(trainingBuff, []);
+      executeSimulation(trainingBuff, [], leagueResult || undefined);
     }
+  };
+
+  const handleLeagueSeasonComplete = (result: { matches: number; goals: number; assists: number; leaguePosition: number }) => {
+    setShowLeagueSeason(false);
+    proceedAfterLeagueSeason(pendingTrainingBuff, result);
   };
 
   const handleInteractiveFinalComplete = (won: boolean, playerGoals: number, playerAssists: number) => {
@@ -197,16 +228,18 @@ export default function App() {
     } else {
       setReachedFinalsQueue([]);
       setCurrentFinalType(null);
-      executeSimulation(pendingTrainingBuff, updatedPlayed);
+      executeSimulation(pendingTrainingBuff, updatedPlayed, pendingLeagueResult || undefined);
     }
   };
 
   const executeSimulation = (
     trainingBuff?: Partial<Attributes>,
-    prePlayedFinals?: {type: string; won: boolean; goals: number; assists: number}[]
+    prePlayedFinals?: {type: string; won: boolean; goals: number; assists: number}[],
+    leagueResult?: { matches: number; goals: number; assists: number; leaguePosition: number }
   ) => {
     if (!player) return;
-    const { baseUpdatedPlayer, seasonStat, transfer, earnedPoints, proContractOffer } = simulateSeason(player, prePlayedFinals);
+    const { baseUpdatedPlayer, seasonStat, transfer, earnedPoints, proContractOffer } = simulateSeason(player, prePlayedFinals, leagueResult);
+    setPendingLeagueResult(null);
 
     const autoDist = autoDistributePoints(earnedPoints, baseUpdatedPlayer.attributes, player.position);
     
@@ -1014,6 +1047,14 @@ export default function App() {
 
 
           
+          {showLeagueSeason && player && (
+            <LeagueSeasonModal
+              player={player}
+              leagueName={getLeagueNameForTeam(player.currentTeam)}
+              onComplete={handleLeagueSeasonComplete}
+            />
+          )}
+
           {currentFinalType && (
             <InteractiveMatchModal 
               player={player} 
