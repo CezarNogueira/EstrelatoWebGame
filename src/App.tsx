@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Attributes, FinalResult, Player, PlayerPlayStyle, PlayStyle, Position, RomanceEvent, SeasonStat, Team } from "./types";
+import { Attributes, FinalResult, LeagueSeasonState, Player, PlayerPlayStyle, PlayStyle, Position, RomanceEvent, SeasonStat, Team } from "./types";
 import { StartScreen } from "./components/StartScreen";
 import { ChooseNationality } from "./components/ChooseNationality";
 import { ChooseAppearance } from "./components/ChooseAppearance";
@@ -22,10 +22,10 @@ import { RomanceEventModal } from "./components/RomanceEventModal";
 import { generateRomanceEvent } from "./data/romanceEvents";
 import { MentalHealthModal } from "./components/MentalHealthModal";
 import { HeartCrack, Heart } from "lucide-react";
-import { generateRelationships, generateFriend, PLAY_STYLES, PLAY_STYLE_MILESTONES, PLAY_STYLE_LEVEL_LABEL, getNextPlayStyleLevel } from "./data";
-import { PlayStyleModal } from "./components/Playstylesmodal";
-import { simulateSeason, applyGrowth, autoDistributePoints, generatePressMessage, calculateMarketValue, calculateOverall, formatCurrency, getReachedFinals, getContractEndOffers, addMessageToChat, updateIdolStatus, getLeagueNameForTeam } from "./utils";
-import { LeagueSeasonModal } from "./components/Leagueseasonmodal";
+import { generateRelationships, generateFriend, PLAY_STYLES, PLAY_STYLE_MILESTONES, PLAY_STYLE_LEVEL_LABEL, getNextPlayStyleLevel, TEAMS } from "./data";
+import { PlayStyleModal } from "./components/PlayStylesModal";
+import { simulateSeason, applyGrowth, autoDistributePoints, generatePressMessage, calculateMarketValue, calculateOverall, formatCurrency, getReachedFinals, getContractEndOffers, addMessageToChat, updateIdolStatus, getLeagueNameForTeam, createLeagueSeasonState, simulateLeagueRound } from "./utils";
+import { LeagueSeasonModal } from "./components/LeagueSeasonModal";
 import { IdolModal } from "./components/IdolModal";
 import { NewFriendModal } from "./components/NewFriendModal";
 import { Friend } from "./types";
@@ -153,6 +153,7 @@ export default function App() {
   // assume a tela e roda as 38 rodadas (turno e returno) antes de seguirmos
   // para o restante do fluxo de fim de temporada (finais de copas, etc).
   const [showLeagueSeason, setShowLeagueSeason] = useState(false);
+  const [leagueSeasonState, setLeagueSeasonState] = useState<LeagueSeasonState | null>(null);
   const [pendingLeagueResult, setPendingLeagueResult] = useState<
     { matches: number; goals: number; assists: number; leaguePosition: number } | null
   >(null);
@@ -176,10 +177,16 @@ export default function App() {
     if (!player) return;
     setPendingTrainingBuff(trainingBuff);
 
-    // Times profissionais no Modo História jogam a liga rodada a rodada
-    // primeiro. Times de base ou o Modo Rápido seguem direto pro fluxo
-    // estatístico de sempre.
-    if (player.isPro && player.currentTeam.id !== "none" && player.mode === "STORY") {
+    // Times profissionais no Modo História (qualquer coisa que não seja
+    // explicitamente Modo Rápido) jogam a liga rodada a rodada primeiro.
+    // Times de base ou o Modo Rápido seguem direto pro fluxo estatístico.
+    if (player.isPro && player.currentTeam.id !== "none" && player.mode !== "QUICK") {
+      const leagueName = getLeagueNameForTeam(player.currentTeam);
+      const initialState = simulateLeagueRound(
+        createLeagueSeasonState(leagueName, player.currentTeam, TEAMS),
+        1
+      );
+      setLeagueSeasonState(initialState);
       setShowLeagueSeason(true);
       return;
     }
@@ -1047,10 +1054,11 @@ export default function App() {
 
 
           
-          {showLeagueSeason && player && (
+          {showLeagueSeason && player && leagueSeasonState && (
             <LeagueSeasonModal
               player={player}
-              leagueName={getLeagueNameForTeam(player.currentTeam)}
+              state={leagueSeasonState}
+              onStateChange={setLeagueSeasonState}
               onComplete={handleLeagueSeasonComplete}
             />
           )}
@@ -1301,7 +1309,7 @@ export default function App() {
               </div>
             </div>
           )}
-          <Dashboard player={player} onSimulate={handleSimulate} onUpdatePlayer={(p) => { setPlayer(p); if (p.retired) setScreen("CAREER_SUMMARY"); }} onTriggerRomanceEvent={setPendingRomanceEvent} />
+          <Dashboard player={player} leagueSeasonState={leagueSeasonState} onSimulate={handleSimulate} onUpdatePlayer={(p) => { setPlayer(p); if (p.retired) setScreen("CAREER_SUMMARY"); }} onTriggerRomanceEvent={setPendingRomanceEvent} />
 
       {pendingBallonDor && (
         <BallonDorModal

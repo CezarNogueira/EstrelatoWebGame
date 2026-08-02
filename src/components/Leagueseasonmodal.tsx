@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { Player, Team, LeagueSeasonState, LeagueMatch } from "../types";
-import { TEAMS } from "../data";
 import {
   calculateOverall,
-  createLeagueSeasonState,
   simulateLeagueRound,
   simulateLeagueMatchResult,
   resolvePlayerLeagueMatch,
@@ -11,7 +9,7 @@ import {
   generateSeasonMatchStats,
 } from "../utils";
 import { InteractiveMatchModal } from "./InteractiveMatchModal";
-import { LeagueTable } from "./Leaguetable";
+import { LeagueTable } from "./LeagueTable";
 import { Play, FastForward, ChevronRight, Trophy } from "lucide-react";
 
 type Phase = "PROMPT" | "PLAYING" | "ROUND_SUMMARY";
@@ -19,24 +17,25 @@ type Phase = "PROMPT" | "PLAYING" | "ROUND_SUMMARY";
 type SeasonResult = { matches: number; goals: number; assists: number; leaguePosition: number };
 
 // Pré-requisito: só deve ser renderizado quando player.isPro && player.currentTeam.id !== "none".
+// Componente CONTROLADO: quem chama (App.tsx) é dono do LeagueSeasonState,
+// assim a tabela também pode ser exibida em outros lugares (ex: Dashboard)
+// enquanto a temporada está em andamento.
+//
 // Fluxo rodada a rodada da liga do jogador (turno e returno - 38 jogos para
 // uma liga de 20 times). A cada rodada, os outros jogos são simulados
 // automaticamente e o jogo do próprio jogador fica pendente até o usuário
 // escolher "Jogar" (abre a InteractiveMatchModal) ou "Simular".
 export function LeagueSeasonModal({
   player,
-  leagueName,
+  state,
+  onStateChange,
   onComplete,
 }: {
   player: Player;
-  leagueName: string;
+  state: LeagueSeasonState;
+  onStateChange: (state: LeagueSeasonState) => void;
   onComplete: (result: SeasonResult) => void;
 }) {
-  const [state, setState] = useState<LeagueSeasonState>(() => {
-    const initial = createLeagueSeasonState(leagueName, player.currentTeam, TEAMS);
-    // Já deixa os jogos dos outros times da 1ª rodada resolvidos.
-    return simulateLeagueRound(initial, 1);
-  });
   const [phase, setPhase] = useState<Phase>("PROMPT");
   const [seasonGoals, setSeasonGoals] = useState(0);
   const [seasonAssists, setSeasonAssists] = useState(0);
@@ -55,7 +54,7 @@ export function LeagueSeasonModal({
     setSeasonGoals(newGoals);
     setSeasonAssists(newAssists);
     setLastRoundMatches(updatedState.fixtures.filter((m) => m.round === round));
-    setState(updatedState);
+    onStateChange(updatedState);
 
     if (round >= updatedState.totalRounds) {
       const leaguePosition = getPlayerLeaguePosition(updatedState, player.currentTeam.id);
@@ -102,7 +101,7 @@ export function LeagueSeasonModal({
     }
     const nextRound = round + 1;
     const withBotsSimulated = simulateLeagueRound(state, nextRound);
-    setState({ ...withBotsSimulated, currentRound: nextRound });
+    onStateChange({ ...withBotsSimulated, currentRound: nextRound });
     setPhase("PROMPT");
   };
 
@@ -110,8 +109,8 @@ export function LeagueSeasonModal({
     return (
       <InteractiveMatchModal
         player={player}
-        finalType={leagueName}
-        headerLabel={`Rodada ${round}/${state.totalRounds} - ${leagueName}`}
+        finalType={state.leagueName}
+        headerLabel={`Rodada ${round}/${state.totalRounds} - ${state.leagueName}`}
         explicitOpponent={opponentTeam}
         allowDraw
         onComplete={handleMatchComplete}
@@ -123,7 +122,7 @@ export function LeagueSeasonModal({
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-slate-950/95 p-4">
       <div className="bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl max-w-4xl w-full max-h-[92vh] overflow-hidden flex flex-col">
         <div className="p-6 border-b border-slate-800 shrink-0 text-center">
-          <h2 className="text-2xl font-black text-white">{leagueName}</h2>
+          <h2 className="text-2xl font-black text-white">{state.leagueName}</h2>
           <p className="text-slate-400 text-sm font-bold mt-1">
             Rodada {round} de {state.totalRounds}
           </p>
