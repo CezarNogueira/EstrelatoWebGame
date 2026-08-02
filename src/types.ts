@@ -177,6 +177,11 @@ export type LeagueMatch = {
   homeGoals?: number;
   awayGoals?: number;
   isPlayerMatch: boolean; // o time do jogador está envolvido nesta partida
+  // Preenchidos apenas quando isPlayerMatch é true e a partida já foi
+  // resolvida (jogada ou simulada) - usados no "Caixa da Temporada" da Dashboard.
+  playerGoals?: number;
+  playerAssists?: number;
+  playerRating?: number;
 };
 
 export type LeagueSeasonState = {

@@ -1,7 +1,7 @@
 import { RomanceEvent } from "../types";
-import { FamilyEvent, Player, LeagueSeasonState } from "../types";
+import { FamilyEvent, Player, SeasonStat, LeagueSeasonState } from "../types";
 import { calculateOverall, getPlayerTitle, formatCurrency, getLeagueName, getLeagueTheme } from "../utils";
-import { Calendar, Goal, User, Zap, FileSignature, Shield, MapPin, Smartphone, Crosshair, Target, MoveRight, Activity, Rocket, Trophy } from "lucide-react";
+import { ArrowRight, Calendar, Goal, User, Users, Zap, FileSignature, ShoppingBag, Shield, ShieldCheck, MapPin, Smartphone, Crosshair, Target, MoveRight, Activity, Rocket, Trophy } from "lucide-react";
 import { PLAY_STYLES, PLAY_STYLE_LEVEL_LABEL } from "../data";
 import { PlayStyle, PlayStyleLevel } from "../types";
 import { motion, AnimatePresence } from "motion/react";
@@ -9,6 +9,7 @@ import { useState } from "react";
 import { StoreModal, STORE_ITEMS } from "./StoreModal";
 import { RelationshipsModal } from "./RelationshipsModal";
 import { LeagueTable } from "./LeagueTable";
+import { LeagueSeasonPanel } from "./LeagueSeasonPanel.tsx";
 import { FamilyEventModal } from "./FamilyEventModal";
 import { NewFriendModal } from "./NewFriendModal";
 import { FAMILY_EVENTS } from "../data/familyEvents";
@@ -54,12 +55,16 @@ function AttributeBar({ label, value }: { label: string; value: number }) {
 export function Dashboard({ 
   player, 
   leagueSeasonState,
+  onLeagueStateChange,
+  onLeagueSeasonComplete,
   onSimulate,
   onUpdatePlayer,
   onTriggerRomanceEvent
 }: { 
   player: Player; 
   leagueSeasonState?: LeagueSeasonState | null;
+  onLeagueStateChange?: (state: LeagueSeasonState) => void;
+  onLeagueSeasonComplete?: (result: { matches: number; goals: number; assists: number; leaguePosition: number }) => void;
   onSimulate: () => void;
   onUpdatePlayer: (p: Player) => void;
   onTriggerRomanceEvent?: (event: RomanceEvent) => void;
@@ -147,6 +152,7 @@ export function Dashboard({
   };
   const requiredOvr = minOvrForStarter[player.currentTeam.level] || 64;
   const isBenched = player.isPro && ovr < requiredOvr;
+  const isLeagueSeasonActive = !!leagueSeasonState && leagueSeasonState.currentRound <= leagueSeasonState.totalRounds;
 
   const hasUnreadMessages = player.chats ? Object.values(player.chats).some(c => c.hasUnread) : false;
 
@@ -384,7 +390,7 @@ export function Dashboard({
       {showContractInfo && (
 
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 p-4">
-          <div className="bg-slate-900 border border-slate-800 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center space-y-6">
+          <div className="bg-slate-900 border border-slate-800 p-8 rounded-xl shadow-2xl max-w-sm w-full text-center space-y-6">
             <FileSignature className="w-12 h-12 text-blue-400 mx-auto" />
             <h3 className="text-2xl font-black text-slate-100">Seu Contrato</h3>
             
@@ -492,11 +498,11 @@ export function Dashboard({
         />
       )}
 
-      <div className="max-w-8xl mx-auto space-y-4 select-none">
+      <div className="max-w-8xl mx-auto space-y-8 select-none">
         
         {/* Header Profile */}
         <div
-          className="border p-6 rounded-3xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl transition-colors duration-700"
+          className="border p-6 rounded-xl flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl transition-colors duration-700"
           style={{ backgroundImage: theme.cardGradient, borderColor: theme.border }}
         >
           <div className="flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-6 w-full md:w-auto">
@@ -547,7 +553,7 @@ export function Dashboard({
               </div>
               {/* Personal Attributes */}
               {player.personal && (
-                <div className="flex justify-center sm:justify-start gap-4 mt-2">
+                <div className="flex justify-center sm:justify-start gap-4 mt-4">
                   <div className="flex flex-col items-center">
                     <span className="text-[10px] text-slate-500 font-bold uppercase">Humor</span>
                     <span className="text-sm font-bold text-blue-400">{Math.round(player.personal.mood)}%</span>
@@ -581,12 +587,12 @@ export function Dashboard({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           
           {/* Attributes Column */}
-          <div className="md:col-span-1 space-y-2 max-w-sm">
+          <div className="md:col-span-1 space-y-6">
             <div
-              className="border p-6 rounded-3xl shadow-lg transition-colors duration-700"
+              className="border p-6 rounded-xl shadow-lg transition-colors duration-700"
               style={{ backgroundImage: theme.cardGradient, borderColor: theme.border }}
             >
               <div className="flex items-center justify-between mb-6">
@@ -598,7 +604,7 @@ export function Dashboard({
                   {player.position}
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-4">
                 <AttributeBar label="Ritmo" value={player.attributes.pace} />
                 <AttributeBar label="Chute" value={player.attributes.shooting} />
                 <AttributeBar label="Passe" value={player.attributes.passing} />
@@ -631,13 +637,22 @@ export function Dashboard({
             </div>
 
             <div className="space-y-3">
-              <button
-                onClick={handleSimulate}
-                disabled={player.retired}
-                className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-800 disabled:text-slate-600 text-slate-950 font-bold text-lg rounded-2xl transition-all active:scale-95 shadow-[0_0_30px_-10px_rgba(16,185,129,0.4)] disabled:shadow-none"
-              >
-                {player.retired ? "Carreira Encerrada" : "Simular Temporada"}
-              </button>
+              {isLeagueSeasonActive && leagueSeasonState ? (
+                <LeagueSeasonPanel
+                  player={player}
+                  state={leagueSeasonState}
+                  onStateChange={(s) => onLeagueStateChange?.(s)}
+                  onComplete={(result) => onLeagueSeasonComplete?.(result)}
+                />
+              ) : (
+                <button
+                  onClick={handleSimulate}
+                  disabled={player.retired}
+                  className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-800 disabled:text-slate-600 text-slate-950 font-bold text-lg rounded-xl transition-all active:scale-95 shadow-[0_0_30px_-10px_rgba(16,185,129,0.4)] disabled:shadow-none"
+                >
+                  {player.retired ? "Carreira Encerrada" : "Simular Temporada"}
+                </button>
+              )}
 
               <button
                     onClick={() => setShowPhone(true)}
@@ -696,9 +711,9 @@ export function Dashboard({
           </div>
 
           {/* Career Logs Column */}
-          <div className="md:col-span-3 w-full">
+          <div className="md:col-span-3">
             <div
-              className="border p-6 rounded-3xl shadow-lg h-[600px] w-full flex flex-col transition-colors duration-700"
+              className="border p-6 rounded-xl shadow-lg h-[600px] flex flex-col transition-colors duration-700"
               style={{ backgroundImage: theme.cardGradient, borderColor: theme.border }}
             >
               <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
@@ -718,7 +733,7 @@ export function Dashboard({
                         key={player.age - idx}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        className="bg-slate-950 border border-slate-800 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center gap-4"
+                        className="bg-slate-950 border border-slate-800 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center gap-4"
                       >
                         <div className="flex items-center sm:flex-col sm:justify-center w-full sm:w-16 h-auto sm:h-16 bg-slate-900 rounded-xl shrink-0 border border-slate-800 p-2 sm:p-0 gap-2 sm:gap-0">
                           <span className="text-xs text-slate-500 font-bold uppercase">Idade</span>
@@ -811,9 +826,10 @@ export function Dashboard({
           {/* League Table Column */}
           <div className="md:col-span-1">
             <div
-              className="rounded-3xl shadow-lg flex flex-col transition-colors duration-700"
+              className="border rounded-xl p-2 shadow-lg h-auto flex flex-col transition-colors duration-700"
               style={{ backgroundImage: theme.cardGradient, borderColor: theme.border }}
             >
+
               <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
                 {leagueSeasonState ? (
                   <>

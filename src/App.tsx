@@ -25,7 +25,6 @@ import { HeartCrack, Heart } from "lucide-react";
 import { generateRelationships, generateFriend, PLAY_STYLES, PLAY_STYLE_MILESTONES, PLAY_STYLE_LEVEL_LABEL, getNextPlayStyleLevel, TEAMS } from "./data";
 import { PlayStyleModal } from "./components/PlayStylesModal";
 import { simulateSeason, applyGrowth, autoDistributePoints, generatePressMessage, calculateMarketValue, calculateOverall, formatCurrency, getReachedFinals, getContractEndOffers, addMessageToChat, updateIdolStatus, getLeagueNameForTeam, createLeagueSeasonState, simulateLeagueRound } from "./utils";
-import { LeagueSeasonModal } from "./components/LeagueSeasonModal";
 import { IdolModal } from "./components/IdolModal";
 import { NewFriendModal } from "./components/NewFriendModal";
 import { Friend } from "./types";
@@ -149,10 +148,10 @@ export default function App() {
 
   const [pendingMentalHealthEvent, setPendingMentalHealthEvent] = useState<{ type: "depressed" | "isolated" } | null>(null);
 
-  // Fase 2 - Liga ponto a ponto: enquanto isso for true, a LeagueSeasonModal
-  // assume a tela e roda as 38 rodadas (turno e returno) antes de seguirmos
-  // para o restante do fluxo de fim de temporada (finais de copas, etc).
-  const [showLeagueSeason, setShowLeagueSeason] = useState(false);
+  // Fase 3 - Liga ponto a ponto embutida na própria Dashboard (sem modal de
+  // tela cheia): a Dashboard mostra o painel de rodadas sempre que houver
+  // uma temporada da liga em andamento (leagueSeasonState não nulo e ainda
+  // não concluída).
   const [leagueSeasonState, setLeagueSeasonState] = useState<LeagueSeasonState | null>(null);
   const [pendingLeagueResult, setPendingLeagueResult] = useState<
     { matches: number; goals: number; assists: number; leaguePosition: number } | null
@@ -178,8 +177,8 @@ export default function App() {
     setPendingTrainingBuff(trainingBuff);
 
     // Times profissionais no Modo História (qualquer coisa que não seja
-    // explicitamente Modo Rápido) jogam a liga rodada a rodada primeiro.
-    // Times de base ou o Modo Rápido seguem direto pro fluxo estatístico.
+    // explicitamente Modo Rápido) jogam a liga rodada a rodada, direto na
+    // Dashboard. Times de base ou o Modo Rápido seguem o fluxo estatístico.
     if (player.isPro && player.currentTeam.id !== "none" && player.mode !== "QUICK") {
       const leagueName = getLeagueNameForTeam(player.currentTeam);
       const initialState = simulateLeagueRound(
@@ -187,7 +186,6 @@ export default function App() {
         1
       );
       setLeagueSeasonState(initialState);
-      setShowLeagueSeason(true);
       return;
     }
 
@@ -214,7 +212,6 @@ export default function App() {
   };
 
   const handleLeagueSeasonComplete = (result: { matches: number; goals: number; assists: number; leaguePosition: number }) => {
-    setShowLeagueSeason(false);
     proceedAfterLeagueSeason(pendingTrainingBuff, result);
   };
 
@@ -1054,15 +1051,6 @@ export default function App() {
 
 
           
-          {showLeagueSeason && player && leagueSeasonState && (
-            <LeagueSeasonModal
-              player={player}
-              state={leagueSeasonState}
-              onStateChange={setLeagueSeasonState}
-              onComplete={handleLeagueSeasonComplete}
-            />
-          )}
-
           {currentFinalType && (
             <InteractiveMatchModal 
               player={player} 
@@ -1309,7 +1297,7 @@ export default function App() {
               </div>
             </div>
           )}
-          <Dashboard player={player} leagueSeasonState={leagueSeasonState} onSimulate={handleSimulate} onUpdatePlayer={(p) => { setPlayer(p); if (p.retired) setScreen("CAREER_SUMMARY"); }} onTriggerRomanceEvent={setPendingRomanceEvent} />
+          <Dashboard player={player} leagueSeasonState={leagueSeasonState} onLeagueStateChange={setLeagueSeasonState} onLeagueSeasonComplete={handleLeagueSeasonComplete} onSimulate={handleSimulate} onUpdatePlayer={(p) => { setPlayer(p); if (p.retired) setScreen("CAREER_SUMMARY"); }} onTriggerRomanceEvent={setPendingRomanceEvent} />
 
       {pendingBallonDor && (
         <BallonDorModal

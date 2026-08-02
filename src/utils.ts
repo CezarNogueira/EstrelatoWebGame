@@ -1663,16 +1663,40 @@ export function simulateLeagueRound(state: LeagueSeasonState, round: number): Le
 // Resolve a partida do jogador na rodada atual com um placar já definido
 // (vindo da InteractiveMatchModal, quando ele decide jogar, ou de um sorteio
 // rápido, quando decide simular) e atualiza a tabela.
+// Nota (0-10) para exibição no "Caixa da Temporada" da Dashboard: parte de
+// uma base 6.0, soma bônus por gol/assistência e um pequeno ajuste pelo
+// saldo de gols do próprio time naquela partida.
+export function computeLeagueMatchRating(playerGoals: number, playerAssists: number, ownGoalDiff: number): number {
+  const diffBonus = Math.max(-1, Math.min(1, ownGoalDiff)) * 0.3;
+  const rating = 6.0 + playerGoals * 0.8 + playerAssists * 0.5 + diffBonus;
+  return Math.round(Math.max(4, Math.min(10, rating)) * 10) / 10;
+}
+
 export function resolvePlayerLeagueMatch(
   state: LeagueSeasonState,
   round: number,
   homeGoals: number,
-  awayGoals: number
+  awayGoals: number,
+  playerTeamId?: string,
+  playerGoals: number = 0,
+  playerAssists: number = 0
 ): LeagueSeasonState {
   let standings = state.standings;
   const fixtures = state.fixtures.map((m) => {
     if (m.round !== round || !m.isPlayerMatch) return m;
-    const updated: LeagueMatch = { ...m, played: true, homeGoals, awayGoals };
+    const isHome = playerTeamId ? m.home.id === playerTeamId : true;
+    const ownGoals = isHome ? homeGoals : awayGoals;
+    const opponentGoals = isHome ? awayGoals : homeGoals;
+    const rating = computeLeagueMatchRating(playerGoals, playerAssists, ownGoals - opponentGoals);
+    const updated: LeagueMatch = {
+      ...m,
+      played: true,
+      homeGoals,
+      awayGoals,
+      playerGoals,
+      playerAssists,
+      playerRating: rating,
+    };
     standings = applyLeagueResultToStandings(standings, updated);
     return updated;
   });
