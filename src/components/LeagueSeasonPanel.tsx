@@ -240,8 +240,8 @@ export function LeagueSeasonPanel({
       )}
 
       <div className="bg-slate-950 border border-slate-800 rounded-xl p-3">
-        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Caixa da Temporada</p>
-        <div className="space-y-1 max-h-56 overflow-y-auto custom-scrollbar pr-1">
+        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Temporada</p>
+        <div className="space-y-1 max-h-16 overflow-y-auto custom-scrollbar pr-1">
           {playedPlayerMatches.length === 0 ? (
             <p className="text-xs text-slate-600 text-center py-4">Nenhuma partida disputada ainda.</p>
           ) : (

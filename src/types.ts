@@ -195,6 +195,40 @@ export type LeagueSeasonState = {
   totalRounds: number;
 };
 
+// -----------------------------------------------------------------------------
+// Copas (mata-mata) ponto a ponto - Nacional e Continental
+// -----------------------------------------------------------------------------
+// Assim como a liga, quando o time do jogador se classifica para uma copa
+// (nacional ou continental), o torneio é jogado rodada a rodada em formato de
+// chaveamento eliminatório, em vez de decidir "chegou à final" por sorteio.
+export type CupMatch = {
+  id: string;
+  roundIndex: number; // 0-indexed dentro do chaveamento
+  roundName: string; // ex: "Oitavas de Final", "Quartas de Final", "Semifinal", "Final"
+  home: Team;
+  away: Team;
+  played: boolean;
+  homeGoals?: number;
+  awayGoals?: number;
+  isPlayerMatch: boolean;
+  playerGoals?: number;
+  playerAssists?: number;
+  playerRating?: number;
+};
+
+export type CupSeasonState = {
+  cupName: string;
+  isContinental: boolean;
+  roundNames: string[];
+  roundsMatches: CupMatch[][]; // roundsMatches[roundIndex] = confrontos daquela fase
+  currentRoundIndex: number;
+  playerTeamId: string;
+  eliminated: boolean;
+  champion: boolean;
+  playerGoalsTotal: number;
+  playerAssistsTotal: number;
+};
+
 export type Player = {
   name: string;
   mode?: "STORY" | "QUICK";

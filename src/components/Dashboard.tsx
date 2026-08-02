@@ -1,5 +1,5 @@
 import { RomanceEvent } from "../types";
-import { FamilyEvent, Player, SeasonStat, LeagueSeasonState } from "../types";
+import { FamilyEvent, Player, SeasonStat, LeagueSeasonState, CupSeasonState } from "../types";
 import { calculateOverall, getPlayerTitle, formatCurrency, getLeagueName, getLeagueTheme } from "../utils";
 import { ArrowRight, Calendar, Goal, User, Users, Zap, FileSignature, ShoppingBag, Shield, ShieldCheck, MapPin, Smartphone, Crosshair, Target, MoveRight, Activity, Rocket, Trophy } from "lucide-react";
 import { PLAY_STYLES, PLAY_STYLE_LEVEL_LABEL } from "../data";
@@ -9,7 +9,8 @@ import { useState } from "react";
 import { StoreModal, STORE_ITEMS } from "./StoreModal";
 import { RelationshipsModal } from "./RelationshipsModal";
 import { LeagueTable } from "./LeagueTable";
-import { LeagueSeasonPanel } from "./LeagueSeasonPanel.tsx";
+import { LeagueSeasonPanel } from "./LeagueSeasonPanel";
+import { CupSeasonPanel } from "./CupSeasonPanel";
 import { FamilyEventModal } from "./FamilyEventModal";
 import { NewFriendModal } from "./NewFriendModal";
 import { FAMILY_EVENTS } from "../data/familyEvents";
@@ -57,6 +58,9 @@ export function Dashboard({
   leagueSeasonState,
   onLeagueStateChange,
   onLeagueSeasonComplete,
+  cupSeasonStates,
+  onCupStateChange,
+  onCupSeasonComplete,
   onSimulate,
   onUpdatePlayer,
   onTriggerRomanceEvent
@@ -65,6 +69,9 @@ export function Dashboard({
   leagueSeasonState?: LeagueSeasonState | null;
   onLeagueStateChange?: (state: LeagueSeasonState) => void;
   onLeagueSeasonComplete?: (result: { matches: number; goals: number; assists: number; leaguePosition: number }) => void;
+  cupSeasonStates?: CupSeasonState[];
+  onCupStateChange?: (index: number, state: CupSeasonState) => void;
+  onCupSeasonComplete?: (index: number, result: { cupName: string; reachedFinal: boolean; won: boolean; goals: number; assists: number }) => void;
   onSimulate: () => void;
   onUpdatePlayer: (p: Player) => void;
   onTriggerRomanceEvent?: (event: RomanceEvent) => void;
@@ -653,6 +660,16 @@ export function Dashboard({
                   {player.retired ? "Carreira Encerrada" : "Simular Temporada"}
                 </button>
               )}
+
+              {(cupSeasonStates || []).map((cupState, index) => (
+                <CupSeasonPanel
+                  key={`${cupState.cupName}-${index}`}
+                  player={player}
+                  state={cupState}
+                  onStateChange={(s) => onCupStateChange?.(index, s)}
+                  onComplete={(result) => onCupSeasonComplete?.(index, result)}
+                />
+              ))}
 
               <button
                     onClick={() => setShowPhone(true)}

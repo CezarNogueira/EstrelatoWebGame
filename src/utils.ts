@@ -1,4 +1,4 @@
-import { Attributes, LeagueMatch, LeagueSeasonState, LeagueStanding, Player, Position, SeasonStat, Team } from "./types";
+import { Attributes, CupMatch, CupSeasonState, LeagueMatch, LeagueSeasonState, LeagueStanding, Player, Position, SeasonStat, Team } from "./types";
 import { TEAMS, getNationalContinentalCup } from "./data";
 
 export const getLeagueName = (team: Team): string => {
@@ -523,7 +523,7 @@ export const generatePressMessage = (
   return chosenMessage;
 };
 
-export const getReachedFinals = (player: Player, currentOvr: number): string[] => {
+export const getReachedFinals = (player: Player, currentOvr: number, includeClubCups: boolean = true): string[] => {
   const finals: string[] = [];
   const relLevel = player.currentTeam.division === 2 ? 1 : getRelativeLevel(player.currentTeam);
   const teamPower = relLevel * 20 + currentOvr * 0.5;
@@ -586,7 +586,7 @@ export const getReachedFinals = (player: Player, currentOvr: number): string[] =
       continentalName = "Copa Libertadores";
     }
 
-    if (!isDiv2) {
+    if (includeClubCups && !isDiv2) {
       if (relLevel === 5 && Math.random() * 100 < teamPower * 0.15) {
         finals.push(cupName);
       }
@@ -1727,4 +1727,243 @@ export function getLeagueNameForTeam(team: Team): string {
     case "UY": return isDiv2 ? "Segunda División" : "Primera División Uruguaya";
     default: return "Liga Nacional";
   }
+}
+
+// =============================================================================
+// COPAS (NACIONAL E CONTINENTAL) PONTO A PONTO - Fase 4
+// =============================================================================
+// Mesma filosofia da liga: em vez de sortear se o time "chegou à final", o
+// torneio é jogado em chaveamento eliminatório real, rodada a rodada.
+
+export function getCupNamesForTeam(team: Team): { domestic: string; continental: string } {
+  switch (team.country) {
+    case "BR": return { domestic: "Copa do Brasil", continental: "Copa Libertadores" };
+    case "EN": return { domestic: "FA Cup", continental: "Champions League" };
+    case "IT": return { domestic: "Coppa Italia", continental: "Champions League" };
+    case "ES": return { domestic: "Copa del Rey", continental: "Champions League" };
+    case "DE": return { domestic: "DFB-Pokal", continental: "Champions League" };
+    case "FR": return { domestic: "Coupe de France", continental: "Champions League" };
+    case "PT": return { domestic: "Taça de Portugal", continental: "Champions League" };
+    case "NL": return { domestic: "KNVB Cup", continental: "Champions League" };
+    case "US": return { domestic: "US Open Cup", continental: "Copa Libertadores" };
+    case "SA": return { domestic: "King's Cup", continental: "AFC Champions League" };
+    case "AR": return { domestic: "Copa Argentina", continental: "Copa Libertadores" };
+    case "UY": return { domestic: "Copa Uruguay", continental: "Copa Libertadores" };
+    default: return { domestic: "Copa Nacional", continental: "Copa Continental" };
+  }
+}
+
+// Mesmos critérios de classificação que o jogo já usava (times de elite têm
+// chance de entrar nas copas). A diferença agora é que, uma vez classificado,
+// o torneio inteiro é jogado partida a partida em vez de decidir "chegou à
+// final" na sorte.
+export function getCupQualifications(player: Player, currentOvr: number): { domesticCup: boolean; continentalCup: boolean } {
+  if (!player.isPro || player.currentTeam.division === 2) return { domesticCup: false, continentalCup: false };
+  const relLevel = getRelativeLevel(player.currentTeam);
+  if (relLevel !== 5) return { domesticCup: false, continentalCup: false };
+  const teamPower = relLevel * 20 + currentOvr * 0.5;
+  const domesticCup = Math.random() * 100 < teamPower * 0.4;
+  const continentalCup = Math.random() * 100 < (teamPower - 70) * 0.6;
+  return { domesticCup, continentalCup };
+}
+
+const CONTINENTAL_GROUPS: Record<string, string[]> = {
+  BR: ["BR", "AR", "UY"],
+  AR: ["BR", "AR", "UY"],
+  UY: ["BR", "AR", "UY"],
+  EN: ["EN", "IT", "ES", "DE", "FR", "PT", "NL"],
+  IT: ["EN", "IT", "ES", "DE", "FR", "PT", "NL"],
+  ES: ["EN", "IT", "ES", "DE", "FR", "PT", "NL"],
+  DE: ["EN", "IT", "ES", "DE", "FR", "PT", "NL"],
+  FR: ["EN", "IT", "ES", "DE", "FR", "PT", "NL"],
+  PT: ["EN", "IT", "ES", "DE", "FR", "PT", "NL"],
+  NL: ["EN", "IT", "ES", "DE", "FR", "PT", "NL"],
+  US: ["US"],
+  SA: ["SA"],
+};
+
+export function getDomesticCupOpponentPool(playerTeam: Team): Team[] {
+  return TEAMS.filter((t) => t.country === playerTeam.country && t.id !== playerTeam.id);
+}
+
+export function getContinentalCupOpponentPool(playerTeam: Team): Team[] {
+  const group = CONTINENTAL_GROUPS[playerTeam.country] || [playerTeam.country];
+  return TEAMS.filter((t) => group.includes(t.country) && (t.division || 1) === 1 && t.id !== playerTeam.id);
+}
+
+function shuffleTeams<T>(list: T[]): T[] {
+  const arr = [...list];
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function pickBracketSize(available: number, desired: number): number {
+  const capped = Math.min(desired, available);
+  if (capped >= 16) return 16;
+  if (capped >= 8) return 8;
+  if (capped >= 4) return 4;
+  return 2;
+}
+
+function roundNamesForSize(size: number): string[] {
+  if (size === 16) return ["Oitavas de Final", "Quartas de Final", "Semifinal", "Final"];
+  if (size === 8) return ["Quartas de Final", "Semifinal", "Final"];
+  return ["Semifinal", "Final"];
+}
+
+function pairUpCupRound(teams: Team[], roundIndex: number, roundName: string, playerTeamId: string): CupMatch[] {
+  const matches: CupMatch[] = [];
+  for (let i = 0; i < teams.length; i += 2) {
+    const home = teams[i];
+    const away = teams[i + 1];
+    matches.push({
+      id: `cup-r${roundIndex}-${home.id}-${away.id}`,
+      roundIndex,
+      roundName,
+      home,
+      away,
+      played: false,
+      isPlayerMatch: home.id === playerTeamId || away.id === playerTeamId,
+    });
+  }
+  return matches;
+}
+
+// Monta o chaveamento inicial: o time do jogador entra sorteado junto com
+// outros times do pool (mesmo país para copa nacional, região continental
+// para copa continental).
+export function createCupBracket(
+  cupName: string,
+  isContinental: boolean,
+  playerTeam: Team,
+  opponentPool: Team[],
+  desiredSize: 8 | 16
+): CupSeasonState {
+  const size = pickBracketSize(opponentPool.length + 1, desiredSize);
+  const roundNames = roundNamesForSize(size);
+  const others = shuffleTeams(opponentPool).slice(0, size - 1);
+  const participants = shuffleTeams([playerTeam, ...others]);
+  const firstRound = pairUpCupRound(participants, 0, roundNames[0], playerTeam.id);
+
+  return {
+    cupName,
+    isContinental,
+    roundNames,
+    roundsMatches: [firstRound],
+    currentRoundIndex: 0,
+    playerTeamId: playerTeam.id,
+    eliminated: false,
+    champion: false,
+    playerGoalsTotal: 0,
+    playerAssistsTotal: 0,
+  };
+}
+
+// Simula os confrontos da rodada atual que NÃO envolvem o jogador. Mata-mata
+// não empata: se acontecer, resolve com uma "disputa de pênaltis" (sorteio).
+export function simulateCupRoundBots(state: CupSeasonState): CupSeasonState {
+  const roundIdx = state.currentRoundIndex;
+  const matches = state.roundsMatches[roundIdx].map((m) => {
+    if (m.isPlayerMatch || m.played) return m;
+    const result = simulateLeagueMatchResult(m.home, m.away);
+    let { homeGoals, awayGoals } = result;
+    if (homeGoals === awayGoals) {
+      if (Math.random() > 0.5) homeGoals += 1;
+      else awayGoals += 1;
+    }
+    return { ...m, played: true, homeGoals, awayGoals };
+  });
+  const roundsMatches = [...state.roundsMatches];
+  roundsMatches[roundIdx] = matches;
+  return { ...state, roundsMatches };
+}
+
+// Resolve o confronto do jogador na rodada atual com o placar já definido
+// (vindo da InteractiveMatchModal ou de uma simulação rápida). Em caso de
+// empate, decide no sorteio (representando os pênaltis).
+export function resolvePlayerCupMatch(
+  state: CupSeasonState,
+  homeGoals: number,
+  awayGoals: number,
+  playerGoals: number = 0,
+  playerAssists: number = 0
+): CupSeasonState {
+  const roundIdx = state.currentRoundIndex;
+  let finalHome = homeGoals;
+  let finalAway = awayGoals;
+  if (finalHome === finalAway) {
+    if (Math.random() > 0.5) finalHome += 1;
+    else finalAway += 1;
+  }
+
+  const matches = state.roundsMatches[roundIdx].map((m) => {
+    if (!m.isPlayerMatch) return m;
+    const isHome = m.home.id === state.playerTeamId;
+    const ownGoals = isHome ? finalHome : finalAway;
+    const opponentGoals = isHome ? finalAway : finalHome;
+    const rating = computeLeagueMatchRating(playerGoals, playerAssists, ownGoals - opponentGoals);
+    return {
+      ...m,
+      played: true,
+      homeGoals: finalHome,
+      awayGoals: finalAway,
+      playerGoals,
+      playerAssists,
+      playerRating: rating,
+    };
+  });
+
+  const roundsMatches = [...state.roundsMatches];
+  roundsMatches[roundIdx] = matches;
+  return {
+    ...state,
+    roundsMatches,
+    playerGoalsTotal: state.playerGoalsTotal + playerGoals,
+    playerAssistsTotal: state.playerAssistsTotal + playerAssists,
+  };
+}
+
+// Depois que TODOS os confrontos da rodada atual (bots + jogador) foram
+// resolvidos: elimina o jogador, decreta campeão, ou sorteia os confrontos
+// da próxima fase entre os vencedores.
+export function advanceCupToNextRound(state: CupSeasonState): CupSeasonState {
+  const roundIdx = state.currentRoundIndex;
+  const matches = state.roundsMatches[roundIdx];
+
+  const playerMatch = matches.find((m) => m.isPlayerMatch);
+  if (!playerMatch || playerMatch.homeGoals === undefined) return state;
+
+  const playerWon = playerMatch.home.id === state.playerTeamId
+    ? playerMatch.homeGoals! > playerMatch.awayGoals!
+    : playerMatch.awayGoals! > playerMatch.homeGoals!;
+
+  if (!playerWon) {
+    return { ...state, eliminated: true };
+  }
+
+  const winners = matches.map((m) => (m.homeGoals! > m.awayGoals! ? m.home : m.away));
+
+  if (winners.length <= 1) {
+    return { ...state, champion: true };
+  }
+
+  const nextRoundIdx = roundIdx + 1;
+  const shuffledWinners = shuffleTeams(winners);
+  const nextRound = pairUpCupRound(shuffledWinners, nextRoundIdx, state.roundNames[nextRoundIdx], state.playerTeamId);
+
+  return {
+    ...state,
+    currentRoundIndex: nextRoundIdx,
+    roundsMatches: [...state.roundsMatches, nextRound],
+  };
+}
+
+// Um torneio de copa só chega a virar um "final" (para efeito de imprensa,
+// prêmios etc, no mesmo formato que já era usado para as finais) quando o
+// jogador de fato chegou até a última fase do chaveamento.
+export function cupReachedFinalRound(state: CupSeasonState): boolean {
+  return state.currentRoundIndex === state.roundNames.length - 1 && (state.champion || state.eliminated);
 }

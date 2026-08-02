@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Attributes, FinalResult, LeagueSeasonState, Player, PlayerPlayStyle, PlayStyle, Position, RomanceEvent, SeasonStat, Team } from "./types";
+import { useState, useEffect, useRef } from "react";
+import { Attributes, CupSeasonState, FinalResult, LeagueSeasonState, Player, PlayerPlayStyle, PlayStyle, Position, RomanceEvent, SeasonStat, Team } from "./types";
 import { StartScreen } from "./components/StartScreen";
 import { ChooseNationality } from "./components/ChooseNationality";
 import { ChooseAppearance } from "./components/ChooseAppearance";
@@ -24,7 +24,7 @@ import { MentalHealthModal } from "./components/MentalHealthModal";
 import { HeartCrack, Heart } from "lucide-react";
 import { generateRelationships, generateFriend, PLAY_STYLES, PLAY_STYLE_MILESTONES, PLAY_STYLE_LEVEL_LABEL, getNextPlayStyleLevel, TEAMS } from "./data";
 import { PlayStyleModal } from "./components/PlayStylesModal";
-import { simulateSeason, applyGrowth, autoDistributePoints, generatePressMessage, calculateMarketValue, calculateOverall, formatCurrency, getReachedFinals, getContractEndOffers, addMessageToChat, updateIdolStatus, getLeagueNameForTeam, createLeagueSeasonState, simulateLeagueRound } from "./utils";
+import { simulateSeason, applyGrowth, autoDistributePoints, generatePressMessage, calculateMarketValue, calculateOverall, formatCurrency, getReachedFinals, getContractEndOffers, addMessageToChat, updateIdolStatus, getLeagueNameForTeam, createLeagueSeasonState, simulateLeagueRound, getCupNamesForTeam, getCupQualifications, getDomesticCupOpponentPool, getContinentalCupOpponentPool, createCupBracket, simulateCupRoundBots } from "./utils";
 import { IdolModal } from "./components/IdolModal";
 import { NewFriendModal } from "./components/NewFriendModal";
 import { Friend } from "./types";
@@ -157,6 +157,16 @@ export default function App() {
     { matches: number; goals: number; assists: number; leaguePosition: number } | null
   >(null);
 
+  // Fase 4 - Copas Nacional e Continental, também jogadas ponto a ponto
+  // (chaveamento eliminatório), embutidas na Dashboard igual à liga. Um
+  // time pode estar em até duas copas na mesma temporada.
+  const [cupSeasonStates, setCupSeasonStates] = useState<CupSeasonState[]>([]);
+  const [leagueResultForSeason, setLeagueResultForSeason] = useState<
+    { matches: number; goals: number; assists: number; leaguePosition: number } | null
+  >(null);
+  const [clubCupFinals, setClubCupFinals] = useState<{ type: string; won: boolean; goals: number; assists: number }[]>([]);
+  const seasonEndProcessedRef = useRef(false);
+
   const handleSimulate = () => {
     if (!player) return;
     
@@ -186,34 +196,78 @@ export default function App() {
         1
       );
       setLeagueSeasonState(initialState);
+
+      // Verifica classificação para Copa Nacional / Continental. Quando
+      // classificado, o torneio inteiro passa a ser jogado partida a
+      // partida, igual à liga, em vez de sortear "chegou à final".
+      const currentOvr = calculateOverall(player.attributes, player.position);
+      const quals = getCupQualifications(player, currentOvr);
+      const cupNames = getCupNamesForTeam(player.currentTeam);
+      const newCups: CupSeasonState[] = [];
+      if (quals.domesticCup) {
+        const pool = getDomesticCupOpponentPool(player.currentTeam);
+        newCups.push(simulateCupRoundBots(createCupBracket(cupNames.domestic, false, player.currentTeam, pool, 16)));
+      }
+      if (quals.continentalCup) {
+        const pool = getContinentalCupOpponentPool(player.currentTeam);
+        newCups.push(simulateCupRoundBots(createCupBracket(cupNames.continental, true, player.currentTeam, pool, 8)));
+      }
+      setCupSeasonStates(newCups);
+      setLeagueResultForSeason(null);
+      setClubCupFinals([]);
+      seasonEndProcessedRef.current = false;
       return;
     }
 
-    proceedAfterLeagueSeason(trainingBuff, null);
+    proceedAfterLeagueSeason(trainingBuff, null, []);
   };
 
   const proceedAfterLeagueSeason = (
     trainingBuff: Partial<Attributes> | undefined,
-    leagueResult: { matches: number; goals: number; assists: number; leaguePosition: number } | null
+    leagueResult: { matches: number; goals: number; assists: number; leaguePosition: number } | null,
+    resolvedClubCupFinals: { type: string; won: boolean; goals: number; assists: number }[]
   ) => {
     if (!player) return;
     const currentOvr = calculateOverall(player.attributes, player.position);
-    const reached = getReachedFinals(player, currentOvr);
+    // Times profissionais já tiveram suas copas de clube resolvidas de
+    // verdade (partida a partida) - aqui só sobra checar seleção nacional.
+    const reached = getReachedFinals(player, currentOvr, !player.isPro);
 
     if (reached.length > 0) {
       setReachedFinalsQueue(reached);
-      setPlayedFinals([]);
-      setFinalsGoalsAssists({ goals: 0, assists: 0 });
+      setPlayedFinals(resolvedClubCupFinals);
+      setFinalsGoalsAssists({
+        goals: resolvedClubCupFinals.reduce((sum, f) => sum + f.goals, 0),
+        assists: resolvedClubCupFinals.reduce((sum, f) => sum + f.assists, 0),
+      });
       setCurrentFinalType(reached[0]);
       setPendingLeagueResult(leagueResult);
     } else {
-      executeSimulation(trainingBuff, [], leagueResult || undefined);
+      executeSimulation(trainingBuff, resolvedClubCupFinals, leagueResult || undefined);
     }
   };
 
   const handleLeagueSeasonComplete = (result: { matches: number; goals: number; assists: number; leaguePosition: number }) => {
-    proceedAfterLeagueSeason(pendingTrainingBuff, result);
+    setLeagueResultForSeason(result);
   };
+
+  const handleCupSeasonComplete = (index: number, result: { cupName: string; reachedFinal: boolean; won: boolean; goals: number; assists: number }) => {
+    setCupSeasonStates((prev) => prev.filter((_, i) => i !== index));
+    if (result.reachedFinal) {
+      setClubCupFinals((prev) => [...prev, { type: result.cupName, won: result.won, goals: result.goals, assists: result.assists }]);
+    }
+  };
+
+  // Só avança para o fim de temporada quando a liga (38 rodadas) E todas as
+  // copas em andamento já tiverem sido concluídas (campeão ou eliminado).
+  useEffect(() => {
+    if (!leagueResultForSeason) return;
+    if (seasonEndProcessedRef.current) return;
+    if (cupSeasonStates.length > 0) return;
+    seasonEndProcessedRef.current = true;
+    proceedAfterLeagueSeason(pendingTrainingBuff, leagueResultForSeason, clubCupFinals);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leagueResultForSeason, cupSeasonStates, clubCupFinals]);
 
   const handleInteractiveFinalComplete = (won: boolean, playerGoals: number, playerAssists: number) => {
     const updatedPlayed = [...playedFinals, { type: currentFinalType!, won, goals: playerGoals, assists: playerAssists }];
@@ -1297,7 +1351,18 @@ export default function App() {
               </div>
             </div>
           )}
-          <Dashboard player={player} leagueSeasonState={leagueSeasonState} onLeagueStateChange={setLeagueSeasonState} onLeagueSeasonComplete={handleLeagueSeasonComplete} onSimulate={handleSimulate} onUpdatePlayer={(p) => { setPlayer(p); if (p.retired) setScreen("CAREER_SUMMARY"); }} onTriggerRomanceEvent={setPendingRomanceEvent} />
+          <Dashboard
+            player={player}
+            leagueSeasonState={leagueSeasonState}
+            onLeagueStateChange={setLeagueSeasonState}
+            onLeagueSeasonComplete={handleLeagueSeasonComplete}
+            cupSeasonStates={cupSeasonStates}
+            onCupStateChange={(index, s) => setCupSeasonStates((prev) => prev.map((c, i) => (i === index ? s : c)))}
+            onCupSeasonComplete={handleCupSeasonComplete}
+            onSimulate={handleSimulate}
+            onUpdatePlayer={(p) => { setPlayer(p); if (p.retired) setScreen("CAREER_SUMMARY"); }}
+            onTriggerRomanceEvent={setPendingRomanceEvent}
+          />
 
       {pendingBallonDor && (
         <BallonDorModal
