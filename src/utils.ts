@@ -1967,3 +1967,13 @@ export function advanceCupToNextRound(state: CupSeasonState): CupSeasonState {
 export function cupReachedFinalRound(state: CupSeasonState): boolean {
   return state.currentRoundIndex === state.roundNames.length - 1 && (state.champion || state.eliminated);
 }
+
+// Total de partidas realmente disputadas pelo jogador em uma copa (todas as
+// fases já resolvidas, vencendo ou perdendo) - usado para somar ao total de
+// jogos da temporada no histórico de carreira.
+export function countCupMatchesPlayed(state: CupSeasonState): number {
+  return state.roundsMatches.reduce(
+    (sum, roundMatches) => sum + roundMatches.filter((m) => m.isPlayerMatch && m.played).length,
+    0
+  );
+}

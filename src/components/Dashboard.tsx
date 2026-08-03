@@ -71,7 +71,7 @@ export function Dashboard({
   onLeagueSeasonComplete?: (result: { matches: number; goals: number; assists: number; leaguePosition: number }) => void;
   cupSeasonStates?: CupSeasonState[];
   onCupStateChange?: (index: number, state: CupSeasonState) => void;
-  onCupSeasonComplete?: (index: number, result: { cupName: string; reachedFinal: boolean; won: boolean; goals: number; assists: number }) => void;
+  onCupSeasonComplete?: (index: number, result: { cupName: string; reachedFinal: boolean; won: boolean; goals: number; assists: number; matches: number }) => void;
   onSimulate: () => void;
   onUpdatePlayer: (p: Player) => void;
   onTriggerRomanceEvent?: (event: RomanceEvent) => void;

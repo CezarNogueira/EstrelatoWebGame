@@ -165,6 +165,7 @@ export default function App() {
     { matches: number; goals: number; assists: number; leaguePosition: number } | null
   >(null);
   const [clubCupFinals, setClubCupFinals] = useState<{ type: string; won: boolean; goals: number; assists: number }[]>([]);
+  const [clubCupMatchesPlayed, setClubCupMatchesPlayed] = useState(0);
   const seasonEndProcessedRef = useRef(false);
 
   const handleSimulate = () => {
@@ -215,6 +216,7 @@ export default function App() {
       setCupSeasonStates(newCups);
       setLeagueResultForSeason(null);
       setClubCupFinals([]);
+      setClubCupMatchesPlayed(0);
       seasonEndProcessedRef.current = false;
       return;
     }
@@ -251,8 +253,9 @@ export default function App() {
     setLeagueResultForSeason(result);
   };
 
-  const handleCupSeasonComplete = (index: number, result: { cupName: string; reachedFinal: boolean; won: boolean; goals: number; assists: number }) => {
+  const handleCupSeasonComplete = (index: number, result: { cupName: string; reachedFinal: boolean; won: boolean; goals: number; assists: number; matches: number }) => {
     setCupSeasonStates((prev) => prev.filter((_, i) => i !== index));
+    setClubCupMatchesPlayed((prev) => prev + result.matches);
     if (result.reachedFinal) {
       setClubCupFinals((prev) => [...prev, { type: result.cupName, won: result.won, goals: result.goals, assists: result.assists }]);
     }
@@ -265,9 +268,12 @@ export default function App() {
     if (seasonEndProcessedRef.current) return;
     if (cupSeasonStates.length > 0) return;
     seasonEndProcessedRef.current = true;
-    proceedAfterLeagueSeason(pendingTrainingBuff, leagueResultForSeason, clubCupFinals);
+    // Soma os jogos de copa (nacional/continental) aos jogos da liga, para
+    // que o histórico de carreira reflita todas as partidas da temporada.
+    const combinedResult = { ...leagueResultForSeason, matches: leagueResultForSeason.matches + clubCupMatchesPlayed };
+    proceedAfterLeagueSeason(pendingTrainingBuff, combinedResult, clubCupFinals);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leagueResultForSeason, cupSeasonStates, clubCupFinals]);
+  }, [leagueResultForSeason, cupSeasonStates, clubCupFinals, clubCupMatchesPlayed]);
 
   const handleInteractiveFinalComplete = (won: boolean, playerGoals: number, playerAssists: number) => {
     const updatedPlayed = [...playedFinals, { type: currentFinalType!, won, goals: playerGoals, assists: playerAssists }];
