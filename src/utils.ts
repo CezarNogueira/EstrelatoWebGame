@@ -1759,6 +1759,14 @@ export function getCupNamesForTeam(team: Team): { domestic: string; continental:
 // final" na sorte.
 export function getCupQualifications(player: Player, currentOvr: number): { domesticCup: boolean; continentalCup: boolean } {
   if (!player.isPro || player.currentTeam.division === 2) return { domesticCup: false, continentalCup: false };
+
+  // Terminou no G4 (top 4) da liga na temporada anterior: classificação
+  // garantida para a Copa Nacional e para a Copa Continental.
+  const lastSeason = player.history[0];
+  if (lastSeason && lastSeason.leaguePosition !== undefined && lastSeason.leaguePosition <= 4) {
+    return { domesticCup: true, continentalCup: true };
+  }
+
   const relLevel = getRelativeLevel(player.currentTeam);
   if (relLevel !== 5) return { domesticCup: false, continentalCup: false };
   const teamPower = relLevel * 20 + currentOvr * 0.5;

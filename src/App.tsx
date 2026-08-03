@@ -166,6 +166,7 @@ export default function App() {
   >(null);
   const [clubCupFinals, setClubCupFinals] = useState<{ type: string; won: boolean; goals: number; assists: number }[]>([]);
   const [clubCupMatchesPlayed, setClubCupMatchesPlayed] = useState(0);
+  const [pendingExtraFinals, setPendingExtraFinals] = useState<string[]>([]);
   const seasonEndProcessedRef = useRef(false);
 
   const handleSimulate = () => {
@@ -217,6 +218,7 @@ export default function App() {
       setLeagueResultForSeason(null);
       setClubCupFinals([]);
       setClubCupMatchesPlayed(0);
+      setPendingExtraFinals([]);
       seasonEndProcessedRef.current = false;
       return;
     }
@@ -227,13 +229,15 @@ export default function App() {
   const proceedAfterLeagueSeason = (
     trainingBuff: Partial<Attributes> | undefined,
     leagueResult: { matches: number; goals: number; assists: number; leaguePosition: number } | null,
-    resolvedClubCupFinals: { type: string; won: boolean; goals: number; assists: number }[]
+    resolvedClubCupFinals: { type: string; won: boolean; goals: number; assists: number }[],
+    extraFinals: string[] = []
   ) => {
     if (!player) return;
     const currentOvr = calculateOverall(player.attributes, player.position);
     // Times profissionais já tiveram suas copas de clube resolvidas de
-    // verdade (partida a partida) - aqui só sobra checar seleção nacional.
-    const reached = getReachedFinals(player, currentOvr, !player.isPro);
+    // verdade (partida a partida) - aqui só sobra checar seleção nacional
+    // e, se for o caso, a final do Mundial de Clubes (ganhou a continental).
+    const reached = [...getReachedFinals(player, currentOvr, !player.isPro), ...extraFinals];
 
     if (reached.length > 0) {
       setReachedFinalsQueue(reached);
@@ -253,11 +257,15 @@ export default function App() {
     setLeagueResultForSeason(result);
   };
 
-  const handleCupSeasonComplete = (index: number, result: { cupName: string; reachedFinal: boolean; won: boolean; goals: number; assists: number; matches: number }) => {
+  const handleCupSeasonComplete = (index: number, result: { cupName: string; isContinental: boolean; reachedFinal: boolean; won: boolean; goals: number; assists: number; matches: number }) => {
     setCupSeasonStates((prev) => prev.filter((_, i) => i !== index));
     setClubCupMatchesPlayed((prev) => prev + result.matches);
     if (result.reachedFinal) {
       setClubCupFinals((prev) => [...prev, { type: result.cupName, won: result.won, goals: result.goals, assists: result.assists }]);
+    }
+    // Campeão continental? Vai direto pra uma final de Mundial de Clubes.
+    if (result.isContinental && result.won) {
+      setPendingExtraFinals((prev) => [...prev, "Mundial de Clubes"]);
     }
   };
 
@@ -271,9 +279,9 @@ export default function App() {
     // Soma os jogos de copa (nacional/continental) aos jogos da liga, para
     // que o histórico de carreira reflita todas as partidas da temporada.
     const combinedResult = { ...leagueResultForSeason, matches: leagueResultForSeason.matches + clubCupMatchesPlayed };
-    proceedAfterLeagueSeason(pendingTrainingBuff, combinedResult, clubCupFinals);
+    proceedAfterLeagueSeason(pendingTrainingBuff, combinedResult, clubCupFinals, pendingExtraFinals);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leagueResultForSeason, cupSeasonStates, clubCupFinals, clubCupMatchesPlayed]);
+  }, [leagueResultForSeason, cupSeasonStates, clubCupFinals, clubCupMatchesPlayed, pendingExtraFinals]);
 
   const handleInteractiveFinalComplete = (won: boolean, playerGoals: number, playerAssists: number) => {
     const updatedPlayed = [...playedFinals, { type: currentFinalType!, won, goals: playerGoals, assists: playerAssists }];

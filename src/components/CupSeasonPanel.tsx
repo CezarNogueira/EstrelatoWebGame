@@ -12,7 +12,7 @@ import {
 import { InteractiveMatchModal } from "./InteractiveMatchModal";
 import { Play, FastForward, Trophy, SkipForward } from "lucide-react";
 
-type CupResult = { cupName: string; reachedFinal: boolean; won: boolean; goals: number; assists: number; matches: number };
+type CupResult = { cupName: string; isContinental: boolean; reachedFinal: boolean; won: boolean; goals: number; assists: number; matches: number };
 
 // Pré-requisito: só deve ser renderizado enquanto !state.eliminated && !state.champion,
 // OU no instante em que acabou de ser eliminado/coroado campeão (pra mostrar o resultado).
@@ -106,6 +106,7 @@ export function CupSeasonPanel({
   const handleFinish = () => {
     onComplete({
       cupName: state.cupName,
+      isContinental: state.isContinental,
       reachedFinal: cupReachedFinalRound(state),
       won: state.champion,
       goals: state.playerGoalsTotal,
