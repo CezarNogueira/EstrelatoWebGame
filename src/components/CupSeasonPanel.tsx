@@ -39,6 +39,7 @@ export function CupSeasonPanel({
     state.cupName.includes("Copa do Mundo") ||
     state.cupName.includes("Eurocopa") ||
     state.cupName.includes("Copa América") ||
+    state.cupName.includes("Copa da Ásia") ||
     state.cupName.includes("Copa Continental (Seleção)");
 
   const isDone = state.eliminated || state.champion;

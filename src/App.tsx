@@ -314,6 +314,7 @@ export default function App() {
       result.cupName.includes("Copa do Mundo") ||
       result.cupName.includes("Eurocopa") ||
       result.cupName.includes("Copa América") ||
+      result.cupName.includes("Copa da Ásia") ||
       result.cupName.includes("Copa Continental (Seleção)");
 
     if (result.isContinental && !isNationalCup && result.won) {

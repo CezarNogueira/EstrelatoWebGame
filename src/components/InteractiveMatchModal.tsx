@@ -602,7 +602,7 @@ export function InteractiveMatchModal({
   const [successfulActions, setSuccessfulActions] = useState(0);
   const [failedActions, setFailedActions] = useState(0);
 
-  const isNational = finalType.includes("Copa do Mundo") || finalType.includes("Eurocopa") || finalType.includes("Copa América") || finalType.includes("Copa Continental (Seleção)");
+  const isNational = finalType.includes("Copa do Mundo") || finalType.includes("Eurocopa") || finalType.includes("Copa América") || finalType.includes("Copa da Ásia") || finalType.includes("Copa Continental (Seleção)");
   const playerTeamName = isNational ? player.nationality : player.currentTeam.name;
 
   const playerTeamLogo = isNational
