@@ -253,6 +253,28 @@ import HolandaLogo from "./assets/countryTeams/paisesbajos.png";
 import PortugalLogo from "./assets/countryTeams/portugal.png";
 import UruguaiLogo from "./assets/countryTeams/uruguay.png";
 import ItaliaLogo from "./assets/countryTeams/italia.png";
+import ArabiaSauditaLogo from "./assets/countryTeams/arabiasaudita.png";
+import AustraliaLogo from "./assets/countryTeams/australia.png";
+import AustriaLogo from "./assets/countryTeams/austria.png";
+import BelgicaLogo from "./assets/countryTeams/belgica.png";
+import BosniaLogo from "./assets/countryTeams/bosnia.png";
+import CatarLogo from "./assets/countryTeams/catar.png";
+import ColombiaLogo from "./assets/countryTeams/colombia.png";
+import CoreiaDoSulLogo from "./assets/countryTeams/coreiadosul.png";
+import CroaciaLogo from "./assets/countryTeams/croacia.png";
+import EquadorLogo from "./assets/countryTeams/equador.png";
+import EscociaLogo from "./assets/countryTeams/escocia.png";
+import IraqueLogo from "./assets/countryTeams/iraque.png";
+import IranLogo from "./assets/countryTeams/iran.png";
+import JapaoLogo from "./assets/countryTeams/japao.png";
+import JordaniaLogo from "./assets/countryTeams/jordania.png";
+import NoruegaLogo from "./assets/countryTeams/noruega.png";
+import ParaguaiLogo from "./assets/countryTeams/paraguai.png";
+import RepublicaTchecaLogo from "./assets/countryTeams/republicatcheca.png";
+import SuicaLogo from "./assets/countryTeams/suica.png";
+import SueciaLogo from "./assets/countryTeams/suecia.png";
+import TurquiaLogo from "./assets/countryTeams/turquia.png";
+import UzbequistaoLogo from "./assets/countryTeams/uzbequistao.png";
 
 // -----------------------------------------------------------------------------
 // PlayStyles
@@ -937,28 +959,28 @@ export const NATIONAL_TEAMS: Team[] = [
   { id: "PT", name: "Portugal", country: "PT", level: 5, logo: PortugalLogo },
   { id: "NL", name: "Holanda", country: "NL", level: 4, logo: HolandaLogo },
   { id: "UY", name: "Uruguai", country: "UY", level: 4, logo: UruguaiLogo },
-  { id: "CO", name: "Colômbia", country: "CO", level: 4 },
-  { id: "EC", name: "Equador", country: "EC", level: 4 },
-  { id: "PY", name: "Paraguai", country: "PY", level: 4 },
-  { id: "AT", name: "Áustria", country: "AT", level: 4 },
-  { id: "BE", name: "Bélgica", country: "BE", level: 4 },
-  { id: "BA", name: "Bósnia", country: "BA", level: 3 },
-  { id: "HR", name: "Croácia", country: "HR", level: 4 },
-  { id: "SCO", name: "Escócia", country: "SCO", level: 3 },
-  { id: "NO", name: "Noruega", country: "NO", level: 3 },
-  { id: "CZ", name: "R. Tcheca", country: "CZ", level: 2 },
-  { id: "SE", name: "Suécia", country: "SE", level: 3 },
-  { id: "CH", name: "Suíça", country: "CH", level: 3 },
-  { id: "TR", name: "Turquia", country: "TR", level: 3 },
-  { id: "JP", name: "Japão", country: "JP", level: 4 },
-  { id: "AU", name: "Austrália", country: "AU", level: 2 },
-  { id: "JO", name: "Jordânia", country: "JO", level: 2 },
-  { id: "QA", name: "Catar", country: "QA", level: 1 },
-  { id: "SA", name: "A. Saudita", country: "SA", level: 4 },
-  { id: "KR", name: "Coreia do Sul", country: "KR", level: 3 },
-  { id: "IR", name: "Irã", country: "IR", level: 2 },
-  { id: "IQ", name: "Iraque", country: "IQ", level: 1 },
-  { id: "UZ", name: "Uzbequistão", country: "UZ", level: 1 },
+  { id: "CO", name: "Colômbia", country: "CO", level: 4, logo: ColombiaLogo },
+  { id: "EC", name: "Equador", country: "EC", level: 4, logo: EquadorLogo },
+  { id: "PY", name: "Paraguai", country: "PY", level: 4, logo: ParaguaiLogo },
+  { id: "AT", name: "Áustria", country: "AT", level: 4, logo: AustriaLogo },
+  { id: "BE", name: "Bélgica", country: "BE", level: 4, logo: BelgicaLogo },
+  { id: "BA", name: "Bósnia", country: "BA", level: 3, logo: BosniaLogo },
+  { id: "HR", name: "Croácia", country: "HR", level: 4, logo: CroaciaLogo },
+  { id: "SCO", name: "Escócia", country: "SCO", level: 3, logo: EscociaLogo },
+  { id: "NO", name: "Noruega", country: "NO", level: 3, logo: NoruegaLogo },
+  { id: "CZ", name: "R. Tcheca", country: "CZ", level: 2, logo: RepublicaTchecaLogo },
+  { id: "SE", name: "Suécia", country: "SE", level: 3, logo: SueciaLogo },
+  { id: "CH", name: "Suíça", country: "CH", level: 3, logo: SuicaLogo },
+  { id: "TR", name: "Turquia", country: "TR", level: 3, logo: TurquiaLogo },
+  { id: "JP", name: "Japão", country: "JP", level: 4, logo: JapaoLogo },
+  { id: "AU", name: "Austrália", country: "AU", level: 2, logo: AustraliaLogo },
+  { id: "JO", name: "Jordânia", country: "JO", level: 2, logo: JordaniaLogo },
+  { id: "QA", name: "Catar", country: "QA", level: 1, logo: CatarLogo },
+  { id: "SA", name: "A. Saudita", country: "SA", level: 4, logo: ArabiaSauditaLogo },
+  { id: "KR", name: "Coreia do Sul", country: "KR", level: 3, logo: CoreiaDoSulLogo },
+  { id: "IR", name: "Irã", country: "IR", level: 2, logo: IranLogo },
+  { id: "IQ", name: "Iraque", country: "IQ", level: 1, logo: IraqueLogo },
+  { id: "UZ", name: "Uzbequistão", country: "UZ", level: 1, logo: UzbequistaoLogo },
 ];
 
 export function getNationalTeam(nationality: string): Team {
