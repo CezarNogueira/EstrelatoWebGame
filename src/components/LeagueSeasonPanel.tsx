@@ -246,41 +246,6 @@ export function LeagueSeasonPanel({
           </button>
         </div>
       )}
-
-      <div className="bg-slate-950 border border-slate-800 rounded-xl p-3">
-        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Temporada</p>
-        <div className="space-y-1 max-h-16 overflow-y-auto custom-scrollbar pr-1">
-          {playedPlayerMatches.length === 0 ? (
-            <p className="text-xs text-slate-600 text-center py-4">Nenhuma partida disputada ainda.</p>
-          ) : (
-            playedPlayerMatches.map((m: LeagueMatch) => {
-              const wasHome = m.home.id === player.currentTeam.id;
-              const opp = wasHome ? m.away : m.home;
-              const ourGoals = wasHome ? m.homeGoals! : m.awayGoals!;
-              const theirGoals = wasHome ? m.awayGoals! : m.homeGoals!;
-              const scoreColor = ourGoals > theirGoals ? "text-emerald-400" : ourGoals < theirGoals ? "text-red-400" : "text-slate-300";
-              return (
-                <div key={m.id} className="flex items-center gap-2 text-xs py-1.5 px-1">
-                  <span className="text-slate-600 font-bold w-6 shrink-0">LIG</span>
-                  {opp.logo ? (
-                    <img src={opp.logo} className="w-4 h-4 object-contain shrink-0" alt={opp.name} />
-                  ) : (
-                    <span className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: opp.color || "#64748b" }} />
-                  )}
-                  <span className="text-slate-300 font-medium truncate flex-1">
-                    {!wasHome && "@ "}
-                    {opp.name}
-                  </span>
-                  {m.playerRating !== undefined && (
-                    <span className={`font-bold shrink-0 ${ratingColor(m.playerRating)}`}>{m.playerRating.toFixed(1)}</span>
-                  )}
-                  <span className={`font-black shrink-0 ${scoreColor}`}>{ourGoals}-{theirGoals}</span>
-                </div>
-              );
-            })
-          )}
-        </div>
-      </div>
     </div>
   );
 }
