@@ -17,14 +17,16 @@ import { ContractOffersModal } from "./components/ContractOffersModal";
 import { InteractiveMatchModal, resetOpponentMemory } from "./components/InteractiveMatchModal";
 import { BallonDorModal } from "./components/BallonDorModal";
 import { ChuteiraModal } from "./components/ChuteiraModal";
+import { ReiDasAmericasModal } from "./components/ReiDasAmericasModal";
+import { MelhorDaEuropaModal } from "./components/MelhorDaEuropaModal";
 import { MuralhaModal } from "./components/MuralhaModal";
 import { RomanceEventModal } from "./components/RomanceEventModal";
 import { generateRomanceEvent } from "./data/romanceEvents";
 import { MentalHealthModal } from "./components/MentalHealthModal";
 import { HeartCrack, Heart } from "lucide-react";
-import { generateRelationships, generateFriend, PLAY_STYLES, PLAY_STYLE_MILESTONES, PLAY_STYLE_LEVEL_LABEL, getNextPlayStyleLevel, TEAMS } from "./data";
+import { generateRelationships, generateFriend, PLAY_STYLES, PLAY_STYLE_MILESTONES, PLAY_STYLE_LEVEL_LABEL, getNextPlayStyleLevel, TEAMS, getNationalTeam, getNationalContinentalCup } from "./data";
 import { PlayStyleModal } from "./components/PlayStylesModal";
-import { simulateSeason, applyGrowth, autoDistributePoints, generatePressMessage, calculateMarketValue, calculateOverall, formatCurrency, getReachedFinals, getContractEndOffers, addMessageToChat, updateIdolStatus, getLeagueNameForTeam, createLeagueSeasonState, simulateLeagueRound, getCupNamesForTeam, getCupQualifications, getDomesticCupOpponentPool, getContinentalCupOpponentPool, createCupBracket, simulateCupRoundBots } from "./utils";
+import { simulateSeason, applyGrowth, autoDistributePoints, generatePressMessage, calculateMarketValue, calculateOverall, formatCurrency, getReachedFinals, getContractEndOffers, addMessageToChat, updateIdolStatus, getLeagueNameForTeam, createLeagueSeasonState, simulateLeagueRound, getCupNamesForTeam, getCupQualifications, getDomesticCupOpponentPool, getContinentalCupOpponentPool, createCupBracket, simulateCupRoundBots, calculateBiometricsModifiers, getNationalCupQualifications, getNationalTeamOpponentPool, getNationalContinentalOpponentPool } from "./utils";
 import { IdolModal } from "./components/IdolModal";
 import { NewFriendModal } from "./components/NewFriendModal";
 import { Friend } from "./types";
@@ -42,6 +44,8 @@ export default function App() {
   const [playerName, setPlayerName] = useState<string>("Você");
   const [playerNationality, setPlayerNationality] = useState<string>("");
   const [playerAvatar, setPlayerAvatar] = useState<string>("");
+  const [playerHeight, setPlayerHeight] = useState<number>(180);
+  const [playerWeight, setPlayerWeight] = useState<number>(75);
   const [pendingIdol, setPendingIdol] = useState<{ club: string, reason: string } | null>(null);
 
   const [gameMode, setGameMode] = useState<"STORY" | "QUICK">("STORY");
@@ -61,8 +65,10 @@ export default function App() {
     setScreen("CHOOSE_APPEARANCE");
   };
 
-  const handleAppearanceSelected = (avatarUrl: string) => {
+  const handleAppearanceSelected = (avatarUrl: string, height: number, weight: number) => {
     setPlayerAvatar(avatarUrl);
+    setPlayerHeight(height);
+    setPlayerWeight(weight);
     setScreen("ROULETTE");
   };
 
@@ -73,13 +79,14 @@ export default function App() {
 
   const handlePositionSelected = (position: Position) => {
     if (!draftTeam) return;
+    const { physicalMod, paceMod } = calculateBiometricsModifiers(playerHeight, playerWeight);
     const attributes = {
-      pace: 50,
+      pace: Math.min(99, Math.max(1, 50 + paceMod)),
       shooting: 50,
       passing: 50,
       dribbling: 50,
       defending: 50,
-      physical: 50,
+      physical: Math.min(99, Math.max(1, 50 + physicalMod)),
     };
     const initialOvr = calculateOverall(attributes, position);
     const initialMarketValue = calculateMarketValue(initialOvr, 14);
@@ -88,6 +95,8 @@ export default function App() {
       name: playerName,
       mode: gameMode,
       avatarUrl: playerAvatar,
+      height: playerHeight,
+      weight: playerWeight,
       age: 14,
       position,
       attributes,
@@ -154,7 +163,7 @@ export default function App() {
   // não concluída).
   const [leagueSeasonState, setLeagueSeasonState] = useState<LeagueSeasonState | null>(null);
   const [pendingLeagueResult, setPendingLeagueResult] = useState<
-    { matches: number; goals: number; assists: number; leaguePosition: number } | null
+    { matches: number; goals: number; assists: number; leaguePosition: number; manOfTheMatch?: number } | null
   >(null);
 
   // Fase 4 - Copas Nacional e Continental, também jogadas ponto a ponto
@@ -162,10 +171,12 @@ export default function App() {
   // time pode estar em até duas copas na mesma temporada.
   const [cupSeasonStates, setCupSeasonStates] = useState<CupSeasonState[]>([]);
   const [leagueResultForSeason, setLeagueResultForSeason] = useState<
-    { matches: number; goals: number; assists: number; leaguePosition: number } | null
+    { matches: number; goals: number; assists: number; leaguePosition: number; manOfTheMatch?: number } | null
   >(null);
   const [clubCupFinals, setClubCupFinals] = useState<{ type: string; won: boolean; goals: number; assists: number }[]>([]);
   const [clubCupMatchesPlayed, setClubCupMatchesPlayed] = useState(0);
+  const [clubCupMotm, setClubCupMotm] = useState(0);
+  const [finalsMotm, setFinalsMotm] = useState(0);
   const [pendingExtraFinals, setPendingExtraFinals] = useState<string[]>([]);
   const seasonEndProcessedRef = useRef(false);
 
@@ -214,10 +225,39 @@ export default function App() {
         const pool = getContinentalCupOpponentPool(player.currentTeam);
         newCups.push(simulateCupRoundBots(createCupBracket(cupNames.continental, true, player.currentTeam, pool, 8)));
       }
+
+      // Copas de Seleção no Modo História: Copa do Mundo e Copa Continental de Seleções (Eurocopa / Copa América)
+      const natQuals = getNationalCupQualifications(player, currentOvr);
+      const natTeam = getNationalTeam(player.nationality);
+      if (natTeam && natQuals.isCalledUp) {
+        if (natQuals.worldCup) {
+          const natPool = getNationalTeamOpponentPool(player.nationality);
+          newCups.push(simulateCupRoundBots(createCupBracket("Copa do Mundo", true, natTeam, natPool, 8, true)));
+        }
+        if (natQuals.continentalCup) {
+          const natContName = getNationalContinentalCup(player.nationality);
+          const natContPool = getNationalContinentalOpponentPool(player.nationality);
+          newCups.push(simulateCupRoundBots(createCupBracket(natContName, true, natTeam, natContPool, 8, true)));
+        }
+
+        const tournamentName = natQuals.worldCup ? "Copa do Mundo" : getNationalContinentalCup(player.nationality);
+        setPlayer((prev) => (prev ? addMessageToChat(prev, "treinador", `📋 Seleção: Convocado para ${player.nationality} para disputar a ${tournamentName}!`) : prev));
+        setNationalTeamMsg(true);
+        setTimeout(() => setNationalTeamMsg(false), 5000);
+      } else {
+        const isTournamentYear = (player.age % 4 === 0) || (player.age % 4 === 2);
+        if (isTournamentYear && player.isPro) {
+          const tournamentName = (player.age % 4 === 0) ? "Copa do Mundo" : getNationalContinentalCup(player.nationality);
+          setPlayer((prev) => (prev ? addMessageToChat(prev, "treinador", `📋 Seleção: Você não foi convocado para a ${tournamentName} esta temporada. Continue evoluindo no clube!`) : prev));
+        }
+      }
+
       setCupSeasonStates(newCups);
       setLeagueResultForSeason(null);
       setClubCupFinals([]);
       setClubCupMatchesPlayed(0);
+      setClubCupMotm(0);
+      setFinalsMotm(0);
       setPendingExtraFinals([]);
       seasonEndProcessedRef.current = false;
       return;
@@ -228,15 +268,14 @@ export default function App() {
 
   const proceedAfterLeagueSeason = (
     trainingBuff: Partial<Attributes> | undefined,
-    leagueResult: { matches: number; goals: number; assists: number; leaguePosition: number } | null,
+    leagueResult: { matches: number; goals: number; assists: number; leaguePosition: number; manOfTheMatch?: number } | null,
     resolvedClubCupFinals: { type: string; won: boolean; goals: number; assists: number }[],
     extraFinals: string[] = []
   ) => {
     if (!player) return;
     const currentOvr = calculateOverall(player.attributes, player.position);
-    // Times profissionais já tiveram suas copas de clube resolvidas de
-    // verdade (partida a partida) - aqui só sobra checar seleção nacional
-    // e, se for o caso, a final do Mundial de Clubes (ganhou a continental).
+    // Times profissionais já tiveram suas copas de clube e de seleção resolvidas de
+    // verdade (partida a partida) - aqui só sobra checar a final do Mundial de Clubes (ganhou a continental de clubes).
     const reached = [...getReachedFinals(player, currentOvr, !player.isPro), ...extraFinals];
 
     if (reached.length > 0) {
@@ -253,18 +292,31 @@ export default function App() {
     }
   };
 
-  const handleLeagueSeasonComplete = (result: { matches: number; goals: number; assists: number; leaguePosition: number }) => {
+  const handleLeagueSeasonComplete = (result: { matches: number; goals: number; assists: number; leaguePosition: number; manOfTheMatch?: number }) => {
     setLeagueResultForSeason(result);
   };
 
-  const handleCupSeasonComplete = (index: number, result: { cupName: string; isContinental: boolean; reachedFinal: boolean; won: boolean; goals: number; assists: number; matches: number }) => {
+  const handleCupSeasonComplete = (
+    index: number,
+    result: { cupName: string; isContinental: boolean; isNational?: boolean; reachedFinal: boolean; won: boolean; goals: number; assists: number; matches: number; manOfTheMatch?: number }
+  ) => {
     setCupSeasonStates((prev) => prev.filter((_, i) => i !== index));
     setClubCupMatchesPlayed((prev) => prev + result.matches);
+    if (result.manOfTheMatch) {
+      setClubCupMotm((prev) => prev + result.manOfTheMatch!);
+    }
     if (result.reachedFinal) {
       setClubCupFinals((prev) => [...prev, { type: result.cupName, won: result.won, goals: result.goals, assists: result.assists }]);
     }
-    // Campeão continental? Vai direto pra uma final de Mundial de Clubes.
-    if (result.isContinental && result.won) {
+    // Apenas campeão continental de CLUBES (ex: Libertadores / Champions League) vai para o Mundial de Clubes
+    const isNationalCup =
+      result.isNational ||
+      result.cupName.includes("Copa do Mundo") ||
+      result.cupName.includes("Eurocopa") ||
+      result.cupName.includes("Copa América") ||
+      result.cupName.includes("Copa Continental (Seleção)");
+
+    if (result.isContinental && !isNationalCup && result.won) {
       setPendingExtraFinals((prev) => [...prev, "Mundial de Clubes"]);
     }
   };
@@ -276,14 +328,29 @@ export default function App() {
     if (seasonEndProcessedRef.current) return;
     if (cupSeasonStates.length > 0) return;
     seasonEndProcessedRef.current = true;
-    // Soma os jogos de copa (nacional/continental) aos jogos da liga, para
-    // que o histórico de carreira reflita todas as partidas da temporada.
-    const combinedResult = { ...leagueResultForSeason, matches: leagueResultForSeason.matches + clubCupMatchesPlayed };
+    // Soma os jogos e prêmios de MOTM de copa aos da liga.
+    const combinedResult = {
+      ...leagueResultForSeason,
+      matches: leagueResultForSeason.matches + clubCupMatchesPlayed,
+      manOfTheMatch: (leagueResultForSeason.manOfTheMatch || 0) + clubCupMotm,
+    };
     proceedAfterLeagueSeason(pendingTrainingBuff, combinedResult, clubCupFinals, pendingExtraFinals);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leagueResultForSeason, cupSeasonStates, clubCupFinals, clubCupMatchesPlayed, pendingExtraFinals]);
+  }, [leagueResultForSeason, cupSeasonStates, clubCupFinals, clubCupMatchesPlayed, clubCupMotm, pendingExtraFinals]);
 
-  const handleInteractiveFinalComplete = (won: boolean, playerGoals: number, playerAssists: number) => {
+  const handleInteractiveFinalComplete = (
+    won: boolean,
+    playerGoals: number,
+    playerAssists: number,
+    _scoreUs?: number,
+    _scoreThem?: number,
+    _isDraw?: boolean,
+    _rating?: number,
+    isMOTM?: boolean
+  ) => {
+    if (isMOTM) {
+      setFinalsMotm((prev) => prev + 1);
+    }
     const updatedPlayed = [...playedFinals, { type: currentFinalType!, won, goals: playerGoals, assists: playerAssists }];
     setPlayedFinals(updatedPlayed);
 
@@ -293,6 +360,13 @@ export default function App() {
     };
     setFinalsGoalsAssists(updatedGoalsAssists);
 
+    const finalLeagueRes = pendingLeagueResult
+      ? {
+          ...pendingLeagueResult,
+          manOfTheMatch: (pendingLeagueResult.manOfTheMatch || 0) + (isMOTM ? 1 : 0),
+        }
+      : undefined;
+
     if (reachedFinalsQueue.length > 1) {
       const newQueue = reachedFinalsQueue.slice(1);
       setReachedFinalsQueue(newQueue);
@@ -300,14 +374,14 @@ export default function App() {
     } else {
       setReachedFinalsQueue([]);
       setCurrentFinalType(null);
-      executeSimulation(pendingTrainingBuff, updatedPlayed, pendingLeagueResult || undefined);
+      executeSimulation(pendingTrainingBuff, updatedPlayed, finalLeagueRes);
     }
   };
 
   const executeSimulation = (
     trainingBuff?: Partial<Attributes>,
     prePlayedFinals?: {type: string; won: boolean; goals: number; assists: number}[],
-    leagueResult?: { matches: number; goals: number; assists: number; leaguePosition: number }
+    leagueResult?: { matches: number; goals: number; assists: number; leaguePosition: number; manOfTheMatch?: number }
   ) => {
     if (!player) return;
     const { baseUpdatedPlayer, seasonStat, transfer, earnedPoints, proContractOffer } = simulateSeason(player, prePlayedFinals, leagueResult);
@@ -740,6 +814,8 @@ export default function App() {
   const [pendingSocialEvent, setPendingSocialEvent] = useState<any>(null);
   const [pendingBallonDor, setPendingBallonDor] = useState<any>(null);
   const [pendingChuteira, setPendingChuteira] = useState<any>(null);
+  const [pendingReiDasAmericas, setPendingReiDasAmericas] = useState<any>(null);
+  const [pendingMelhorDaEuropa, setPendingMelhorDaEuropa] = useState<any>(null);
   const [pendingMuralha, setPendingMuralha] = useState<any>(null);
 
   const [pendingSponsorChoice, setPendingSponsorChoice] = useState<boolean>(false);
@@ -851,13 +927,49 @@ export default function App() {
       setPendingChuteira(stateToPass);
       return;
     }
-    checkMuralhaOrFinish(stateToPass);
+    checkReiDasAmericasOrFinish(stateToPass);
   };
 
   const handleChuteiraClose = () => {
     if (pendingChuteira) {
       const stateToPass = { ...pendingChuteira };
       setPendingChuteira(null);
+      checkReiDasAmericasOrFinish(stateToPass);
+    }
+  };
+
+  const checkReiDasAmericasOrFinish = (stateToPass: any) => {
+    const stat = stateToPass.seasonStat;
+    // Rei das Américas check
+    if (stat && stat.individualAwards && stat.individualAwards.includes("Rei das Américas")) {
+      setPendingReiDasAmericas(stateToPass);
+      return;
+    }
+    checkMelhorDaEuropaOrFinish(stateToPass);
+  };
+
+  const handleReiDasAmericasClose = () => {
+    if (pendingReiDasAmericas) {
+      const stateToPass = { ...pendingReiDasAmericas };
+      setPendingReiDasAmericas(null);
+      checkMelhorDaEuropaOrFinish(stateToPass);
+    }
+  };
+
+  const checkMelhorDaEuropaOrFinish = (stateToPass: any) => {
+    const stat = stateToPass.seasonStat;
+    // Melhor da Europa check
+    if (stat && stat.individualAwards && stat.individualAwards.includes("Melhor da Europa")) {
+      setPendingMelhorDaEuropa(stateToPass);
+      return;
+    }
+    checkMuralhaOrFinish(stateToPass);
+  };
+
+  const handleMelhorDaEuropaClose = () => {
+    if (pendingMelhorDaEuropa) {
+      const stateToPass = { ...pendingMelhorDaEuropa };
+      setPendingMelhorDaEuropa(null);
       checkMuralhaOrFinish(stateToPass);
     }
   };
@@ -1391,6 +1503,22 @@ export default function App() {
           player={pendingChuteira.baseUpdatedPlayer}
           seasonStat={pendingChuteira.seasonStat}
           onClose={handleChuteiraClose}
+        />
+      )}
+
+      {pendingReiDasAmericas && (
+        <ReiDasAmericasModal
+          player={pendingReiDasAmericas.baseUpdatedPlayer}
+          seasonStat={pendingReiDasAmericas.seasonStat}
+          onClose={handleReiDasAmericasClose}
+        />
+      )}
+
+      {pendingMelhorDaEuropa && (
+        <MelhorDaEuropaModal
+          player={pendingMelhorDaEuropa.baseUpdatedPlayer}
+          seasonStat={pendingMelhorDaEuropa.seasonStat}
+          onClose={handleMelhorDaEuropaClose}
         />
       )}
 

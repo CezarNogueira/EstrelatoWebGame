@@ -263,6 +263,11 @@ export function CareerSummary({ player, onRestart }: { player: Player; onRestart
                   </div>
 
                   <div className="flex items-center gap-3 shrink-0">
+                    {!!stat.manOfTheMatch && stat.manOfTheMatch > 0 && (
+                      <span className="text-xs text-amber-400 font-bold">
+                        {stat.manOfTheMatch}x MJP
+                      </span>
+                    )}
                     <span className="text-xs text-slate-500 font-semibold">
                       {stat.goals}
                       <span className="text-slate-600 font-normal"> G</span>

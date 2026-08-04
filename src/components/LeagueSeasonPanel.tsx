@@ -11,7 +11,7 @@ import {
 import { InteractiveMatchModal } from "./InteractiveMatchModal";
 import { Play, FastForward, SkipForward } from "lucide-react";
 
-type SeasonResult = { matches: number; goals: number; assists: number; leaguePosition: number };
+type SeasonResult = { matches: number; goals: number; assists: number; leaguePosition: number; manOfTheMatch?: number };
 
 function ratingColor(rating: number) {
   if (rating >= 8.5) return "text-yellow-400";
@@ -39,6 +39,7 @@ export function LeagueSeasonPanel({
   const [autoSimAll, setAutoSimAll] = useState(false);
   const [seasonGoals, setSeasonGoals] = useState(0);
   const [seasonAssists, setSeasonAssists] = useState(0);
+  const [seasonMotm, setSeasonMotm] = useState(0);
   const autoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const round = state.currentRound;
@@ -53,16 +54,18 @@ export function LeagueSeasonPanel({
     .sort((a, b) => b.round - a.round);
   const lastMatch = playedPlayerMatches[0];
 
-  const advanceRound = (updatedState: LeagueSeasonState, goalsThisMatch: number, assistsThisMatch: number) => {
+  const advanceRound = (updatedState: LeagueSeasonState, goalsThisMatch: number, assistsThisMatch: number, motmThisMatch: number = 0) => {
     const newGoals = seasonGoals + goalsThisMatch;
     const newAssists = seasonAssists + assistsThisMatch;
+    const newMotm = seasonMotm + motmThisMatch;
     setSeasonGoals(newGoals);
     setSeasonAssists(newAssists);
+    setSeasonMotm(newMotm);
 
     if (round >= state.totalRounds) {
       const leaguePosition = getPlayerLeaguePosition(updatedState, player.currentTeam.id);
       onStateChange({ ...updatedState, currentRound: state.totalRounds + 1 });
-      onComplete({ matches: state.totalRounds, goals: newGoals, assists: newAssists, leaguePosition });
+      onComplete({ matches: state.totalRounds, goals: newGoals, assists: newAssists, leaguePosition, manOfTheMatch: newMotm });
       return;
     }
 
@@ -80,6 +83,8 @@ export function LeagueSeasonPanel({
     const performanceRatio = Math.min(1.5, Math.max(0.5, currentOvr / expectedOvr));
     const { goals, assists } = generateSeasonMatchStats(player, 1, performanceRatio);
 
+    const isSimMOTM = (goals * 1.5 + assists * 1.0 + (performanceRatio >= 1.1 ? 0.6 : 0)) >= 1.5;
+
     const updated = resolvePlayerLeagueMatch(
       state,
       round,
@@ -89,7 +94,7 @@ export function LeagueSeasonPanel({
       goals,
       assists
     );
-    advanceRound(updated, goals, assists);
+    advanceRound(updated, goals, assists, isSimMOTM ? 1 : 0);
   };
 
   const handlePlayMatch = () => setPlaying(true);
@@ -99,7 +104,10 @@ export function LeagueSeasonPanel({
     playerGoals: number,
     playerAssists: number,
     scoreFor?: number,
-    scoreAgainst?: number
+    scoreAgainst?: number,
+    _isDraw?: boolean,
+    _rating?: number,
+    isMOTM?: boolean
   ) => {
     if (!playerFixture) return;
     setPlaying(false);
@@ -116,7 +124,7 @@ export function LeagueSeasonPanel({
       playerGoals,
       playerAssists
     );
-    advanceRound(updated, playerGoals, playerAssists);
+    advanceRound(updated, playerGoals, playerAssists, isMOTM ? 1 : 0);
   };
 
   // "Simular Tudo": avança rodada a rodada sozinho (sempre simulando, nunca

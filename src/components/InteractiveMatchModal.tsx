@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 import { Player, PlayStyle, Position, Team } from "../types";
 import { calculateOverall } from "../utils";
-import { Trophy, Goal, Activity, FastForward, Play, AlertCircle, Shield, UserCheck, Rocket, MoveRight, Target, Crosshair } from "lucide-react";
-import { TEAMS, NATIONAL_TEAMS, EUROPEAN_NATIONALITIES, AMERICAN_NATIONALITIES, NATIONALITIES, PLAY_STYLE_LEVEL_CHANCE } from "../data";
+import { Trophy, Goal, Activity, FastForward, Play, AlertCircle, Shield, UserCheck, Rocket, MoveRight, Target, Crosshair, Star } from "lucide-react";
+import { TEAMS, NATIONAL_TEAMS, EUROPEAN_NATIONALITIES, AMERICAN_NATIONALITIES, ASIAN_NATIONALITIES, NATIONALITIES, PLAY_STYLE_LEVEL_CHANCE } from "../data";
 
 // -----------------------------------------------------------------------------
 // Cenários de jogada
@@ -13,6 +13,7 @@ import { TEAMS, NATIONAL_TEAMS, EUROPEAN_NATIONALITIES, AMERICAN_NATIONALITIES, 
 // (tomar a bola no meio de campo ou desarmar uma infiltração adversária).
 type Scenario =
   | "FRENTE_GOL"   // Receber a bola na frente do gol -> Chutar ou Passe
+  | "FRENTE_GOL_DRIBLE" // Driblou a marcação -> Cara a cara com o gol (Chutar ou Passe sempre 85%)
   | "LATERAL"      // Receber a bola na lateral -> Cruzar ou Passe
   | "MEIO_CAMPO"   // Tomou a bola no meio de campo -> Correr pra área ou Passe
   | "ENTRADA_AREA" // Bola sobrou na entrada da área -> Chutar, Driblar ou Passe
@@ -112,14 +113,12 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
       { id: "passe", label: "Passe", icon: MoveRight, classes: "bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-200", resultType: "assist" },
     ],
     computeChance: (actionId, player, difficultyMod) => {
-      const { attributes: attrs, position } = player;
+      const { attributes: attrs } = player;
       let chance = 50;
       if (actionId === "chutar") {
-        chance = 35 + attrs.shooting * 0.6 + attrs.physical * 0.1 - difficultyMod;
-        if (position === "ATA" || position === "PON") chance += 10;
+        chance = 30 + (attrs.shooting - 50) * 2 - difficultyMod;
       } else {
-        chance = 30 + attrs.passing * 0.6 + attrs.dribbling * 0.1 - difficultyMod;
-        if (position === "MEI") chance += 10;
+        chance = 35 + Math.floor((attrs.passing - 50) / 2) * 2 - difficultyMod;
       }
       return chance;
     },
@@ -140,14 +139,12 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
       { id: "passe", label: "Passe", icon: MoveRight, classes: "bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-200", resultType: "assist" },
     ],
     computeChance: (actionId, player, difficultyMod) => {
-      const { attributes: attrs, position } = player;
+      const { attributes: attrs } = player;
       let chance = 50;
       if (actionId === "cruzar") {
-        chance = 35 + attrs.passing * 0.4 + attrs.pace * 0.3 - difficultyMod;
-        if (position === "PON") chance += 10;
+        chance = 20 + (attrs.passing - 50) * 2 - difficultyMod;
       } else {
-        chance = 40 + attrs.passing * 0.6 + attrs.dribbling * 0.1 - difficultyMod;
-        if (position === "MEI") chance += 10;
+        chance = 35 + Math.floor((attrs.passing - 50) / 2) * 2 - difficultyMod;
       }
       return chance;
     },
@@ -168,15 +165,12 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
       { id: "passe", label: "Passe", icon: MoveRight, classes: "bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-200", resultType: "assist" },
     ],
     computeChance: (actionId, player, difficultyMod) => {
-      const { attributes: attrs, position } = player;
+      const { attributes: attrs } = player;
       let chance = 50;
       if (actionId === "correr") {
-        chance = 35 + attrs.pace * 0.5 + attrs.dribbling * 0.2 - difficultyMod;
-        if (position === "ATA" || position === "PON") chance += 10;
-        if (position === "VOL" || position === "LAT") chance += 5;
+        chance = 35 + (attrs.pace - 50) * 2 - difficultyMod;
       } else {
-        chance = 40 + attrs.passing * 0.6 + attrs.dribbling * 0.1 - difficultyMod;
-        if (position === "MC" || position === "MEI") chance += 10;
+        chance = 35 + Math.floor((attrs.passing - 50) / 2) * 2 - difficultyMod;
       }
       return chance;
     },
@@ -194,33 +188,47 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
     chanceText: (name) => `A bola sobra para ${name} na entrada da área! O que ele vai fazer?`,
     actions: [
       { id: "chutar", label: "Chutar", icon: Goal, classes: "bg-red-900/50 hover:bg-red-800/80 border border-red-700 text-red-200", resultType: "goal" },
-      { id: "driblar", label: "Driblar", icon: FastForward, classes: "bg-purple-900/50 hover:bg-purple-800/80 border border-purple-700 text-purple-200", resultType: "goal" },
+      { id: "driblar", label: "Driblar", icon: FastForward, classes: "bg-purple-900/50 hover:bg-purple-800/80 border border-purple-700 text-purple-200" },
       { id: "passe", label: "Passe", icon: MoveRight, classes: "bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-200", resultType: "assist" },
     ],
     computeChance: (actionId, player, difficultyMod) => {
-      const { attributes: attrs, position } = player;
+      const { attributes: attrs } = player;
       let chance = 50;
       if (actionId === "chutar") {
-        chance = 30 + attrs.shooting * 0.6 + attrs.physical * 0.1 - difficultyMod;
-        if (position === "ATA") chance += 10;
+        chance = 30 + (attrs.shooting - 50) * 2 - difficultyMod;
       } else if (actionId === "driblar") {
-        chance = 30 + attrs.dribbling * 0.6 + attrs.pace * 0.1 - difficultyMod;
-        if (position === "PON") chance += 10;
+        chance = 25 + (attrs.dribbling - 50) * 4 - difficultyMod;
       } else {
-        chance = 35 + attrs.passing * 0.6 + attrs.dribbling * 0.1 - difficultyMod;
-        if (position === "MEI") chance += 10;
+        chance = 35 + Math.floor((attrs.passing - 50) / 2) * 2 - difficultyMod;
       }
       return chance;
     },
     successText: (actionId, name) => {
       if (actionId === "chutar") return `QUE PANCADA DE ${name.toUpperCase()}! Bate de primeira e é GOL!`;
-      if (actionId === "driblar") return `${name.toUpperCase()} DRIBLA MAIS UM e finaliza! GOL!`;
+      if (actionId === "driblar") return `${name.toUpperCase()} DRIBLA O MARCADOR e fica de frente pro gol!`;
       return `${name.toUpperCase()} VÊ O COMPANHEIRO LIVRE e serve na medida. GOL!`;
     },
     failText: (actionId, name, opponentName) => {
       if (actionId === "chutar") return `Chute travado de ${name}, a bola desvia para escanteio.`;
       if (actionId === "driblar") return `${name} tenta o drible mas é desarmado na entrada da área.`;
       return `Passe muito forte de ${name}, ninguém alcança e a bola sai pela linha de fundo.`;
+    },
+  },
+
+  FRENTE_GOL_DRIBLE: {
+    chanceText: (name) => `${name} driblou a marcação e ficou de frente pro gol! O que ele vai fazer?`,
+    actions: [
+      { id: "chutar", label: "Chutar", icon: Goal, classes: "bg-red-900/50 hover:bg-red-800/80 border border-red-700 text-red-200", resultType: "goal" },
+      { id: "passe", label: "Passe", icon: MoveRight, classes: "bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-200", resultType: "assist" },
+    ],
+    computeChance: () => 85,
+    successText: (actionId, name) => {
+      if (actionId === "chutar") return `GOLAÇO DE ${name.toUpperCase()}! De frente pro gol, finaliza com maestria e marca!`;
+      return `PASSE SERVIDO DE ${name.toUpperCase()}! Deixa o companheiro livre na cara do gol. GOL!`;
+    },
+    failText: (actionId, name, opponentName) => {
+      if (actionId === "chutar") return `Incrível! De frente pro gol, ${name} acaba chutando para fora!`;
+      return `Passe muito forte de ${name} de frente pro gol, a zaga do ${opponentName} intercepta!`;
     },
   },
 
@@ -292,9 +300,9 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
       const { attributes: attrs } = player;
       let chance = 50;
       if (actionId === "cobrar") {
-        chance = 30 + attrs.shooting * 0.6 - difficultyMod;
+        chance = 30 + (attrs.shooting - 50) * 2 - difficultyMod;
       } else {
-        chance = 35 + attrs.passing * 0.6 - difficultyMod;
+        chance = 20 + (attrs.passing - 50) * 2 - difficultyMod;
       }
       return chance;
     },
@@ -316,7 +324,10 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
     actions: [
       { id: "chute_colocado", label: "Chute Colocado", icon: Crosshair, classes: "bg-red-900/50 hover:bg-red-800/80 border border-red-700 text-red-200", resultType: "goal" },
     ],
-    computeChance: (_actionId, player) => (getPlayStyleChance(player, "chute_colocado")),
+    computeChance: (_actionId, player) => {
+      const baseChance = getPlayStyleChance(player, "chute_colocado");
+      return Math.min(95, Math.max(10, baseChance + Math.round((player.attributes.shooting - 50) * 0.2)));
+    },
     successText: (_actionId, name) => `GOLAÇO DE FORA DA ÁREA! ${name.toUpperCase()} ACERTA UM CHUTE COLOCADO PERFEITO NO ÂNGULO!`,
     failText: (_actionId, name) => `${name} arrisca de longe, mas a bola vai longe do gol.`,
   },
@@ -326,7 +337,11 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
     actions: [
       { id: "cabecear", label: "Cabecear", icon: Target, classes: "bg-blue-900/50 hover:bg-blue-800/80 border border-blue-700 text-blue-200", resultType: "goal" },
     ],
-    computeChance: (_actionId, player) => (getPlayStyleChance(player, "forca_aerea")),
+    computeChance: (_actionId, player) => {
+      const baseChance = getPlayStyleChance(player, "forca_aerea");
+      const heightBonus = Math.round((player.height || 180) / 20);
+      return Math.min(95, Math.max(10, baseChance + heightBonus + Math.round((player.attributes.physical - 50) * 0.2)));
+    },
     successText: (_actionId, name) => `CABEÇADA MORTAL DE ${name.toUpperCase()}! Sobe mais que todo mundo e é GOL DE CABEÇA!`,
     failText: (_actionId, name) => `${name} sobe bem, mas cabeceia por cima do gol.`,
   },
@@ -336,7 +351,10 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
     actions: [
       { id: "passe_matador", label: "Passe Matador", icon: MoveRight, classes: "bg-emerald-900/50 hover:bg-emerald-800/80 border border-emerald-700 text-emerald-200", resultType: "assist" },
     ],
-    computeChance: (_actionId, player) => (getPlayStyleChance(player, "tiki_taka")),
+    computeChance: (_actionId, player) => {
+      const baseChance = getPlayStyleChance(player, "tiki_taka");
+      return Math.min(95, Math.max(10, baseChance + Math.round((player.attributes.passing - 50) * 0.2)));
+    },
     successText: (_actionId, name) => `PASSE DE PRIMEIRA CATEGORIA DE ${name.toUpperCase()}! Encaixa entre os zagueiros e é GOL do companheiro!`,
     failText: (_actionId, name, opponentName) => `${name} tenta o passe entre linhas, mas a zaga do ${opponentName} intercepta.`,
   },
@@ -346,7 +364,10 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
     actions: [
       { id: "cruzamento_dificil", label: "Cruzamento Difícil", icon: Activity, classes: "bg-amber-900/50 hover:bg-amber-800/80 border border-amber-700 text-amber-200", resultType: "assist" },
     ],
-    computeChance: (_actionId, player) => (getPlayStyleChance(player, "cruzamento_preciso")),
+    computeChance: (_actionId, player) => {
+      const baseChance = getPlayStyleChance(player, "cruzamento_preciso");
+      return Math.min(95, Math.max(10, baseChance + Math.round((player.attributes.passing - 50) * 0.2)));
+    },
     successText: (_actionId, name) => `CRUZAMENTO DE TIRAR O FÔLEGO DE ${name.toUpperCase()}! Encontra a cabeça do companheiro. GOL!`,
     failText: (_actionId, name) => `${name} tenta o cruzamento quase impossível, mas a bola sai direto pela linha de fundo.`,
   },
@@ -356,7 +377,10 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
     actions: [
       { id: "disparar", label: "Disparar", icon: Rocket, classes: "bg-purple-900/50 hover:bg-purple-800/80 border border-purple-700 text-purple-200", resultType: "goal" },
     ],
-    computeChance: (_actionId, player) => (getPlayStyleChance(player, "veloz")),
+    computeChance: (_actionId, player) => {
+      const baseChance = getPlayStyleChance(player, "veloz");
+      return Math.min(95, Math.max(10, baseChance + Math.round((player.attributes.pace - 50) * 0.2)));
+    },
     successText: (_actionId, name) => `${name.toUpperCase()} DISPARA E DEIXA A MARCAÇÃO PARA TRÁS! Fica na cara do gol e é GOL!`,
     failText: (_actionId, name) => `${name} tenta a arrancada, mas é alcançado antes de finalizar.`,
   },
@@ -372,6 +396,65 @@ const SCENARIOS: Record<Scenario, ScenarioConfig> = {
     failText: (_actionId, name, opponentName) => `${name} não consegue o desarme e é GOL DO ${opponentName.toUpperCase()}!`,
   },
 };
+
+function selectScenarioForPlayer(player: Player, isSetPieceTaker: boolean): Scenario {
+  const isAttacker = ATTACKING_POSITIONS.includes(player.position);
+  const h = player.height || 180;
+  const pace = player.attributes.pace;
+  const shooting = player.attributes.shooting;
+  const passing = player.attributes.passing;
+  const defending = player.attributes.defending;
+  const position = player.position;
+
+  const weights: Partial<Record<Scenario, number>> = {};
+
+  if (isAttacker) {
+    weights.FRENTE_GOL = 20;
+    weights.LATERAL = 20;
+    weights.MEIO_CAMPO = 20;
+    weights.ENTRADA_AREA = 20;
+  } else {
+    weights.MEIO_CAMPO = 25;
+    weights.INFILTRACAO = 25;
+  }
+
+  if (isSetPieceTaker) {
+    weights.PENALTI = 12;
+    weights.FALTA = 12;
+  }
+
+  // 1. Quanto mais alto, mais ações de cabeceio (FORCA_AEREA)
+  weights.FORCA_AEREA = Math.max(3, Math.round((h - 160) * 0.95));
+
+  // 2. Quanto mais ritmo, mais situações de corrida difícil (VELOZ)
+  weights.VELOZ = Math.max(3, Math.round((pace - 25) * 0.45));
+
+  // 3. Quanto mais chute, mais situações de chute colocado (CHUTE_COLOCADO)
+  weights.CHUTE_COLOCADO = Math.max(3, Math.round((shooting - 25) * 0.45));
+
+  // 4. As posições PON e LAT têm mais situações de cruzamento difícil (CRUZAMENTO_PRECISO)
+  if (position === "PON" || position === "LAT") {
+    weights.CRUZAMENTO_PRECISO = 32 + Math.round((passing - 50) * 0.2);
+  } else {
+    weights.CRUZAMENTO_PRECISO = 6;
+  }
+
+  weights.TIKI_TAKA = Math.max(3, Math.round((passing - 25) * 0.3));
+  if (!isAttacker) {
+    weights.XERIFE = Math.max(5, Math.round((defending - 25) * 0.35));
+  }
+
+  const entries = Object.entries(weights) as [Scenario, number][];
+  const totalWeight = entries.reduce((acc, [_, w]) => acc + w, 0);
+  let roll = Math.random() * totalWeight;
+
+  for (const [sc, w] of entries) {
+    if (roll < w) return sc;
+    roll -= w;
+  }
+
+  return isAttacker ? "FRENTE_GOL" : "INFILTRACAO";
+}
 
 function getScenarioPool(position: Position, includeSetPieces: boolean): Scenario[] {
   const base = ATTACKING_POSITIONS.includes(position) ? ATTACKING_SCENARIOS : DEFENSIVE_SCENARIOS;
@@ -478,7 +561,9 @@ export function InteractiveMatchModal({
     playerAssists: number,
     finalScoreFor?: number,
     finalScoreAgainst?: number,
-    isDraw?: boolean
+    isDraw?: boolean,
+    rating?: number,
+    isMOTM?: boolean
   ) => void;
   // Quando informado (partidas de liga com adversário já sorteado pelo
   // calendário), pula o sorteio aleatório de adversário e usa este time.
@@ -510,6 +595,12 @@ export function InteractiveMatchModal({
   // outros companheiros ("GOL DA SUA EQUIPE!") não entram aqui.
   const [matchGoals, setMatchGoals] = useState(0);
   const [matchAssists, setMatchAssists] = useState(0);
+  const [successfulPasses, setSuccessfulPasses] = useState(0);
+  const [successfulDribbles, setSuccessfulDribbles] = useState(0);
+  const [successfulTackles, setSuccessfulTackles] = useState(0);
+  const [successfulMarkings, setSuccessfulMarkings] = useState(0);
+  const [successfulActions, setSuccessfulActions] = useState(0);
+  const [failedActions, setFailedActions] = useState(0);
 
   const isNational = finalType.includes("Copa do Mundo") || finalType.includes("Eurocopa") || finalType.includes("Copa América") || finalType.includes("Copa Continental (Seleção)");
   const playerTeamName = isNational ? player.nationality : player.currentTeam.name;
@@ -536,6 +627,10 @@ export function InteractiveMatchModal({
       setCurrentScenario(null);
       setMatchGoals(0);
       setMatchAssists(0);
+      setSuccessfulPasses(0);
+      setSuccessfulDribbles(0);
+      setSuccessfulTackles(0);
+      setSuccessfulMarkings(0);
       const isIdol = player.idolClubs?.includes(player.currentTeam.name);
       setTotalChances(isIdol ? 6 : Math.floor(Math.random() * 6) + 1);
       return;
@@ -560,6 +655,10 @@ export function InteractiveMatchModal({
       // Copa América - só seleções americanas disputam.
       category = `selecao-${finalType}`;
       ops = AMERICAN_NATIONALITIES.filter(c => c !== player.nationality);
+    } else if (finalType.includes("Copa da Ásia")) {
+      // Copa da Ásia - só seleções asiáticas disputam.
+      category = `selecao-${finalType}`;
+      ops = ASIAN_NATIONALITIES.filter(c => c !== player.nationality);
     } else if (isNational) {
       // Copa do Mundo (ou fallback genérico) - qualquer seleção cadastrada em
       // data.ts pode aparecer, exceto a do próprio jogador.
@@ -617,6 +716,10 @@ export function InteractiveMatchModal({
     setCurrentScenario(null);
     setMatchGoals(0);
     setMatchAssists(0);
+    setSuccessfulPasses(0);
+    setSuccessfulDribbles(0);
+    setSuccessfulTackles(0);
+    setSuccessfulMarkings(0);
     // Cada final agora sorteia entre 1 e 6 chances de o jogador participar
     // ativamente da jogada, em vez de sempre uma única oportunidade.
     const isIdol = player.idolClubs?.includes(player.currentTeam.name);
@@ -664,14 +767,25 @@ export function InteractiveMatchModal({
             addEvent(genericEvents[Math.floor(Math.random() * genericEvents.length)], "neutral", nextMin);
           }
 
-          // Opponent scores (lowered probability for realistic score)
-          if (Math.random() < 0.004) {
+          // Probabilidades dinâmicas de gol baseadas nos níveis dos times (mais realistas)
+          const playerTeamLevel = player.currentTeam?.level || 3;
+          let opponentLevel = explicitOpponent?.level;
+          if (!opponentLevel) {
+            const foundOpponent = TEAMS.find(t => t.name.toLowerCase() === opponentName.toLowerCase());
+            opponentLevel = foundOpponent?.level || 3;
+          }
+
+          const opponentGoalChance = Math.max(0.001, Math.min(0.008, 0.0035 * Math.sqrt(opponentLevel / 3.0) / Math.sqrt(playerTeamLevel / 3.0)));
+          const teammateGoalChance = Math.max(0.001, Math.min(0.008, 0.0035 * Math.sqrt(playerTeamLevel / 3.0) / Math.sqrt(opponentLevel / 3.0)));
+
+          // Opponent scores
+          if (Math.random() < opponentGoalChance) {
             setScoreThem(s => s + 1);
             addEvent(`GOL DO ${opponentName.toUpperCase()}! Eles abrem a defesa e marcam.`, "goal_them", nextMin);
           }
 
-          // Team scores without player (lowered probability)
-          if (Math.random() < 0.003) {
+          // Team scores without player
+          if (Math.random() < teammateGoalChance) {
             setScoreUs(s => s + 1);
             addEvent(`GOL DA SUA EQUIPE! Uma bela jogada coletiva termina na rede!`, "goal_us", nextMin);
           }
@@ -687,18 +801,7 @@ export function InteractiveMatchModal({
             const threshold = SET_PIECE_OVR_THRESHOLD[player.currentTeam.level] ?? Infinity;
             const isSetPieceTaker = playerOvr >= threshold;
 
-            let scenario: Scenario;
-            if (Math.random() < RARE_PLAYSTYLE_MOMENT_CHANCE) {
-              // Jogada rara ligada a um PlayStyle - só é garantida se o
-              // jogador tiver o PlayStyle correspondente.
-              const rarePool = ATTACKING_POSITIONS.includes(player.position)
-                ? ATTACKING_PLAYSTYLE_SCENARIOS
-                : DEFENSIVE_PLAYSTYLE_SCENARIOS;
-              scenario = rarePool[Math.floor(Math.random() * rarePool.length)];
-            } else {
-              const pool = getScenarioPool(player.position, isSetPieceTaker);
-              scenario = pool[Math.floor(Math.random() * pool.length)];
-            }
+            const scenario = selectScenarioForPlayer(player, isSetPieceTaker);
 
             setCurrentScenario(scenario);
             setStatus("WAITING_ACTION");
@@ -707,17 +810,26 @@ export function InteractiveMatchModal({
 
           return nextMin;
         });
-      }, 60); // Velocidade da partida (60ms por minuto)
+      }, 75); // Velocidade da partida (75ms por minuto)
     }
     
     return () => clearInterval(timer);
   }, [status, chancesHad, totalChances, player.name, player.position, player.currentTeam.level, opponentName]);
 
+  const getDifficultyMod = () => {
+    let oppLevel = explicitOpponent?.level;
+    if (!oppLevel) {
+      const found = TEAMS.find(t => t.name.toLowerCase() === opponentName.toLowerCase());
+      oppLevel = found?.level || 3;
+    }
+    return (oppLevel - 1) * 2;
+  };
+
   const handleAction = (actionId: string) => {
     if (!currentScenario) return;
 
     const config = SCENARIOS[currentScenario];
-    const difficultyMod = player.currentTeam.level * 5;
+    const difficultyMod = getDifficultyMod();
 
     let chance = config.computeChance(actionId, player, difficultyMod);
     chance = PLAYSTYLE_SCENARIO_SET.has(currentScenario)
@@ -733,23 +845,77 @@ export function InteractiveMatchModal({
     
     // Apply result after animation (e.g. 1.8s)
     setTimeout(() => {
-      setChancesHad(c => c + 1);
       const isDefensiveScenario = DEFENSIVE_SCENARIO_SET.has(currentScenario);
+      const quality = getQualityWord(rollValue, chance);
 
       if (isSuccess) {
+        setSuccessfulActions(s => s + 1);
+
+        if (actionId === "driblar") {
+          setSuccessfulDribbles(d => d + 1);
+          addEvent(`${player.name.toUpperCase()} DRIBLA O MARCADOR E FICA DE FRENTE PRO GOL!`, "chance");
+
+          setDiceRollInfo(null);
+          setCurrentScenario("FRENTE_GOL_DRIBLE");
+          setStatus("WAITING_ACTION");
+          return;
+        }
+
+        setChancesHad(c => c + 1);
+
+        const isPassOrCross = actionId === "passe" || actionId === "cruzar" || actionId === "passe_matador" || actionId === "cruzamento_dificil";
+
+        if (actionId === "desarmar" || actionId === "desarme_xerife") {
+          setSuccessfulTackles(t => t + 1);
+        } else if (actionId === "marcar") {
+          setSuccessfulMarkings(m => m + 1);
+        } else if (isPassOrCross) {
+          setSuccessfulPasses(p => p + 1);
+        }
+
         if (isDefensiveScenario) {
           addEvent(config.successText(actionId, player.name, opponentName), "chance");
-        } else {
-          setScoreUs(s => s + 1);
+        } else if (isPassOrCross) {
           const action = config.actions.find(a => a.id === actionId);
-          if (action?.resultType === "goal") {
-            setMatchGoals(g => g + 1);
-          } else if (action?.resultType === "assist") {
-            setMatchAssists(a => a + 1);
+          // Se for "Perfeito", 100% gol/assistência.
+          // Se for "Muito Bom" ou "Bom", o companheiro tem chance de errar o gol baseada no nível do time.
+          const isPerfeito = quality === "Perfeito";
+          const teamLevel = player.currentTeam.level || 1;
+          const missChanceMap: Record<number, number> = { 1: 0.80, 2: 0.75, 3: 0.60, 4: 0.50, 5: 0.40 };
+          const missChance = missChanceMap[teamLevel] ?? 0.40;
+          const teammateMissed = !isPerfeito && Math.random() < missChance;
+
+          if (teammateMissed) {
+            addEvent(`${player.name} fez o lançamento de qualidade (${quality}), mas o companheiro de equipe errou o chute e perdeu o gol!`, "miss");
+          } else {
+            setScoreUs(s => s + 1);
+            if (action?.resultType === "assist" || isPassOrCross) {
+              setMatchAssists(a => a + 1);
+            }
+            addEvent(config.successText(actionId, player.name, opponentName), "goal_us");
           }
-          addEvent(config.successText(actionId, player.name, opponentName), "goal_us");
+        } else {
+          const opponentTeamLevel = explicitOpponent?.level || TEAMS.find(t => t.name === opponentName)?.level || 3;
+          const gkSaveChanceMap: Record<number, number> = { 1: 0.10, 2: 0.15, 3: 0.20, 4: 0.25, 5: 0.30 };
+          const gkSaveChance = gkSaveChanceMap[opponentTeamLevel] ?? 0.20;
+          const gkSaved = Math.random() < gkSaveChance;
+
+          if (gkSaved) {
+            addEvent(`DEFESA DO GOLEIRO! ${player.name} finalizou bem (${quality}), mas o goleiro do ${opponentName} fez a defesa e evitou o gol!`, "miss");
+          } else {
+            setScoreUs(s => s + 1);
+            const action = config.actions.find(a => a.id === actionId);
+            if (action?.resultType === "goal" || !action?.resultType) {
+              setMatchGoals(g => g + 1);
+            } else if (action?.resultType === "assist") {
+              setMatchAssists(a => a + 1);
+            }
+            addEvent(config.successText(actionId, player.name, opponentName), "goal_us");
+          }
         }
       } else {
+        setChancesHad(c => c + 1);
+        setFailedActions(f => f + 1);
         if (isDefensiveScenario) {
           setScoreThem(s => s + 1);
           addEvent(config.failText(actionId, player.name, opponentName), "goal_them");
@@ -774,14 +940,44 @@ export function InteractiveMatchModal({
     }
   };
 
+  const calculateLiveRating = (
+    currMinute: number,
+    goals: number,
+    assists: number,
+    passes: number,
+    dribbles: number,
+    tackles: number,
+    markings: number
+  ): number => {
+    const base = 6.0;
+    const minuteLoss = Math.floor(currMinute / 10) * 0.1;
+    const passesGain = passes * 0.4;
+    const goalsGain = goals * 1.9;
+    const assistsGain = assists * 1.8;
+    const dribblesGain = dribbles * 0.3;
+    const tacklesGain = tackles * 0.9;
+    const markingsGain = markings * 1.4;
+
+    const total = base - minuteLoss + passesGain + goalsGain + assistsGain + dribblesGain + tacklesGain + markingsGain;
+    return Number(Math.min(10.0, Math.max(1.0, total)).toFixed(1));
+  };
+
+  const matchRating = calculateLiveRating(
+    minute,
+    matchGoals,
+    matchAssists,
+    successfulPasses,
+    successfulDribbles,
+    successfulTackles,
+    successfulMarkings
+  );
+  const isMOTM = matchRating >= 8.0;
+
   const handleFinish = () => {
-    // Guard against rapid double-clicks: once the penalty shootout has
-    // started, ignore further clicks on this same button until it resolves.
     if (resolvingPenalties) return;
 
     if (scoreUs === scoreThem && allowDraw) {
-      // Partida de liga: empate é um resultado válido, sem pênaltis.
-      onComplete(false, matchGoals, matchAssists, scoreUs, scoreThem, true);
+      onComplete(false, matchGoals, matchAssists, scoreUs, scoreThem, true, matchRating, isMOTM);
       return;
     }
 
@@ -791,6 +987,11 @@ export function InteractiveMatchModal({
       addEvent("Fim do tempo regulamentar! Vamos para a disputa de pênaltis!", "neutral");
       
       setTimeout(() => {
+        const finalUs = won ? scoreUs + 1 : scoreUs;
+        const finalThem = won ? scoreThem : scoreThem + 1;
+        const finalRating = calculateLiveRating(minute, matchGoals, matchAssists, successfulPasses, successfulDribbles, successfulTackles, successfulMarkings);
+        const finalMOTM = finalRating >= 8.0;
+
         if (won) {
           setScoreUs(s => s + 1);
           addEvent(`O goleiro defende a última cobrança do ${opponentName}! SEU TIME É CAMPEÃO NOS PÊNALTIS!`, "goal_us");
@@ -799,12 +1000,13 @@ export function InteractiveMatchModal({
           addEvent(`Cobrança na trave... O ${opponentName} vence nos pênaltis.`, "goal_them");
         }
         setResolvingPenalties(false);
+        onComplete(won, matchGoals, matchAssists, finalUs, finalThem, false, finalRating, finalMOTM);
       }, 1500);
       return;
     }
     
     let won = scoreUs > scoreThem;
-    onComplete(won, matchGoals, matchAssists, scoreUs, scoreThem, false);
+    onComplete(won, matchGoals, matchAssists, scoreUs, scoreThem, false, matchRating, isMOTM);
   };
 
   const currentActions = currentScenario ? SCENARIOS[currentScenario].actions : [];
@@ -834,8 +1036,8 @@ export function InteractiveMatchModal({
                 <span className="text-slate-600">-</span>
                 <span>{scoreThem}</span>
               </div>
-              <div className="mt-2 font-mono text-xl text-slate-100 font-bold">
-                {minute}'
+              <div className="mt-2 flex items-center gap-2">
+                <span className="font-mono text-xl text-slate-100 font-bold">{minute}'</span>
               </div>
             </div>
 
@@ -889,7 +1091,7 @@ export function InteractiveMatchModal({
               <div className={`grid gap-4 ${currentActions.length === 3 ? "grid-cols-1 sm:grid-cols-3" : currentActions.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
                 {currentActions.map((action) => {
                   const Icon = action.icon;
-                  const difficultyMod = player.currentTeam.level * 5;
+                  const difficultyMod = getDifficultyMod();
                   let chance = SCENARIOS[currentScenario].computeChance(action.id, player, difficultyMod);
                   chance = PLAYSTYLE_SCENARIO_SET.has(currentScenario)
                     ? Math.round(chance)
@@ -902,9 +1104,6 @@ export function InteractiveMatchModal({
                     >
                       <div className="flex items-center gap-2">
                         <Icon className="w-6 h-6" /> {action.label}
-                      </div>
-                      <div className="text-sm opacity-90 px-2 py-1 bg-black/30 rounded-lg">
-                        {chance}% de Sucesso
                       </div>
                     </button>
                   );
@@ -924,25 +1123,72 @@ export function InteractiveMatchModal({
           )}
 
           {status === "SIMULATING" && (
-            <div className="flex justify-center items-center h-16 text-slate-500 font-bold tracking-widest uppercase">
-              Simulando...
+            <div className="flex flex-col justify-center items-center py-2 space-y-1.5 h-20">
+              <div className="text-slate-500 font-bold tracking-widest uppercase text-xs sm:text-sm animate-pulse">
+                Simulando...
+              </div>
+              <div className="flex items-center gap-2 bg-slate-950/80 px-4 py-1.5 rounded-xl border border-slate-800">
+                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">Nota do Jogador:</span>
+                <span className={`text-lg font-black ${
+                  matchRating >= 8.0
+                    ? "text-amber-400"
+                    : matchRating >= 7.0
+                    ? "text-emerald-400"
+                    : matchRating >= 6.0
+                    ? "text-blue-400"
+                    : "text-red-400"
+                }`}>
+                  {matchRating.toFixed(1)}
+                </span>
+              </div>
             </div>
           )}
 
           {status === "FINISHED" && (
-            <button 
-              onClick={handleFinish}
-              disabled={resolvingPenalties}
-              className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-black rounded-2xl transition-all text-xl"
-            >
-              {resolvingPenalties
-                ? "Cobrando pênaltis..."
-                : scoreUs === scoreThem && allowDraw
-                ? "Confirmar Empate"
-                : scoreUs === scoreThem
-                ? "Ir para os Pênaltis"
-                : "Continuar"}
-            </button>
+            <div className="space-y-4 animate-in fade-in duration-300">
+              <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className={`px-4 py-2 rounded-xl border flex flex-col items-center justify-center font-black ${
+                    matchRating >= 8.0 
+                      ? 'border-amber-500/50 text-amber-300 shadow-lg shadow-amber-500/10'
+                      : matchRating >= 7.0
+                      ? 'border-emerald-500/50 text-emerald-300'
+                      : 'border-slate-800 text-slate-200'
+                  }`}>
+                    <span className="text-[10px] uppercase text-slate-400 font-bold tracking-wider">Nota do Jogador</span>
+                    <span className="text-2xl font-black">{matchRating.toFixed(1)}</span>
+                  </div>
+
+                  <div className="text-left">
+                    <div className="text-xs sm:text-sm font-bold text-slate-200 flex flex-wrap gap-1">
+                      <span>{matchGoals} Gols</span> • <span>{matchAssists} Assistências</span>
+                    </div>
+                    {isMOTM ? (
+                      <div className="flex items-center gap-1.5 text-xs font-extrabold text-amber-400 mt-1 bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/30 w-fit">
+                        <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
+                        🏆 MELHOR DA PARTIDA!
+                      </div>
+                    ) : (
+                      <p className=""></p>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              <button 
+                onClick={handleFinish}
+                disabled={resolvingPenalties}
+                className="w-full py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-60 disabled:cursor-not-allowed text-white font-black rounded-2xl transition-all text-xl"
+              >
+                {resolvingPenalties
+                  ? "Cobrando pênaltis..."
+                  : scoreUs === scoreThem && allowDraw
+                  ? "Confirmar e Continuar"
+                  : scoreUs === scoreThem
+                  ? "Ir para os Pênaltis"
+                  : "Confirmar e Continuar"}
+              </button>
+            </div>
           )}
         </div>
 

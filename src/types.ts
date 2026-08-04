@@ -30,6 +30,7 @@ export type SeasonStat = {
   assists: number;
   tackles: number; // desarmes - key stat for ZAG/LAT/VOL
   cleanSheets: number; // jogos sem sofrer gols - key stat for ZAG/LAT/VOL
+  manOfTheMatch?: number; // número de prêmios de Melhor da Partida na temporada
   rating: number; // overall rating that season
   attributeChanges: Partial<Attributes>; 
   nationalTeamCall?: boolean;
@@ -219,6 +220,7 @@ export type CupMatch = {
 export type CupSeasonState = {
   cupName: string;
   isContinental: boolean;
+  isNational?: boolean;
   roundNames: string[];
   roundsMatches: CupMatch[][]; // roundsMatches[roundIndex] = confrontos daquela fase
   currentRoundIndex: number;
@@ -257,6 +259,8 @@ export type Player = {
   bootSponsorSeasonsLeft?: number; // temporadas restantes do contrato de chuteira (dura 5 temporadas)
   relationships: Relationships;
   chats?: Record<string, ChatState>;
+  height?: number;
+  weight?: number;
   personal: {
     mood: number;
     health: number;

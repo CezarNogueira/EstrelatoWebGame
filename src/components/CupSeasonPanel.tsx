@@ -3,6 +3,7 @@ import { Player, Team, CupSeasonState } from "../types";
 import {
   calculateOverall,
   simulateCupRoundBots,
+  simulateLeagueMatchResult,
   resolvePlayerCupMatch,
   advanceCupToNextRound,
   cupReachedFinalRound,
@@ -12,7 +13,7 @@ import {
 import { InteractiveMatchModal } from "./InteractiveMatchModal";
 import { Play, FastForward, Trophy, SkipForward } from "lucide-react";
 
-type CupResult = { cupName: string; isContinental: boolean; reachedFinal: boolean; won: boolean; goals: number; assists: number; matches: number };
+type CupResult = { cupName: string; isContinental: boolean; reachedFinal: boolean; won: boolean; goals: number; assists: number; matches: number; manOfTheMatch?: number };
 
 // Pré-requisito: só deve ser renderizado enquanto !state.eliminated && !state.champion,
 // OU no instante em que acabou de ser eliminado/coroado campeão (pra mostrar o resultado).
@@ -31,7 +32,14 @@ export function CupSeasonPanel({
 }) {
   const [playing, setPlaying] = useState(false);
   const [autoSimAll, setAutoSimAll] = useState(false);
+  const [cupMotm, setCupMotm] = useState(0);
   const autoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const isNationalCup =
+    state.cupName.includes("Copa do Mundo") ||
+    state.cupName.includes("Eurocopa") ||
+    state.cupName.includes("Copa América") ||
+    state.cupName.includes("Copa Continental (Seleção)");
 
   const isDone = state.eliminated || state.champion;
   const roundIdx = state.currentRoundIndex;
@@ -39,8 +47,8 @@ export function CupSeasonPanel({
   const matches = state.roundsMatches[roundIdx] || [];
   const playerFixture = matches.find((m) => m.isPlayerMatch);
   const opponentTeam: Team | undefined =
-    playerFixture && (playerFixture.home.id === player.currentTeam.id ? playerFixture.away : playerFixture.home);
-  const isHome = playerFixture?.home.id === player.currentTeam.id;
+    playerFixture && (playerFixture.home.id === state.playerTeamId ? playerFixture.away : playerFixture.home);
+  const isHome = playerFixture?.home.id === state.playerTeamId;
 
   const resolveAndAdvance = (updated: CupSeasonState) => {
     const withBots = simulateCupRoundBots(updated);
@@ -55,15 +63,20 @@ export function CupSeasonPanel({
 
   const simulateCurrentTie = () => {
     if (!playerFixture || !opponentTeam) return;
+    const result = simulateLeagueMatchResult(playerFixture.home, playerFixture.away);
     const currentOvr = calculateOverall(player.attributes, player.position);
-    const expectedOvr = player.currentTeam.level * 15 + 35;
+    const myTeam = playerFixture.home.id === state.playerTeamId ? playerFixture.home : playerFixture.away;
+    const expectedOvr = (myTeam?.level || 5) * 15 + 35;
     const performanceRatio = Math.min(1.5, Math.max(0.5, currentOvr / expectedOvr));
     const { goals, assists } = generateSeasonMatchStats(player, 1, performanceRatio);
 
-    // Placar-base coerente com o nível dos dois times, mata-mata decide empate.
-    const base = Math.max(0, Math.round((currentOvr - 60) / 20));
-    const homeGoals = isHome ? base + goals : Math.max(0, base - 1);
-    const awayGoals = isHome ? Math.max(0, base - 1) : base + goals;
+    const isSimMOTM = (goals * 1.5 + assists * 1.0 + (performanceRatio >= 1.1 ? 0.6 : 0)) >= 1.5;
+    if (isSimMOTM) {
+      setCupMotm((prev) => prev + 1);
+    }
+
+    const homeGoals = isHome ? result.homeGoals + goals : result.homeGoals;
+    const awayGoals = isHome ? result.awayGoals : result.awayGoals + goals;
 
     const updated = resolvePlayerCupMatch(state, homeGoals, awayGoals, goals, assists);
     resolveAndAdvance(updated);
@@ -76,10 +89,16 @@ export function CupSeasonPanel({
     playerGoals: number,
     playerAssists: number,
     scoreFor?: number,
-    scoreAgainst?: number
+    scoreAgainst?: number,
+    _isDraw?: boolean,
+    _rating?: number,
+    isMOTM?: boolean
   ) => {
     setPlaying(false);
     if (!playerFixture) return;
+    if (isMOTM) {
+      setCupMotm((prev) => prev + 1);
+    }
     const goalsFor = scoreFor ?? 0;
     const goalsAgainst = scoreAgainst ?? 0;
     const homeGoals = isHome ? goalsFor : goalsAgainst;
@@ -112,6 +131,7 @@ export function CupSeasonPanel({
       goals: state.playerGoalsTotal,
       assists: state.playerAssistsTotal,
       matches: countCupMatchesPlayed(state),
+      manOfTheMatch: cupMotm,
     });
   };
 
@@ -155,10 +175,17 @@ export function CupSeasonPanel({
   }
 
   return (
-    <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
+    <div className={`border rounded-xl p-3 space-y-2 ${isNationalCup ? "bg-emerald-950/30 border-emerald-500/40" : "bg-slate-950 border-slate-800"}`}>
       <div className="flex items-center justify-between">
-        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{state.cupName}</p>
-        <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">{roundName}</p>
+        <div className="flex items-center gap-1.5 min-w-0">
+          {isNationalCup && (
+            <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 uppercase tracking-widest shrink-0">
+              Seleção
+            </span>
+          )}
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">{state.cupName}</p>
+        </div>
+        <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest shrink-0">{roundName}</p>
       </div>
 
       {playerFixture && opponentTeam && (

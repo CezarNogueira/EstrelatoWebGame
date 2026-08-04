@@ -1,5 +1,5 @@
 import { Attributes, CupMatch, CupSeasonState, LeagueMatch, LeagueSeasonState, LeagueStanding, Player, Position, SeasonStat, Team } from "./types";
-import { TEAMS, getNationalContinentalCup } from "./data";
+import { TEAMS, getNationalContinentalCup, NATIONAL_TEAMS, EUROPEAN_NATIONALITIES, AMERICAN_NATIONALITIES, ASIAN_NATIONALITIES, getNationalTeam } from "./data";
 
 export const getLeagueName = (team: Team): string => {
   if (team.division === 2) {
@@ -611,7 +611,7 @@ export const getReachedFinals = (player: Player, currentOvr: number, includeClub
   const { goals, assists, tackles, cleanSheets } = generateSeasonMatchStats(player, estimatedMatches, performanceRatio);
   const callScore = getNationalCallScore(goals, assists, tackles, cleanSheets);
 
-  if (currentOvr > 78 && callScore >= 15 && Math.random() > 0.4) {
+  if (includeClubCups && currentOvr > 78 && callScore >= 15 && Math.random() > 0.4) {
     if (player.age % 4 === 0 && Math.random() > 0.7) {
       finals.push("Copa do Mundo");
     } else if (player.age % 4 === 2 && Math.random() > 0.6) {
@@ -634,6 +634,7 @@ export const simulateSeason = (
     goals: number;
     assists: number;
     leaguePosition: number;
+    manOfTheMatch?: number;
   }
 ): { baseUpdatedPlayer: Player; seasonStat: SeasonStat; transfer?: Team; earnedPoints: number; proContractOffer?: boolean } => {
   if (player.currentTeam.id === "none") {
@@ -1026,13 +1027,84 @@ export const simulateSeason = (
       individualAwards.push("Muralha da Temporada");
     }
 
-    // Bola de Ouro
+    // Títulos e destaques para prêmios individuais
     const wonWC = finals.some(f => f.type === "Copa do Mundo" && f.won);
     const wcTopScorer = individualAwards.includes("Artilheiro da Copa do Mundo");
     const wonCL = finals.some(f => f.type === continentalName && f.won);
     const clTopScorer = individualAwards.includes(getArtilheiroString(continentalName));
     const wonLeague = leaguePosition === 1;
 
+    // Rei das Américas
+    const isAmericasClub = ["BR", "AR", "UY"].includes(player.currentTeam.country);
+    const isAmericasNationality = AMERICAN_NATIONALITIES.includes(player.nationality);
+    const isReiDasAmericasEligible = !isDiv2 && (isAmericasClub || isAmericasNationality);
+
+    if (isReiDasAmericasEligible) {
+      const wonLibertadores = wonCL && (isAmericasClub || continentalName === "Copa Continental");
+      const wonCopaAmerica = finals.some(f => (f.type.includes("Copa América") || f.type === "Copa Continental (Seleção)") && f.won);
+      const wonNationalLeague = leaguePosition === 1;
+      const wonNationalCup = finals.some(f => f.type === cupName && f.won);
+      const totalGA = goals + assists;
+
+      let wonReiDasAmericas = false;
+
+      if (wonLibertadores) {
+        if (clTopScorer || totalGA >= 15 || currentOvr >= 75) {
+          wonReiDasAmericas = Math.random() > 0.15; // 85% chance
+        } else if (DEFENSIVE_POSITIONS.includes(player.position) && (cleanSheetRateThisSeason >= 0.35 || tackles >= 60)) {
+          wonReiDasAmericas = Math.random() > 0.2; // 80% chance
+        } else {
+          wonReiDasAmericas = Math.random() > 0.4; // 60% chance
+        }
+      } else if (wonCopaAmerica && totalGA >= 8) {
+        wonReiDasAmericas = Math.random() > 0.3; // 70% chance
+      } else if ((wonNationalLeague || wonNationalCup) && totalGA >= 22 && currentOvr >= 76) {
+        wonReiDasAmericas = Math.random() > 0.5; // 50% chance
+      } else if (isAmericasClub && totalGA >= 28 && currentOvr >= 78) {
+        wonReiDasAmericas = Math.random() > 0.6; // 40% chance
+      }
+
+      if (wonReiDasAmericas) {
+        individualAwards.push("Rei das Américas");
+      }
+    }
+
+    // Melhor da Europa
+    const isEuropeanClub = ["EN", "ES", "IT", "DE", "FR", "PT", "NL"].includes(player.currentTeam.country);
+    const isEuropeanNationality = EUROPEAN_NATIONALITIES.includes(player.nationality);
+    const isMelhorDaEuropaEligible = !isDiv2 && (isEuropeanClub || isEuropeanNationality);
+
+    if (isMelhorDaEuropaEligible) {
+      const wonChampionsLeague = wonCL && (isEuropeanClub || continentalName === "Champions League");
+      const wonEurocopa = finals.some(f => (f.type.includes("Eurocopa") || f.type === "Copa Continental (Seleção)") && f.won);
+      const wonNationalLeague = leaguePosition === 1;
+      const wonNationalCup = finals.some(f => f.type === cupName && f.won);
+      const totalGA = goals + assists;
+
+      let wonMelhorDaEuropa = false;
+
+      if (wonChampionsLeague) {
+        if (clTopScorer || totalGA >= 20 || currentOvr >= 82) {
+          wonMelhorDaEuropa = Math.random() > 0.15; // 85% chance
+        } else if (DEFENSIVE_POSITIONS.includes(player.position) && (cleanSheetRateThisSeason >= 0.4 || tackles >= 70)) {
+          wonMelhorDaEuropa = Math.random() > 0.2; // 80% chance
+        } else {
+          wonMelhorDaEuropa = Math.random() > 0.4; // 60% chance
+        }
+      } else if (wonEurocopa && totalGA >= 8) {
+        wonMelhorDaEuropa = Math.random() > 0.25; // 75% chance
+      } else if ((wonNationalLeague || wonNationalCup) && totalGA >= 30 && currentOvr >= 83) {
+        wonMelhorDaEuropa = Math.random() > 0.5; // 50% chance
+      } else if (isEuropeanClub && totalGA >= 38 && currentOvr >= 85) {
+        wonMelhorDaEuropa = Math.random() > 0.6; // 40% chance
+      }
+
+      if (wonMelhorDaEuropa) {
+        individualAwards.push("Melhor da Europa");
+      }
+    }
+
+    // Bola de Ouro
     let wonBallonDor = false;
     
     if (wonWC && wcTopScorer) {
@@ -1172,6 +1244,12 @@ export const simulateSeason = (
   const chuteiraCount = individualAwards.filter(a => a.includes("Chuteira de Ouro")).length;
   finalPoints += chuteiraCount * 2;
 
+  const reiDasAmericasCount = individualAwards.filter(a => a === "Rei das Américas").length;
+  finalPoints += reiDasAmericasCount * 3;
+
+  const melhorDaEuropaCount = individualAwards.filter(a => a === "Melhor da Europa").length;
+  finalPoints += melhorDaEuropaCount * 3;
+
   let wonWC = false;
   let wonCL = false;
 
@@ -1251,6 +1329,8 @@ export const simulateSeason = (
     }
   }
 
+  const calculatedMotm = leagueSeasonOverride?.manOfTheMatch ?? Math.round(goals * 0.35 + assists * 0.2 + (performanceRatio >= 1.2 ? 2 : 0));
+
   const seasonStatObj: SeasonStat = {
     age: player.age,
     team: player.currentTeam,
@@ -1259,6 +1339,7 @@ export const simulateSeason = (
     assists,
     tackles,
     cleanSheets,
+    manOfTheMatch: Math.max(0, calculatedMotm),
     rating: currentOvr,
     attributeChanges: decline,
     nationalTeamCall,
@@ -1546,11 +1627,23 @@ export function simulateLeagueMatchResult(home: Team, away: Team): { homeGoals: 
     return k - 1;
   };
 
-  const homeAdvantage = 0.3;
-  const diff = (home.level + homeAdvantage) - away.level;
-  const baseGoals = 1.3;
-  const homeExpected = Math.max(0.25, baseGoals + diff * 0.25);
-  const awayExpected = Math.max(0.25, baseGoals - diff * 0.25);
+  const homeAdvantage = 0.25;
+  const levelDiff = (home.level + homeAdvantage) - away.level;
+  const baseGoals = 1.25;
+
+  // Times de nível mais alto têm maior ímpeto ofensivo (+0.08 por nível em relação ao nível 3)
+  const homeAttackBoost = (home.level - 3) * 0.08;
+  const awayAttackBoost = (away.level - 3) * 0.08;
+
+  // Times de nível mais alto têm defesas mais sólidas, reduzindo os gols esperados do adversário
+  const homeDefensiveMultiplier = Math.max(0.65, 1 - (home.level - 3) * 0.08);
+  const awayDefensiveMultiplier = Math.max(0.65, 1 - (away.level - 3) * 0.08);
+
+  let homeExpected = (baseGoals + levelDiff * 0.22 + homeAttackBoost) * awayDefensiveMultiplier;
+  let awayExpected = (baseGoals - levelDiff * 0.22 + awayAttackBoost) * homeDefensiveMultiplier;
+
+  homeExpected = Math.max(0.18, Math.min(3.2, homeExpected));
+  awayExpected = Math.max(0.18, Math.min(3.2, awayExpected));
 
   return { homeGoals: poisson(homeExpected), awayGoals: poisson(awayExpected) };
 }
@@ -1799,6 +1892,71 @@ export function getContinentalCupOpponentPool(playerTeam: Team): Team[] {
   return TEAMS.filter((t) => group.includes(t.country) && (t.division || 1) === 1 && t.id !== playerTeam.id);
 }
 
+export function getNationalTeamOpponentPool(nationality: string): Team[] {
+  return NATIONAL_TEAMS.filter((t) => t.name !== nationality && t.id !== nationality);
+}
+
+export function getNationalContinentalOpponentPool(nationality: string): Team[] {
+  if (EUROPEAN_NATIONALITIES.includes(nationality)) {
+    const pool = NATIONAL_TEAMS.filter((t) => t.name !== nationality && t.id !== nationality && EUROPEAN_NATIONALITIES.includes(t.name));
+    if (pool.length >= 3) return pool;
+  }
+  if (AMERICAN_NATIONALITIES.includes(nationality)) {
+    const pool = NATIONAL_TEAMS.filter((t) => t.name !== nationality && t.id !== nationality && AMERICAN_NATIONALITIES.includes(t.name));
+    if (pool.length >= 2) return pool;
+  }
+  if (ASIAN_NATIONALITIES.includes(nationality)) {
+    const pool = NATIONAL_TEAMS.filter((t) => t.name !== nationality && t.id !== nationality && ASIAN_NATIONALITIES.includes(t.name));
+    if (pool.length >= 2) return pool;
+  }
+  return getNationalTeamOpponentPool(nationality);
+}
+
+export function getNationalCupQualifications(
+  player: Player,
+  currentOvr: number
+): { worldCup: boolean; continentalCup: boolean; isCalledUp: boolean } {
+  if (!player.isPro) return { worldCup: false, continentalCup: false, isCalledUp: false };
+
+  const isWorldCupYear = player.age % 4 === 0;
+  const isContinentalCupYear = player.age % 4 === 2;
+
+  if (!isWorldCupYear && !isContinentalCupYear) {
+    return { worldCup: false, continentalCup: false, isCalledUp: false };
+  }
+
+  // Requisitos reais de convocação para Seleção no Modo História:
+  // OVR >= 75: convocação garantida.
+  // OVR 71-74: convocado se teve boa temporada anterior (gols+assists >= 8) ou 40% de chance.
+  // OVR < 71: NÃO convocado.
+  const topNats = ["Brasil", "Argentina", "França", "Inglaterra", "Espanha", "Itália", "Alemanha", "Portugal", "Holanda", "Uruguai", 
+    "Estados Unidos", "Arábia Saudita", "Japão", "Coreia do Sul", "Austrália", "Colômbia", "Equador", "Paraguai", "Irã", "Iraque", "Uzbequistão", "Catar",
+    "Bélgica", "Suíça", "Suécia", "Noruega", "Croácia", "Turquia", "Escócia", "Bósnia"
+  ];
+  const isTop = topNats.includes(player.nationality);
+  const guaranteedOvr = isTop ? 75 : 71;
+  const minimumOvr = isTop ? 71 : 67;
+
+  let isCalledUp = false;
+  if (currentOvr >= guaranteedOvr) {
+    isCalledUp = true;
+  } else if (currentOvr >= minimumOvr) {
+    const lastSeason = player.history[0];
+    const strongSeason = lastSeason ? (lastSeason.goals + lastSeason.assists >= 8) : false;
+    isCalledUp = strongSeason || Math.random() < 0.4;
+  }
+
+  if (!isCalledUp) {
+    return { worldCup: false, continentalCup: false, isCalledUp: false };
+  }
+
+  return {
+    worldCup: isWorldCupYear,
+    continentalCup: isContinentalCupYear,
+    isCalledUp: true,
+  };
+}
+
 function shuffleTeams<T>(list: T[]): T[] {
   const arr = [...list];
   for (let i = arr.length - 1; i > 0; i--) {
@@ -1842,23 +2000,47 @@ function pairUpCupRound(teams: Team[], roundIndex: number, roundName: string, pl
 
 // Monta o chaveamento inicial: o time do jogador entra sorteado junto com
 // outros times do pool (mesmo país para copa nacional, região continental
-// para copa continental).
+// para copa continental/de seleções).
 export function createCupBracket(
   cupName: string,
   isContinental: boolean,
   playerTeam: Team,
   opponentPool: Team[],
-  desiredSize: 8 | 16
+  desiredSize: 8 | 16,
+  isNational: boolean = false
 ): CupSeasonState {
-  const size = pickBracketSize(opponentPool.length + 1, desiredSize);
-  const roundNames = roundNamesForSize(size);
-  const others = shuffleTeams(opponentPool).slice(0, size - 1);
+  let size = pickBracketSize(opponentPool.length + 1, desiredSize);
+  let roundNames = roundNamesForSize(size);
+  let others = shuffleTeams(opponentPool).slice(0, size - 1);
+
+  // Se a quantidade de oponentes no pool for menor do que (size - 1),
+  // preenche com outras seleções nacionais ou times para manter o chaveamento par
+  if (others.length < size - 1) {
+    const pickedIds = new Set([playerTeam.id, playerTeam.name, ...others.map((t) => t.id), ...others.map((t) => t.name)]);
+    const fillPool = [...NATIONAL_TEAMS, ...TEAMS].filter((t) => !pickedIds.has(t.id) && !pickedIds.has(t.name));
+    const extraNeeded = (size - 1) - others.length;
+    const extra = shuffleTeams(fillPool).slice(0, extraNeeded);
+    others = [...others, ...extra];
+  }
+
+  const totalCount = others.length + 1;
+  if (totalCount < 4) {
+    size = 2;
+  } else if (totalCount < 8) {
+    size = 4;
+  } else if (totalCount < 16 && size === 16) {
+    size = 8;
+  }
+  roundNames = roundNamesForSize(size);
+  others = others.slice(0, size - 1);
+
   const participants = shuffleTeams([playerTeam, ...others]);
   const firstRound = pairUpCupRound(participants, 0, roundNames[0], playerTeam.id);
 
   return {
     cupName,
     isContinental,
+    isNational,
     roundNames,
     roundsMatches: [firstRound],
     currentRoundIndex: 0,
@@ -1985,3 +2167,35 @@ export function countCupMatchesPlayed(state: CupSeasonState): number {
     0
   );
 }
+
+export function calculateBiometricsModifiers(height: number, weight: number) {
+  const heightM = height / 100;
+  const bmi = weight / (heightM * heightM);
+
+  const weightEffect = Math.round((weight - 75) / 3);
+  const heightEffect = Math.round((height - 181) / 3.8);
+
+  const basePhysicalMod = weightEffect + heightEffect;
+  const basePaceMod = -basePhysicalMod;
+
+  let physicalDebuff = 0;
+  let paceDebuff = 0;
+
+  if (bmi < 19.0) {
+    // Jogador muito leve/magro para a altura (ex: 200cm e 60kg => IMC 15.0)
+    const diff = 19.0 - bmi;
+    physicalDebuff = Math.round(diff * 3.2); // Debuff de físico agressivo
+    paceDebuff = Math.round(diff * 0.8);
+  } else if (bmi > 26.0) {
+    // Jogador muito pesado/sobrepeso para a altura (ex: 162cm e 90kg => IMC 34.3)
+    const diff = bmi - 26.0;
+    physicalDebuff = Math.round(diff * 2.8); // Debuff de físico agressivo
+    paceDebuff = Math.round(diff * 1.5);
+  }
+
+  const physicalMod = basePhysicalMod - physicalDebuff;
+  const paceMod = basePaceMod - paceDebuff;
+
+  return { physicalMod, paceMod, physicalDebuff, paceDebuff, bmi };
+}
+

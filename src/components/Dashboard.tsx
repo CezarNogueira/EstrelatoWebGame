@@ -1,7 +1,7 @@
 import { RomanceEvent } from "../types";
 import { FamilyEvent, Player, SeasonStat, LeagueSeasonState, CupSeasonState } from "../types";
 import { calculateOverall, getPlayerTitle, formatCurrency, getLeagueName, getLeagueTheme } from "../utils";
-import { ArrowRight, Calendar, Goal, User, Users, Zap, FileSignature, ShoppingBag, Shield, ShieldCheck, MapPin, Smartphone, Crosshair, Target, MoveRight, Activity, Rocket, Trophy } from "lucide-react";
+import { ArrowRight, Calendar, Goal, User, Users, Zap, FileSignature, ShoppingBag, Shield, ShieldCheck, MapPin, Smartphone, Crosshair, Target, MoveRight, Activity, Rocket, Trophy, Ruler } from "lucide-react";
 import { PLAY_STYLES, PLAY_STYLE_LEVEL_LABEL } from "../data";
 import { PlayStyle, PlayStyleLevel } from "../types";
 import { motion, AnimatePresence } from "motion/react";
@@ -553,6 +553,12 @@ export function Dashboard({
               </div>
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-4 mt-2 text-slate-400 font-medium">
                 <span className="flex items-center gap-1"><Calendar className="w-4 h-4"/> {player.age} anos</span>
+                {player.height && player.weight && (
+                  <>
+                    <span>•</span>
+                    <span className="flex items-center gap-1"><Ruler className="w-4 h-4 text-emerald-400" /> {player.height} cm / {player.weight} kg</span>
+                  </>
+                )}
                 <span>•</span>
                 <span>{player.currentTeam.name}</span>
                 <span>•</span>
@@ -769,6 +775,9 @@ export function Dashboard({
                             <span>{stat.matches} Jogos</span>
                             <span>{stat.goals} Gols</span>
                             <span>{stat.assists} Assists</span>
+                            {!!stat.manOfTheMatch && stat.manOfTheMatch > 0 && (
+                              <span className="text-amber-400 font-bold">⭐ {stat.manOfTheMatch}x melhor da partida</span>
+                            )}
                             {showDefensiveStats && (
                               <>
                                 <span>{stat.tackles ?? 0} Desarmes</span>

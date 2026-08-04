@@ -333,9 +333,16 @@ export function getNextPlayStyleLevel(level: PlayStyleLevel): PlayStyleLevel | n
   return idx >= 0 && idx < PLAY_STYLE_LEVEL_ORDER.length - 1 ? PLAY_STYLE_LEVEL_ORDER[idx + 1] : null;
 }
 
-export const NATIONALITIES = [
+export const AMERICAN_NATIONALITIES = [
   "Brasil",
   "Argentina",
+  "Uruguai",
+  "Colômbia",
+  "Equador",
+  "Paraguai"
+];
+
+export const EUROPEAN_NATIONALITIES = [
   "França",
   "Inglaterra",
   "Espanha",
@@ -343,7 +350,34 @@ export const NATIONALITIES = [
   "Alemanha",
   "Portugal",
   "Holanda",
-  "Uruguai"
+  "Áustria",
+  "Bélgica",
+  "Bósnia",
+  "Croácia",
+  "Escócia",
+  "Noruega",
+  "R. Tcheca",
+  "Suécia",
+  "Suíça",
+  "Turquia"
+];
+
+export const ASIAN_NATIONALITIES = [
+  "Japão",
+  "Austrália",
+  "Jordânia",
+  "Catar",
+  "A. Saudita",
+  "Coreia do Sul",
+  "Irã",
+  "Iraque",
+  "Uzbequistão"
+];
+
+export const NATIONALITIES = [
+  ...AMERICAN_NATIONALITIES,
+  ...EUROPEAN_NATIONALITIES,
+  ...ASIAN_NATIONALITIES
 ];
 
 export const TEAMS: Team[] = [
@@ -860,6 +894,10 @@ export const INITIAL_TEAMS = TEAMS.filter((t) => t.level <= 5);
 export const NATIONALITY_COUNTRY_MAP: Record<string, string> = {
   "Brasil": "BR",
   "Argentina": "AR",
+  "Uruguai": "UY",
+  "Colômbia": "CO",
+  "Equador": "EC",
+  "Paraguai": "PY",
   "França": "FR",
   "Inglaterra": "EN",
   "Espanha": "ES",
@@ -867,7 +905,25 @@ export const NATIONALITY_COUNTRY_MAP: Record<string, string> = {
   "Alemanha": "DE",
   "Portugal": "PT",
   "Holanda": "NL",
-  "Uruguai": "UY",
+  "Áustria": "AT",
+  "Bélgica": "BE",
+  "Bósnia": "BA",
+  "Croácia": "HR",
+  "Escócia": "SCO",
+  "Noruega": "NO",
+  "R. Tcheca": "CZ",
+  "Suécia": "SE",
+  "Suíça": "CH",
+  "Turquia": "TR",
+  "Japão": "JP",
+  "Austrália": "AU",
+  "Jordânia": "JO",
+  "Catar": "QA",
+  "A. Saudita": "SA",
+  "Coreia do Sul": "KR",
+  "Irã": "IR",
+  "Iraque": "IQ",
+  "Uzbequistão": "UZ",
 };
 
 export const NATIONAL_TEAMS: Team[] = [
@@ -876,30 +932,55 @@ export const NATIONAL_TEAMS: Team[] = [
   { id: "FR", name: "França", country: "FR", level: 5, logo: FrancaLogo },
   { id: "EN", name: "Inglaterra", country: "EN", level: 5, logo: InglaterraLogo },
   { id: "ES", name: "Espanha", country: "ES", level: 5, logo: EspanhaLogo },
-  { id: "IT", name: "Itália", country: "IT", level: 5, logo: ItaliaLogo },
+  { id: "IT", name: "Itália", country: "IT", level: 1, logo: ItaliaLogo },
   { id: "DE", name: "Alemanha", country: "DE", level: 5, logo: AlemanhaLogo },
   { id: "PT", name: "Portugal", country: "PT", level: 5, logo: PortugalLogo },
-  { id: "NL", name: "Holanda", country: "NL", level: 5, logo: HolandaLogo },
-  { id: "UY", name: "Uruguai", country: "UY", level: 5, logo: UruguaiLogo },
+  { id: "NL", name: "Holanda", country: "NL", level: 4, logo: HolandaLogo },
+  { id: "UY", name: "Uruguai", country: "UY", level: 4, logo: UruguaiLogo },
+  { id: "CO", name: "Colômbia", country: "CO", level: 4 },
+  { id: "EC", name: "Equador", country: "EC", level: 4 },
+  { id: "PY", name: "Paraguai", country: "PY", level: 4 },
+  { id: "AT", name: "Áustria", country: "AT", level: 4 },
+  { id: "BE", name: "Bélgica", country: "BE", level: 4 },
+  { id: "BA", name: "Bósnia", country: "BA", level: 3 },
+  { id: "HR", name: "Croácia", country: "HR", level: 4 },
+  { id: "SCO", name: "Escócia", country: "SCO", level: 3 },
+  { id: "NO", name: "Noruega", country: "NO", level: 3 },
+  { id: "CZ", name: "R. Tcheca", country: "CZ", level: 2 },
+  { id: "SE", name: "Suécia", country: "SE", level: 3 },
+  { id: "CH", name: "Suíça", country: "CH", level: 3 },
+  { id: "TR", name: "Turquia", country: "TR", level: 3 },
+  { id: "JP", name: "Japão", country: "JP", level: 4 },
+  { id: "AU", name: "Austrália", country: "AU", level: 2 },
+  { id: "JO", name: "Jordânia", country: "JO", level: 2 },
+  { id: "QA", name: "Catar", country: "QA", level: 1 },
+  { id: "SA", name: "A. Saudita", country: "SA", level: 4 },
+  { id: "KR", name: "Coreia do Sul", country: "KR", level: 3 },
+  { id: "IR", name: "Irã", country: "IR", level: 2 },
+  { id: "IQ", name: "Iraque", country: "IQ", level: 1 },
+  { id: "UZ", name: "Uzbequistão", country: "UZ", level: 1 },
 ];
 
-export function getNationalTeam(nationality: string): Team | undefined {
-  return NATIONAL_TEAMS.find((t) => t.name === nationality);
+export function getNationalTeam(nationality: string): Team {
+  const found = NATIONAL_TEAMS.find((t) => t.name === nationality);
+  if (found) return found;
+  return {
+    id: nationality,
+    name: nationality,
+    country: NATIONALITY_COUNTRY_MAP[nationality] || "BR",
+    level: 5,
+    logo: undefined,
+  };
 }
 
 export function getNationalTeamLogo(nationality: string): string | undefined {
   return getNationalTeam(nationality)?.logo;
 }
 
-// Nationalities grouped by continent, so the national-team continental cup
-// (played between World Cups) can be named correctly: Eurocopa for European
-// nations, Copa América for the Americas.
-export const EUROPEAN_NATIONALITIES = ["França", "Inglaterra", "Espanha", "Itália", "Alemanha", "Portugal", "Holanda"];
-export const AMERICAN_NATIONALITIES = ["Brasil", "Argentina", "Uruguai"];
-
 export function getNationalContinentalCup(nationality: string): string {
   if (EUROPEAN_NATIONALITIES.includes(nationality)) return "Eurocopa";
   if (AMERICAN_NATIONALITIES.includes(nationality)) return "Copa América";
+  if (ASIAN_NATIONALITIES.includes(nationality)) return "Copa da Ásia";
   return "Copa Continental (Seleção)";
 }
 
@@ -909,7 +990,19 @@ function getRouletteWeight(level: number): number {
 
 export function getInitialTeamsForNationality(nationality: string): Team[] {
   const countryCode = NATIONALITY_COUNTRY_MAP[nationality];
-  const pool = countryCode ? TEAMS.filter((t) => t.country === countryCode) : TEAMS;
+  let pool = countryCode ? TEAMS.filter((t) => t.country === countryCode) : [];
+
+  // Se o país da nacionalidade não possui liga própria no TEAMS, roleta times aleatórios do mesmo continente (ou Europa para países asiáticos)
+  if (pool.length === 0) {
+    if (AMERICAN_NATIONALITIES.includes(nationality)) {
+      const americanCountryCodes = AMERICAN_NATIONALITIES.map((n) => NATIONALITY_COUNTRY_MAP[n]).filter(Boolean);
+      pool = TEAMS.filter((t) => americanCountryCodes.includes(t.country));
+    } else if (EUROPEAN_NATIONALITIES.includes(nationality) || ASIAN_NATIONALITIES.includes(nationality)) {
+      const europeanCountryCodes = EUROPEAN_NATIONALITIES.map((n) => NATIONALITY_COUNTRY_MAP[n]).filter(Boolean);
+      pool = TEAMS.filter((t) => europeanCountryCodes.includes(t.country));
+    }
+  }
+
   const finalPool = pool.length > 0 ? pool : TEAMS;
 
   const weighted: Team[] = [];
@@ -985,6 +1078,66 @@ const NAME_POOLS: Record<string, NamePool> = {
     female: ["Valentina", "Camila", "Florencia", "Martina", "Sofía", "Lucía", "Agustina", "Victoria"],
     surnames: ["Pereira", "Rodríguez", "Fernández", "Silva", "González", "Núñez", "Correa", "Suárez"],
   },
+  "Colômbia": {
+    male: ["Juan", "Carlos", "Andrés", "David", "Jorge", "Luis", "Diego", "Sebastián"],
+    female: ["María", "Catalina", "Valentina", "Isabella", "Camila", "Sofía", "Daniela", "Gabriela"],
+    surnames: ["García", "Martínez", "Rodríguez", "López", "Gómez", "Díaz", "Pérez", "Ramírez"],
+  },
+  "Equador": {
+    male: ["José", "Luis", "Carlos", "Andrés", "Jorge", "David", "Diego", "Sebastián"],
+    female: ["María", "Valentina", "Isabella", "Camila", "Sofía", "Gabriela", "Daniela", "Lucía"],                    
+    surnames: ["González", "Rodríguez", "Martínez", "López", "Pérez", "Díaz", "Ramírez", "Gómez"],
+  },
+  "Paraguai": {
+    male: ["Juan", "Carlos", "José", "Luis", "Andrés", "Diego", "Jorge", "Sebastián"],
+    female: ["María", "Valentina", "Isabella", "Camila", "Sofía", "Gabriela", "Daniela", "Lucía"],
+    surnames: ["González", "Rodríguez", "Martínez", "López", "Pérez", "Díaz", "Ramírez", "Gómez"],
+  },
+  "Japão": {
+    male: ["Haruto", "Yuto", "Sota", "Yuki", "Kaito", "Ren", "Riku", "Daiki"],
+    female: ["Yui", "Hina", "Sakura", "Rin", "Mio", "Aoi", "Yuna", "Mei", "Aiko"],
+    surnames: ["Sato", "Suzuki", "Takahashi", "Tanaka", "Watanabe", "Ito", "Yamamoto", "Nakamura"],
+  },
+  "Austrália": {
+    male: ["Jack", "Liam", "Noah", "Lucas", "Ethan", "James", "Alexander", "William"],
+    female: ["Charlotte", "Olivia", "Amelia", "Ava", "Mia", "Isla", "Harper", "Ella"],
+    surnames: ["Smith", "Jones", "Williams", "Brown", "Taylor", "Wilson", "Evans", "Thomas"],
+  },
+  "Jordânia": {
+    male: ["Ahmad", "Youssef", "Khalil", "Hassan", "Mohammed", "Ali", "Mustafa", "Omar"],
+    female: ["Aisha", "Fatima", "Khadija", "Zahra", "Amira", "Layla", "Nour", "Sara"],
+    surnames: ["Al-Mansoori", "Al-Hamdan", "Al-Saif", "Al-Dabbagh", "Al-Shami", "Al-Harithi", "Al-Murshidi", "Al-Rashidi"],
+  },
+  "Catar": {
+    male: ["Mohammed", "Ahmed", "Ali", "Hassan", "Khalid", "Abdullah", "Yousef", "Omar"],
+    female: ["Fatima", "Aisha", "Maryam", "Zahra", "Noor", "Layla", "Sara", "Amira"],
+    surnames: ["Al-Thani", "Al-Kuwari", "Al-Mohannadi", "Al-Ansari", "Al-Sulaiti", "Al-Naimi", "Al-Khater", "Al-Muraikhi"],
+  },
+  "Arábia Saudita": {
+    male: ["Mohammed", "Abdullah", "Fahad", "Salman", "Khalid", "Turki", "Nasser", "Saud"],
+    female: ["Fatima", "Aisha", "Maryam", "Zahra", "Noor", "Layla", "Sara", "Amira"],
+    surnames: ["Al-Saud", "Al-Faisal", "Al-Rashid", "Al-Mutairi", "Al-Qahtani", "Al-Shahrani", "Al-Harbi", "Al-Ghamdi"],
+  },
+  "Coreia do Sul": {
+    male: ["Min-jun", "Seo-jun", "Ji-ho", "Hyun-woo", "Joon-seo", "Sang-hoon", "Tae-hyun", "Dong-hyun"],
+    female: ["Seo-yeon", "Ji-woo", "Ha-eun", "Soo-ah", "Min-seo", "Yuna", "Hana", "Eun-ji"],
+    surnames: ["Kim", "Lee", "Park", "Choi", "Jung", "Kang", "Cho", "Yoon"],
+  },
+  "Irã": {
+    male: ["Mohammad", "Ali", "Reza", "Hossein", "Amir", "Saeed", "Hamed", "Ehsan"],
+    female: ["Fatemeh", "Zahra", "Maryam", "Narges", "Sara", "Leila", "Arezoo", "Shirin"],
+    surnames: ["Mohammadi", "Hosseini", "Ahmadi", "Rahimi", "Karimi", "Jafari", "Ebrahimi", "Ghasemi"],
+  },
+  "Iraque": {
+    male: ["Ali", "Ahmed", "Hassan", "Omar", "Mohammed", "Yousef", "Khalid", "Abdullah"],
+    female: ["Fatima", "Aisha", "Maryam", "Zahra", "Noor", "Layla", "Sara", "Amira"],
+    surnames: ["Al-Hashimi", "Al-Mansoori", "Al-Khalidi", "Al-Tamimi", "Al-Jabouri", "Al-Samarrai", "Al-Dulaimi", "Al-Rubaie"],
+  },
+  "Uzbequistão": {
+    male: ["Aziz", "Bekzod", "Diyor", "Jahongir", "Kamol", "Murod", "Rustam", "Shavkat"],
+    female: ["Dilnoza", "Gulnara", "Nilufar", "Saodat", "Shakhnoza", "Yulduz", "Zebiniso", "Zuhra"],
+    surnames: ["Karimov", "Tursunov", "Rakhmonov", "Islomov", "Abdullayev", "Nazarov", "Saidov", "Yusupov"],
+  }
 };
 
 const DEFAULT_NAME_POOL: NamePool = NAME_POOLS["Brasil"];
