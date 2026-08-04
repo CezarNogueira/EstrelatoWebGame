@@ -1556,7 +1556,16 @@ export const updateIdolStatus = (
 
 export function getTeamsInSameLeague(allTeams: Team[], reference: Team): Team[] {
   const division = reference.division || 1;
-  return allTeams.filter((t) => t.country === reference.country && (t.division || 1) === division);
+  // `allTeams` vem da lista estática TEAMS (data.ts), cujo campo `division`
+  // nunca é atualizado quando o time do jogador sobe/desce de divisão - só o
+  // objeto `player.currentTeam` (aqui passado como `reference`) reflete a
+  // divisão nova. Por isso, filtramos a lista estática removendo qualquer
+  // entrada antiga do próprio time do jogador e sempre incluímos `reference`
+  // no lugar; caso contrário, logo após o acesso/rebaixamento o time do
+  // jogador simplesmente não aparece na lista da nova divisão e fica sem
+  // nenhuma partida marcada no calendário.
+  const teams = allTeams.filter((t) => t.country === reference.country && (t.division || 1) === division && t.id !== reference.id);
+  return [...teams, reference];
 }
 
 // Gera o calendário de turno e returno pelo método do círculo. Para N times
@@ -1854,9 +1863,18 @@ export function getCupQualifications(player: Player, currentOvr: number): { dome
   if (!player.isPro || player.currentTeam.division === 2) return { domesticCup: false, continentalCup: false };
 
   // Terminou no G4 (top 4) da liga na temporada anterior: classificação
-  // garantida para a Copa Nacional e para a Copa Continental.
+  // garantida para a Copa Nacional e para a Copa Continental. Importante:
+  // isso só vale se o G4 foi na PRIMEIRA divisão. Sem essa checagem, um time
+  // que sobe da segunda divisão (o que também resulta em posição 1-4 na
+  // tabela da segunda divisão) era erroneamente classificado direto para a
+  // Champions League/Copa Continental, quando na verdade só ganhou o acesso.
   const lastSeason = player.history[0];
-  if (lastSeason && lastSeason.leaguePosition !== undefined && lastSeason.leaguePosition <= 4) {
+  if (
+    lastSeason &&
+    lastSeason.leaguePosition !== undefined &&
+    lastSeason.leaguePosition <= 4 &&
+    (lastSeason.team.division || 1) === 1
+  ) {
     return { domesticCup: true, continentalCup: true };
   }
 
@@ -2198,4 +2216,3 @@ export function calculateBiometricsModifiers(height: number, weight: number) {
 
   return { physicalMod, paceMod, physicalDebuff, paceDebuff, bmi };
 }
-
