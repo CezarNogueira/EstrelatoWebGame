@@ -1031,7 +1031,7 @@ export function InteractiveMatchModal({
       <div className="bg-slate-900 border-2 border-slate-900 rounded-3xl shadow-2xl max-w-2xl w-full flex flex-col h-[85vh] max-h-[800px] overflow-hidden">
         
         {/* Header / Scoreboard */}
-        <div className="bg-slate-950 p-6 border-b border-slate-800 text-center relative shrink-0">
+        <div className="p-6 border-b border-slate-800 text-center relative shrink-0">
           <div className="text-emerald-500 mb-2 font-black uppercase tracking-widest text-sm flex justify-center items-center gap-2">
             {headerLabel || `Final: ${finalType}`}
           </div>
@@ -1076,8 +1076,8 @@ export function InteractiveMatchModal({
           )}
           {events.map((ev, i) => (
             <div key={i} className={`flex gap-4 ${getEventColor(ev.type)} transition-all animate-in slide-in-from-bottom-2`}>
-              <span className="w-8 shrink-0 font-bold opacity-70">{ev.minute}'</span>
-              <span>{ev.text}</span>
+              <span className="w-8 shrink-0 font-black opacity-70">{ev.minute}'</span>
+              <span className="font-black text-lg">{ev.text}</span>
             </div>
           ))}
           <div ref={eventsEndRef} />
