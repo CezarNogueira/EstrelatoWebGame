@@ -1141,9 +1141,9 @@ const NAME_POOLS: Record<string, NamePool> = {
     surnames: ["González", "Rodríguez", "Martínez", "López", "Pérez", "Díaz", "Ramírez", "Gómez"],
   },
   "Japão": {
-    male: ["Haruto", "Yuto", "Sota", "Yuki", "Kaito", "Ren", "Riku", "Daiki"],
+    male: ["Haruto", "Yuto", "Sota", "Yuki", "Kaito", "Ren", "Riku", "Daiki", "Ayase", "Takumi", "Sora", "Itsuki", "Hinata", "Ryusei", "Koki"],
     female: ["Yui", "Hina", "Sakura", "Rin", "Mio", "Aoi", "Yuna", "Mei", "Aiko"],
-    surnames: ["Sato", "Suzuki", "Takahashi", "Tanaka", "Watanabe", "Ito", "Yamamoto", "Nakamura"],
+    surnames: ["Sato", "Suzuki", "Takahashi", "Tanaka", "Watanabe", "Ito", "Yamamoto", "Nakamura", "Ueda", "Kobayashi", "Kato", "Yoshida", "Yamada", "Sasaki", "Yamaguchi", "Matsumoto"],
   },
   "Austrália": {
     male: ["Jack", "Liam", "Noah", "Lucas", "Ethan", "James", "Alexander", "William"],
