@@ -1,5 +1,6 @@
-import { Attributes, CupMatch, CupSeasonState, LeagueMatch, LeagueSeasonState, LeagueStanding, Player, Position, SeasonStat, Team } from "./types";
+import { Attributes, Child, CupMatch, CupSeasonState, GroupStanding, LeagueMatch, LeagueSeasonState, LeagueStanding, Player, Position, SeasonStat, Team } from "./types";
 import { TEAMS, getNationalContinentalCup, NATIONAL_TEAMS, EUROPEAN_NATIONALITIES, AMERICAN_NATIONALITIES, ASIAN_NATIONALITIES, getNationalTeam } from "./data";
+import { NPC_PLAYERS } from "./squadPlayers";
 
 export const getLeagueName = (team: Team): string => {
   if (team.division === 2) {
@@ -635,6 +636,7 @@ export const simulateSeason = (
     assists: number;
     leaguePosition: number;
     manOfTheMatch?: number;
+    coachTrust?: number;
   }
 ): { baseUpdatedPlayer: Player; seasonStat: SeasonStat; transfer?: Team; earnedPoints: number; proContractOffer?: boolean } => {
   if (player.currentTeam.id === "none") {
@@ -856,7 +858,7 @@ export const simulateSeason = (
     const teamLvl = player.currentTeam.level;
     const requiredOvr = minOvrForStarter[teamLvl] || 64;
 
-    if (player.squadRole === "STARTER") {
+    if (getEffectiveSquadRole(player.coachTrust) === "STARTER") {
       isBenched = false; // Always plays
     } else if (currentOvr < requiredOvr) {
       isBenched = true;
@@ -1297,14 +1299,31 @@ export const simulateSeason = (
   }));
 
   let newGirlfriend = player.relationships.girlfriend ? { ...player.relationships.girlfriend } : null;
+  let newChildren = player.relationships.children ? [...player.relationships.children] : [];
+  let babyBornMessage: string | null = null;
+
   if (newGirlfriend) {
     newGirlfriend.affinity = Math.max(0, newGirlfriend.affinity - randomInt(1, 3));
+    if (newGirlfriend.pregnant) {
+      const babyNames = ["Lucas", "Gabriel", "Matheus", "Arthur", "Bernardo", "Sophia", "Isabella", "Alice", "Helena", "Manuela"];
+      const childName = babyNames[Math.floor(Math.random() * babyNames.length)];
+      const newChild: Child = {
+        id: `child_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+        name: childName,
+        motherName: newGirlfriend.name,
+        bornAtPlayerAge: player.age,
+      };
+      newChildren.push(newChild);
+      newGirlfriend.pregnant = false;
+      babyBornMessage = `Chegou! ${childName} nasceu, parabéns aos papais! 👶🎉❤️`;
+    }
   }
 
   const newRelationships = {
     family: newFamily,
     friends: newFriends,
-    girlfriend: newGirlfriend
+    girlfriend: newGirlfriend,
+    children: newChildren,
   };
 
   // Transfer Logic based on CURRENT OVR
@@ -1330,6 +1349,14 @@ export const simulateSeason = (
   }
 
   const calculatedMotm = leagueSeasonOverride?.manOfTheMatch ?? Math.round(goals * 0.35 + assists * 0.2 + (performanceRatio >= 1.2 ? 2 : 0));
+
+  // Sem override de liga rodada a rodada (Modo Rápido), não há nota de partida
+  // individual — aproxima a variação de confiança pelo desempenho da temporada
+  // como um todo. Com override, o valor já vem calculado partida a partida
+  // pelo LeagueSeasonPanel e só precisa ser applied aqui.
+  const newCoachTrust = leagueSeasonOverride?.coachTrust !== undefined
+    ? leagueSeasonOverride.coachTrust
+    : Math.max(0, Math.min(100, (player.coachTrust ?? 50) + Math.round((performanceRatio - 1) * 20)));
 
   const seasonStatObj: SeasonStat = {
     age: player.age,
@@ -1374,6 +1401,8 @@ export const simulateSeason = (
   const baseUpdatedPlayer: Player = {
     ...player,
     currentTeam: updatedTeam,
+    coachTrust: newCoachTrust,
+    squadRole: getEffectiveSquadRole(newCoachTrust),
     age: player.age + 1,
     attributes: newAttributes,
     relationships: newRelationships,
@@ -1387,12 +1416,61 @@ export const simulateSeason = (
     },
   };
 
-  if (baseUpdatedPlayer.chats && baseUpdatedPlayer.chats["treinador"]) {
-    baseUpdatedPlayer.chats = { ...baseUpdatedPlayer.chats };
-    delete baseUpdatedPlayer.chats["treinador"];
+  let finalUpdatedPlayer: Player = baseUpdatedPlayer;
+
+  if (finalUpdatedPlayer.chats && finalUpdatedPlayer.chats["treinador"]) {
+    finalUpdatedPlayer.chats = { ...finalUpdatedPlayer.chats };
+    delete finalUpdatedPlayer.chats["treinador"];
   }
 
-  return { baseUpdatedPlayer, seasonStat: seasonStatObj, transfer, earnedPoints: points, proContractOffer };
+  if (babyBornMessage && newGirlfriend) {
+    finalUpdatedPlayer = addMessageToChat(finalUpdatedPlayer, newGirlfriend.id, babyBornMessage);
+  }
+
+  for (const member of newFamily) {
+    if (Math.random() < 0.30) {
+      const msgs = member.role === "Mãe"
+        ? ["Oi meu filho! Como você está? Não se esqueça de se alimentar bem! ❤️", "Saudade de você, meu querido. Se cuida bastante aí! ❤️", "Vi suas notícias na TV, estou tão orgulhosa de você! ❤️"]
+        : member.role === "Pai"
+        ? ["E aí campeão! Continua trabalhando duro nos treinos.", "Acompanhei a temporada, bom trabalho! Mantenha o foco.", "Futebol exige dedicação diária. Orgulho de ver seu esforço!"]
+        : ["Fala mano! Me manda uma camisa do time!", "E aí garoto, quando vem pra cá pra gente jogar?", "Acompanhando seus jogos aqui, brabo demais!"];
+      const text = msgs[Math.floor(Math.random() * msgs.length)];
+      finalUpdatedPlayer = addMessageToChat(finalUpdatedPlayer, member.id, text);
+    }
+  }
+
+  for (const friend of newFriends) {
+    if (Math.random() < 0.30) {
+      const msgs = [
+        "Fala craque! Que temporada hein, tá jogando muito!",
+        "E aí mano, quando tiver de folga bora marcar de se ver!",
+        "Tava assistindo seu jogo no bar ontem, que partidaço!",
+        "Sucesso sempre meu irmão, tamo junto!"
+      ];
+      const text = msgs[Math.floor(Math.random() * msgs.length)];
+      finalUpdatedPlayer = addMessageToChat(finalUpdatedPlayer, friend.id, text);
+    }
+  }
+
+  if (newGirlfriend && Math.random() < 0.30) {
+    const msgs = newGirlfriend.married
+      ? [
+          "Saudades de você em casa, meu amor! Volta logo! ❤️",
+          "Mais uma temporada juntos, tenho tanto orgulho da nossa família! 💍❤️",
+          "Boa sorte nos próximos desafios, estou sempre ao seu lado! ❤️",
+          "Te amo demais, meu amor! Se cuida nesses treinos! 🥰"
+        ]
+      : [
+          "Estou com muitas saudades de você, meu amor! ❤️",
+          "Muito orgulho de te ver brilhando tanto em campo! Te amo! 🥰",
+          "Não vejo a hora da gente ter um tempinho juntos! ❤️",
+          "Estou sempre torcendo por você! 🥰"
+        ];
+    const text = msgs[Math.floor(Math.random() * msgs.length)];
+    finalUpdatedPlayer = addMessageToChat(finalUpdatedPlayer, newGirlfriend.id, text);
+  }
+
+  return { baseUpdatedPlayer: finalUpdatedPlayer, seasonStat: seasonStatObj, transfer, earnedPoints: points, proContractOffer };
 };
 
 // -----------------------------------------------------------------------------
@@ -1561,11 +1639,69 @@ export function getTeamsInSameLeague(allTeams: Team[], reference: Team): Team[] 
   // objeto `player.currentTeam` (aqui passado como `reference`) reflete a
   // divisão nova. Por isso, filtramos a lista estática removendo qualquer
   // entrada antiga do próprio time do jogador e sempre incluímos `reference`
-  // no lugar; caso contrário, logo após o acesso/rebaixamento o time do
-  // jogador simplesmente não aparece na lista da nova divisão e fica sem
-  // nenhuma partida marcada no calendário.
+  // no lugar. Garantimos exatamente 19 oponentes + `reference` = 20 times.
   const teams = allTeams.filter((t) => t.country === reference.country && (t.division || 1) === division && t.id !== reference.id);
-  return [...teams, reference];
+  const opponentTeams = teams.slice(0, 19);
+  return [...opponentTeams, reference];
+}
+
+export function sanitizeLeagueSeasonState(state: LeagueSeasonState, playerTeam: Team): LeagueSeasonState {
+  const hasBye = state.fixtures.some((m) => m.home.id === "__bye__" || m.away.id === "__bye__");
+  const isInvalid = state.teams.length > 20 || state.totalRounds > 38 || hasBye;
+
+  if (!isInvalid) return state;
+
+  // 1. Limpa a lista de times: remove BYE e duplicatas do time do jogador
+  let cleanTeams = state.teams.filter((t) => t.id !== "__bye__" && t.name !== "BYE" && t.id !== playerTeam.id);
+  cleanTeams = [...cleanTeams.slice(0, 19), playerTeam];
+
+  // 2. Gera novo calendário limpo de 38 rodadas para 20 times
+  const newFixtures = generateLeagueFixtures(cleanTeams).map((m) => ({
+    ...m,
+    isPlayerMatch: m.home.id === playerTeam.id || m.away.id === playerTeam.id,
+  }));
+
+  // 3. Preserva o histórico de partidas que já foram disputadas antes
+  const playedOldMatchesMap = new Map<string, LeagueMatch>();
+  state.fixtures.forEach((m) => {
+    if (m.played) {
+      const key = `${m.home.id}_vs_${m.away.id}`;
+      playedOldMatchesMap.set(key, m);
+    }
+  });
+
+  let standings = initLeagueStandings(cleanTeams);
+
+  const updatedFixtures = newFixtures.map((m) => {
+    const key = `${m.home.id}_vs_${m.away.id}`;
+    const oldMatch = playedOldMatchesMap.get(key);
+    if (oldMatch && oldMatch.played) {
+      const updated: LeagueMatch = {
+        ...m,
+        played: true,
+        homeGoals: oldMatch.homeGoals,
+        awayGoals: oldMatch.awayGoals,
+        playerGoals: oldMatch.playerGoals,
+        playerAssists: oldMatch.playerAssists,
+        playerRating: oldMatch.playerRating,
+      };
+      standings = applyLeagueResultToStandings(standings, updated);
+      return updated;
+    }
+    return m;
+  });
+
+  let currentRound = state.currentRound;
+  if (currentRound > 38) currentRound = 38;
+
+  return {
+    ...state,
+    teams: cleanTeams,
+    fixtures: updatedFixtures,
+    standings: sortLeagueStandings(standings),
+    currentRound,
+    totalRounds: 38,
+  };
 }
 
 // Gera o calendário de turno e returno pelo método do círculo. Para N times
@@ -1735,7 +1871,7 @@ export function createLeagueSeasonState(
   }));
   const totalRounds = fixtures.reduce((max, m) => Math.max(max, m.round), 0);
 
-  return {
+  const rawState: LeagueSeasonState = {
     leagueName,
     country: playerTeam.country,
     division: playerTeam.division || 1,
@@ -1745,6 +1881,8 @@ export function createLeagueSeasonState(
     currentRound: 1,
     totalRounds,
   };
+
+  return sanitizeLeagueSeasonState(rawState, playerTeam);
 }
 
 // Simula todas as partidas de uma rodada, EXCETO a do jogador (que fica
@@ -1772,6 +1910,24 @@ export function computeLeagueMatchRating(playerGoals: number, playerAssists: num
   const diffBonus = Math.max(-1, Math.min(1, ownGoalDiff)) * 0.3;
   const rating = 6.0 + playerGoals * 0.8 + playerAssists * 0.5 + diffBonus;
   return Math.round(Math.max(4, Math.min(10, rating)) * 10) / 10;
+}
+
+// Ajusta a confiança do técnico (0-100) com base na nota de uma partida de liga.
+// Nota 6.0 é neutra (não muda nada); acima disso ganha confiança, abaixo perde.
+// O valor final fica sempre entre 0 e 100.
+export function updateCoachTrust(currentTrust: number | undefined, matchRating: number): number {
+  const base = currentTrust ?? 50;
+  const delta = Math.round((matchRating - 6.0) * 3);
+  const clampedDelta = Math.max(-6, Math.min(9, delta));
+  return Math.max(0, Math.min(100, base + clampedDelta));
+}
+
+// Converte a confiança do técnico (0-100) no papel efetivo do jogador no elenco.
+export function getEffectiveSquadRole(coachTrust: number | undefined): "STARTER" | "COMPETING" | "ROTATION" {
+  const trust = coachTrust ?? 50;
+  if (trust >= 65) return "STARTER";
+  if (trust >= 35) return "COMPETING";
+  return "ROTATION";
 }
 
 export function resolvePlayerLeagueMatch(
@@ -1916,16 +2072,13 @@ export function getNationalTeamOpponentPool(nationality: string): Team[] {
 
 export function getNationalContinentalOpponentPool(nationality: string): Team[] {
   if (EUROPEAN_NATIONALITIES.includes(nationality)) {
-    const pool = NATIONAL_TEAMS.filter((t) => t.name !== nationality && t.id !== nationality && EUROPEAN_NATIONALITIES.includes(t.name));
-    if (pool.length >= 3) return pool;
+    return NATIONAL_TEAMS.filter((t) => t.name !== nationality && t.id !== nationality && EUROPEAN_NATIONALITIES.includes(t.name));
   }
   if (AMERICAN_NATIONALITIES.includes(nationality)) {
-    const pool = NATIONAL_TEAMS.filter((t) => t.name !== nationality && t.id !== nationality && AMERICAN_NATIONALITIES.includes(t.name));
-    if (pool.length >= 2) return pool;
+    return NATIONAL_TEAMS.filter((t) => t.name !== nationality && t.id !== nationality && AMERICAN_NATIONALITIES.includes(t.name));
   }
   if (ASIAN_NATIONALITIES.includes(nationality)) {
-    const pool = NATIONAL_TEAMS.filter((t) => t.name !== nationality && t.id !== nationality && ASIAN_NATIONALITIES.includes(t.name));
-    if (pool.length >= 2) return pool;
+    return NATIONAL_TEAMS.filter((t) => t.name !== nationality && t.id !== nationality && ASIAN_NATIONALITIES.includes(t.name));
   }
   return getNationalTeamOpponentPool(nationality);
 }
@@ -1948,8 +2101,8 @@ export function getNationalCupQualifications(
   // OVR 71-74: convocado se teve boa temporada anterior (gols+assists >= 8) ou 40% de chance.
   // OVR < 71: NÃO convocado.
   const topNats = ["Brasil", "Argentina", "França", "Inglaterra", "Espanha", "Itália", "Alemanha", "Portugal", "Holanda", "Uruguai", 
-    "Estados Unidos", "Arábia Saudita", "Japão", "Coreia do Sul", "Austrália", "Colômbia", "Equador", "Paraguai", "Irã", "Iraque", "Uzbequistão", "Catar",
-    "Bélgica", "Suíça", "Suécia", "Noruega", "Croácia", "Turquia", "Escócia", "Bósnia"
+    "Estados Unidos", "EUA", "Arábia Saudita", "Japão", "Coreia do Sul", "Austrália", "Colômbia", "Equador", "Paraguai", "Irã", "Iraque", "Uzbequistão", "Catar",
+    "Bélgica", "Suíça", "Suécia", "Noruega", "Croácia", "Turquia", "Escócia", "Bósnia", "Chile", "Venezuela", "Bolívia", "Peru", "México", "Canadá"
   ];
   const isTop = topNats.includes(player.nationality);
   const guaranteedOvr = isTop ? 75 : 71;
@@ -2016,9 +2169,79 @@ function pairUpCupRound(teams: Team[], roundIndex: number, roundName: string, pl
   return matches;
 }
 
-// Monta o chaveamento inicial: o time do jogador entra sorteado junto com
-// outros times do pool (mesmo país para copa nacional, região continental
-// para copa continental/de seleções).
+export function applyGroupMatchResult(standings: GroupStanding[], match: CupMatch): GroupStanding[] {
+  if (match.homeGoals === undefined || match.awayGoals === undefined) return standings;
+
+  const { home, away, homeGoals, awayGoals } = match;
+
+  return standings.map((s) => {
+    if (s.team.id !== home.id && s.team.id !== away.id) return s;
+
+    const isHome = s.team.id === home.id;
+    const ownGoals = isHome ? homeGoals : awayGoals;
+    const oppGoals = isHome ? awayGoals : homeGoals;
+
+    let points = s.points;
+    let wins = s.wins;
+    let draws = s.draws;
+    let losses = s.losses;
+
+    if (ownGoals > oppGoals) {
+      points += 3;
+      wins += 1;
+    } else if (ownGoals === oppGoals) {
+      points += 1;
+      draws += 1;
+    } else {
+      losses += 1;
+    }
+
+    const played = s.played + 1;
+    const goalsFor = s.goalsFor + ownGoals;
+    const goalsAgainst = s.goalsAgainst + oppGoals;
+    const goalDifference = goalsFor - goalsAgainst;
+
+    return {
+      ...s,
+      played,
+      points,
+      wins,
+      draws,
+      losses,
+      goalsFor,
+      goalsAgainst,
+      goalDifference,
+    };
+  });
+}
+
+export function sortGroupStandings(standings: GroupStanding[]): GroupStanding[] {
+  return [...standings].sort((a, b) => {
+    if (b.points !== a.points) return b.points - a.points;
+    if (b.goalDifference !== a.goalDifference) return b.goalDifference - a.goalDifference;
+    if (b.goalsFor !== a.goalsFor) return b.goalsFor - a.goalsFor;
+    return (b.team.level || 5) - (a.team.level || 5);
+  });
+}
+
+export function getCupPoolSource(cupName: string, isNational: boolean): Team[] {
+  if (isNational) {
+    if (cupName.includes("Copa América")) {
+      return NATIONAL_TEAMS.filter((t) => AMERICAN_NATIONALITIES.includes(t.name));
+    }
+    if (cupName.includes("Eurocopa")) {
+      return NATIONAL_TEAMS.filter((t) => EUROPEAN_NATIONALITIES.includes(t.name));
+    }
+    if (cupName.includes("Copa da Ásia")) {
+      return NATIONAL_TEAMS.filter((t) => ASIAN_NATIONALITIES.includes(t.name));
+    }
+    return NATIONAL_TEAMS;
+  }
+  return TEAMS;
+}
+
+// Monta o chaveamento inicial: para copas continentais/seleções, inicia na Fase de Grupos;
+// para copas domésticas, inicia direto no mata-mata.
 export function createCupBracket(
   cupName: string,
   isContinental: boolean,
@@ -2027,15 +2250,84 @@ export function createCupBracket(
   desiredSize: 8 | 16,
   isNational: boolean = false
 ): CupSeasonState {
-  let size = pickBracketSize(opponentPool.length + 1, desiredSize);
-  let roundNames = roundNamesForSize(size);
-  let others = shuffleTeams(opponentPool).slice(0, size - 1);
+  const poolSource = getCupPoolSource(cupName, isNational);
+  const filteredOpponentPool = opponentPool.filter((t) =>
+    poolSource.some((p) => p.id === t.id || p.name === t.name)
+  );
 
-  // Se a quantidade de oponentes no pool for menor do que (size - 1),
-  // preenche com outras seleções nacionais ou times para manter o chaveamento par
+  if (isContinental) {
+    // Fase de Grupos nas Copas Continentais (4 times no grupo, turno único: 3 rodadas)
+    let others = shuffleTeams(filteredOpponentPool).slice(0, 3);
+    if (others.length < 3) {
+      const pickedIds = new Set([playerTeam.id, playerTeam.name, ...others.map((t) => t.id), ...others.map((t) => t.name)]);
+      const fillPool = poolSource.filter((t) => !pickedIds.has(t.id) && !pickedIds.has(t.name));
+      const extraNeeded = 3 - others.length;
+      const extra = shuffleTeams(fillPool).slice(0, extraNeeded);
+      others = [...others, ...extra];
+    }
+    const groupTeams = [playerTeam, ...others];
+
+    const [t0, t1, t2, t3] = groupTeams;
+
+    const groupRoundsMatches: CupMatch[][] = [
+      // Rodada 1
+      [
+        { id: `grp-r0-${t0.id}-${t1.id}`, roundIndex: 0, roundName: "Fase de Grupos - Rodada 1", home: t0, away: t1, played: false, isPlayerMatch: true },
+        { id: `grp-r0-${t2.id}-${t3.id}`, roundIndex: 0, roundName: "Fase de Grupos - Rodada 1", home: t2, away: t3, played: false, isPlayerMatch: false },
+      ],
+      // Rodada 2
+      [
+        { id: `grp-r1-${t2.id}-${t0.id}`, roundIndex: 1, roundName: "Fase de Grupos - Rodada 2", home: t2, away: t0, played: false, isPlayerMatch: true },
+        { id: `grp-r1-${t1.id}-${t3.id}`, roundIndex: 1, roundName: "Fase de Grupos - Rodada 2", home: t1, away: t3, played: false, isPlayerMatch: false },
+      ],
+      // Rodada 3
+      [
+        { id: `grp-r2-${t0.id}-${t3.id}`, roundIndex: 2, roundName: "Fase de Grupos - Rodada 3", home: t0, away: t3, played: false, isPlayerMatch: true },
+        { id: `grp-r2-${t1.id}-${t2.id}`, roundIndex: 2, roundName: "Fase de Grupos - Rodada 3", home: t1, away: t2, played: false, isPlayerMatch: false },
+      ],
+    ];
+
+    const groupStandings: GroupStanding[] = groupTeams.map((team) => ({
+      team,
+      played: 0,
+      points: 0,
+      wins: 0,
+      draws: 0,
+      losses: 0,
+      goalsFor: 0,
+      goalsAgainst: 0,
+      goalDifference: 0,
+    }));
+
+    return {
+      cupName,
+      isContinental,
+      isNational,
+      roundNames: ["Oitavas de Final", "Quartas de Final", "Semifinal", "Final"],
+      roundsMatches: [],
+      currentRoundIndex: 0,
+      playerTeamId: playerTeam.id,
+      eliminated: false,
+      champion: false,
+      playerGoalsTotal: 0,
+      playerAssistsTotal: 0,
+      hasGroupStage: true,
+      groupStageDone: false,
+      groupTeams,
+      groupStandings,
+      groupRoundsMatches,
+      groupCurrentRoundIndex: 0,
+      opponentPool: filteredOpponentPool.length > 0 ? filteredOpponentPool : poolSource,
+    };
+  }
+
+  let size = pickBracketSize(filteredOpponentPool.length + 1, desiredSize);
+  let roundNames = roundNamesForSize(size);
+  let others = shuffleTeams(filteredOpponentPool).slice(0, size - 1);
+
   if (others.length < size - 1) {
     const pickedIds = new Set([playerTeam.id, playerTeam.name, ...others.map((t) => t.id), ...others.map((t) => t.name)]);
-    const fillPool = [...NATIONAL_TEAMS, ...TEAMS].filter((t) => !pickedIds.has(t.id) && !pickedIds.has(t.name));
+    const fillPool = poolSource.filter((t) => !pickedIds.has(t.id) && !pickedIds.has(t.name));
     const extraNeeded = (size - 1) - others.length;
     const extra = shuffleTeams(fillPool).slice(0, extraNeeded);
     others = [...others, ...extra];
@@ -2070,10 +2362,32 @@ export function createCupBracket(
   };
 }
 
-// Simula os confrontos da rodada atual que NÃO envolvem o jogador. Mata-mata
-// não empata: se acontecer, resolve com uma "disputa de pênaltis" (sorteio).
+// Simula os confrontos da rodada atual que NÃO envolvem o jogador.
 export function simulateCupRoundBots(state: CupSeasonState): CupSeasonState {
+  if (state.hasGroupStage && !state.groupStageDone && state.groupRoundsMatches && state.groupCurrentRoundIndex !== undefined) {
+    const grpIdx = state.groupCurrentRoundIndex;
+    let standings = state.groupStandings || [];
+    const groupRoundsMatches = [...state.groupRoundsMatches];
+
+    const matches = (groupRoundsMatches[grpIdx] || []).map((m) => {
+      if (m.isPlayerMatch || m.played) return m;
+      const result = simulateLeagueMatchResult(m.home, m.away);
+      const playedMatch = { ...m, played: true, homeGoals: result.homeGoals, awayGoals: result.awayGoals };
+      standings = applyGroupMatchResult(standings, playedMatch);
+      return playedMatch;
+    });
+
+    groupRoundsMatches[grpIdx] = matches;
+    return {
+      ...state,
+      groupRoundsMatches,
+      groupStandings: sortGroupStandings(standings),
+    };
+  }
+
   const roundIdx = state.currentRoundIndex;
+  if (!state.roundsMatches || !state.roundsMatches[roundIdx]) return state;
+
   const matches = state.roundsMatches[roundIdx].map((m) => {
     if (m.isPlayerMatch || m.played) return m;
     const result = simulateLeagueMatchResult(m.home, m.away);
@@ -2089,9 +2403,7 @@ export function simulateCupRoundBots(state: CupSeasonState): CupSeasonState {
   return { ...state, roundsMatches };
 }
 
-// Resolve o confronto do jogador na rodada atual com o placar já definido
-// (vindo da InteractiveMatchModal ou de uma simulação rápida). Em caso de
-// empate, decide no sorteio (representando os pênaltis).
+// Resolve o confronto do jogador na rodada atual com o placar já definido.
 export function resolvePlayerCupMatch(
   state: CupSeasonState,
   homeGoals: number,
@@ -2099,6 +2411,40 @@ export function resolvePlayerCupMatch(
   playerGoals: number = 0,
   playerAssists: number = 0
 ): CupSeasonState {
+  if (state.hasGroupStage && !state.groupStageDone && state.groupRoundsMatches && state.groupCurrentRoundIndex !== undefined) {
+    const grpIdx = state.groupCurrentRoundIndex;
+    let standings = state.groupStandings || [];
+    const groupRoundsMatches = [...state.groupRoundsMatches];
+
+    const matches = (groupRoundsMatches[grpIdx] || []).map((m) => {
+      if (!m.isPlayerMatch) return m;
+      const isHome = m.home.id === state.playerTeamId;
+      const ownGoals = isHome ? homeGoals : awayGoals;
+      const opponentGoals = isHome ? awayGoals : homeGoals;
+      const rating = computeLeagueMatchRating(playerGoals, playerAssists, ownGoals - opponentGoals);
+      const playedMatch = {
+        ...m,
+        played: true,
+        homeGoals,
+        awayGoals,
+        playerGoals,
+        playerAssists,
+        playerRating: rating,
+      };
+      standings = applyGroupMatchResult(standings, playedMatch);
+      return playedMatch;
+    });
+
+    groupRoundsMatches[grpIdx] = matches;
+    return {
+      ...state,
+      groupRoundsMatches,
+      groupStandings: sortGroupStandings(standings),
+      playerGoalsTotal: state.playerGoalsTotal + playerGoals,
+      playerAssistsTotal: state.playerAssistsTotal + playerAssists,
+    };
+  }
+
   const roundIdx = state.currentRoundIndex;
   let finalHome = homeGoals;
   let finalAway = awayGoals;
@@ -2107,7 +2453,7 @@ export function resolvePlayerCupMatch(
     else finalAway += 1;
   }
 
-  const matches = state.roundsMatches[roundIdx].map((m) => {
+  const matches = (state.roundsMatches[roundIdx] || []).map((m) => {
     if (!m.isPlayerMatch) return m;
     const isHome = m.home.id === state.playerTeamId;
     const ownGoals = isHome ? finalHome : finalAway;
@@ -2134,12 +2480,73 @@ export function resolvePlayerCupMatch(
   };
 }
 
-// Depois que TODOS os confrontos da rodada atual (bots + jogador) foram
-// resolvidos: elimina o jogador, decreta campeão, ou sorteia os confrontos
-// da próxima fase entre os vencedores.
+// Avança para a próxima rodada (ou mata-mata pós-fase de grupos).
 export function advanceCupToNextRound(state: CupSeasonState): CupSeasonState {
+  if (state.hasGroupStage && !state.groupStageDone && state.groupRoundsMatches && state.groupCurrentRoundIndex !== undefined) {
+    const grpIdx = state.groupCurrentRoundIndex;
+    const matches = state.groupRoundsMatches[grpIdx] || [];
+    const playerMatch = matches.find((m) => m.isPlayerMatch);
+    if (!playerMatch || !playerMatch.played) return state;
+
+    if (grpIdx < 2) {
+      return {
+        ...state,
+        groupCurrentRoundIndex: grpIdx + 1,
+      };
+    }
+
+    // Fim da Fase de Grupos
+    const sorted = sortGroupStandings(state.groupStandings || []);
+    const playerRank = sorted.findIndex((s) => s.team.id === state.playerTeamId);
+
+    if (playerRank === -1 || playerRank >= 2) {
+      return {
+        ...state,
+        groupStageDone: true,
+        eliminated: true,
+      };
+    }
+
+    // Classificado entre os top 2!
+    const qualifiedFromGroup = sorted.slice(0, 2).map((s) => s.team);
+    const groupTeamIds = new Set((state.groupTeams || []).map((t) => t.id));
+
+    const poolSource = getCupPoolSource(state.cupName, state.isNational ?? false);
+    const validPool = (state.opponentPool || []).filter((t) =>
+      poolSource.some((p) => p.id === t.id || p.name === t.name)
+    );
+    let otherOpponents = validPool.filter((t) => !groupTeamIds.has(t.id));
+
+    const targetKnockoutSize = poolSource.length >= 16 ? 16 : 8;
+    const neededOther = targetKnockoutSize - qualifiedFromGroup.length;
+
+    if (otherOpponents.length < neededOther) {
+      const pickedIds = new Set([...groupTeamIds, ...otherOpponents.map((t) => t.id), ...otherOpponents.map((t) => t.name)]);
+      const fillPool = poolSource.filter((t) => !pickedIds.has(t.id) && !pickedIds.has(t.name));
+      const extraNeeded = neededOther - otherOpponents.length;
+      otherOpponents = [...otherOpponents, ...shuffleTeams(fillPool).slice(0, extraNeeded)];
+    } else {
+      otherOpponents = shuffleTeams(otherOpponents).slice(0, neededOther);
+    }
+
+    const knockoutParticipants = shuffleTeams([...qualifiedFromGroup, ...otherOpponents]);
+    const roundNames = targetKnockoutSize === 16
+      ? ["Oitavas de Final", "Quartas de Final", "Semifinal", "Final"]
+      : ["Quartas de Final", "Semifinal", "Final"];
+    const firstKnockoutRound = pairUpCupRound(knockoutParticipants, 0, roundNames[0], state.playerTeamId);
+
+    return {
+      ...state,
+      groupStageDone: true,
+      roundNames,
+      roundsMatches: [firstKnockoutRound],
+      currentRoundIndex: 0,
+    };
+  }
+
   const roundIdx = state.currentRoundIndex;
   const matches = state.roundsMatches[roundIdx];
+  if (!matches) return state;
 
   const playerMatch = matches.find((m) => m.isPlayerMatch);
   if (!playerMatch || playerMatch.homeGoals === undefined) return state;
@@ -2169,21 +2576,26 @@ export function advanceCupToNextRound(state: CupSeasonState): CupSeasonState {
   };
 }
 
-// Um torneio de copa só chega a virar um "final" (para efeito de imprensa,
-// prêmios etc, no mesmo formato que já era usado para as finais) quando o
-// jogador de fato chegou até a última fase do chaveamento.
 export function cupReachedFinalRound(state: CupSeasonState): boolean {
+  if (state.hasGroupStage && !state.groupStageDone) return false;
   return state.currentRoundIndex === state.roundNames.length - 1 && (state.champion || state.eliminated);
 }
 
-// Total de partidas realmente disputadas pelo jogador em uma copa (todas as
-// fases já resolvidas, vencendo ou perdendo) - usado para somar ao total de
-// jogos da temporada no histórico de carreira.
 export function countCupMatchesPlayed(state: CupSeasonState): number {
-  return state.roundsMatches.reduce(
-    (sum, roundMatches) => sum + roundMatches.filter((m) => m.isPlayerMatch && m.played).length,
-    0
-  );
+  let count = 0;
+  if (state.hasGroupStage && state.groupRoundsMatches) {
+    count += state.groupRoundsMatches.reduce(
+      (sum, roundMatches) => sum + roundMatches.filter((m) => m.isPlayerMatch && m.played).length,
+      0
+    );
+  }
+  if (state.roundsMatches) {
+    count += state.roundsMatches.reduce(
+      (sum, roundMatches) => sum + roundMatches.filter((m) => m.isPlayerMatch && m.played).length,
+      0
+    );
+  }
+  return count;
 }
 
 export function calculateBiometricsModifiers(height: number, weight: number) {
@@ -2216,3 +2628,139 @@ export function calculateBiometricsModifiers(height: number, weight: number) {
 
   return { physicalMod, paceMod, physicalDebuff, paceDebuff, bmi };
 }
+
+export function sanitizeCupSeasonState(state: CupSeasonState, playerTeam?: Team): CupSeasonState {
+  const isNat = !!(
+    state.isNational ||
+    state.cupName.includes("Copa do Mundo") ||
+    state.cupName.includes("Eurocopa") ||
+    state.cupName.includes("Copa América") ||
+    state.cupName.includes("Copa da Ásia") ||
+    state.cupName.includes("Copa Continental (Seleção)")
+  );
+
+  const nationalTeamIds = new Set(NATIONAL_TEAMS.map((t) => t.id));
+  const nationalTeamNames = new Set(NATIONAL_TEAMS.map((t) => t.name));
+
+  const isInvalidTeam = (t: Team) => {
+    if (!t) return false;
+    if (t.id === state.playerTeamId || (playerTeam && t.name === playerTeam.name)) return false;
+    if (isNat) {
+      if (state.cupName.includes("Copa América")) {
+        return !AMERICAN_NATIONALITIES.includes(t.name);
+      }
+      if (state.cupName.includes("Eurocopa")) {
+        return !EUROPEAN_NATIONALITIES.includes(t.name);
+      }
+      if (state.cupName.includes("Copa da Ásia")) {
+        return !ASIAN_NATIONALITIES.includes(t.name);
+      }
+      // Para Copa de Seleções (ex: Copa do Mundo): o time DEVE ser uma Seleção Nacional
+      return !nationalTeamIds.has(t.id) && !nationalTeamNames.has(t.name);
+    } else {
+      // Para Copa de Clubes: o time NÃO deve ser uma Seleção Nacional
+      return nationalTeamIds.has(t.id) || nationalTeamNames.has(t.name);
+    }
+  };
+
+  let hasInvalid = false;
+
+  if (state.groupTeams && state.groupTeams.some(isInvalidTeam)) hasInvalid = true;
+  if (state.opponentPool && state.opponentPool.some(isInvalidTeam)) hasInvalid = true;
+
+  if (state.groupRoundsMatches) {
+    for (const round of state.groupRoundsMatches) {
+      for (const m of round) {
+        if (isInvalidTeam(m.home) || isInvalidTeam(m.away)) hasInvalid = true;
+      }
+    }
+  }
+
+  if (state.roundsMatches) {
+    for (const round of state.roundsMatches) {
+      for (const m of round) {
+        if (isInvalidTeam(m.home) || isInvalidTeam(m.away)) hasInvalid = true;
+      }
+    }
+  }
+
+  if (!hasInvalid && state.isNational === isNat) return state;
+
+  const replacements = new Map<string, Team>();
+  const usedTeamIds = new Set<string>();
+  usedTeamIds.add(state.playerTeamId);
+
+  const checkAndCollect = (t: Team) => {
+    if (t && !isInvalidTeam(t)) {
+      usedTeamIds.add(t.id);
+      usedTeamIds.add(t.name);
+    }
+  };
+
+  if (state.groupTeams) state.groupTeams.forEach(checkAndCollect);
+  if (state.roundsMatches) {
+    state.roundsMatches.forEach((round) =>
+      round.forEach((m) => {
+        if (m.home) checkAndCollect(m.home);
+        if (m.away) checkAndCollect(m.away);
+      })
+    );
+  }
+
+  const sourcePool = shuffleTeams(getCupPoolSource(state.cupName, isNat));
+
+  const getReplacement = (oldTeam: Team): Team => {
+    if (!oldTeam || !isInvalidTeam(oldTeam)) return oldTeam;
+    if (replacements.has(oldTeam.id)) return replacements.get(oldTeam.id)!;
+
+    const available = sourcePool.find((t) => !usedTeamIds.has(t.id) && !usedTeamIds.has(t.name));
+    if (available) {
+      usedTeamIds.add(available.id);
+      usedTeamIds.add(available.name);
+      replacements.set(oldTeam.id, available);
+      return available;
+    }
+    return oldTeam;
+  };
+
+  const mapMatch = (m: CupMatch): CupMatch => {
+    const newHome = getReplacement(m.home);
+    const newAway = getReplacement(m.away);
+    const isPlayerMatch = newHome.id === state.playerTeamId || newAway.id === state.playerTeamId;
+    return {
+      ...m,
+      home: newHome,
+      away: newAway,
+      isPlayerMatch,
+    };
+  };
+
+  const newGroupTeams = state.groupTeams ? state.groupTeams.map(getReplacement) : undefined;
+  const newGroupStandings = state.groupStandings
+    ? state.groupStandings.map((s) => ({ ...s, team: getReplacement(s.team) }))
+    : undefined;
+
+  const newGroupRoundsMatches = state.groupRoundsMatches
+    ? state.groupRoundsMatches.map((round) => round.map(mapMatch))
+    : undefined;
+
+  const newRoundsMatches = state.roundsMatches
+    ? state.roundsMatches.map((round) => round.map(mapMatch))
+    : undefined;
+
+  const newOpponentPool = state.opponentPool
+    ? state.opponentPool.map(getReplacement)
+    : undefined;
+
+  return {
+    ...state,
+    isNational: isNat,
+    groupTeams: newGroupTeams,
+    groupStandings: newGroupStandings,
+    groupRoundsMatches: newGroupRoundsMatches,
+    roundsMatches: newRoundsMatches || [],
+    opponentPool: newOpponentPool,
+  };
+}
+
+

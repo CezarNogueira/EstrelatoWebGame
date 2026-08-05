@@ -361,7 +361,14 @@ export const AMERICAN_NATIONALITIES = [
   "Uruguai",
   "Colômbia",
   "Equador",
-  "Paraguai"
+  "Paraguai",
+  "Chile",
+  "Venezuela",
+  "Bolívia",
+  "Peru",
+  "EUA",
+  "México",
+  "Canadá"
 ];
 
 export const EUROPEAN_NATIONALITIES = [
@@ -920,6 +927,17 @@ export const NATIONALITY_COUNTRY_MAP: Record<string, string> = {
   "Colômbia": "CO",
   "Equador": "EC",
   "Paraguai": "PY",
+  "Chile": "CL",
+  "Venezuela": "VE",
+  "Bolívia": "BO",
+  "Bolivia": "BO",
+  "Peru": "PE",
+  "EUA": "US",
+  "Estados Unidos": "US",
+  "México": "MX",
+  "Mexico": "MX",
+  "Canadá": "CA",
+  "Canada": "CA",
   "França": "FR",
   "Inglaterra": "EN",
   "Espanha": "ES",
@@ -962,6 +980,13 @@ export const NATIONAL_TEAMS: Team[] = [
   { id: "CO", name: "Colômbia", country: "CO", level: 4, logo: ColombiaLogo },
   { id: "EC", name: "Equador", country: "EC", level: 4, logo: EquadorLogo },
   { id: "PY", name: "Paraguai", country: "PY", level: 4, logo: ParaguaiLogo },
+  { id: "CL", name: "Chile", country: "CL", level: 3 },
+  { id: "VE", name: "Venezuela", country: "VE", level: 3 },
+  { id: "BO", name: "Bolívia", country: "BO", level: 2 },
+  { id: "PE", name: "Peru", country: "PE", level: 3 },
+  { id: "US", name: "EUA", country: "US", level: 4 },
+  { id: "MX", name: "México", country: "MX", level: 4 },
+  { id: "CA", name: "Canadá", country: "CA", level: 3 },
   { id: "AT", name: "Áustria", country: "AT", level: 4, logo: AustriaLogo },
   { id: "BE", name: "Bélgica", country: "BE", level: 4, logo: BelgicaLogo },
   { id: "BA", name: "Bósnia", country: "BA", level: 3, logo: BosniaLogo },
@@ -1285,5 +1310,6 @@ export function generateRelationships(nationality: string): Relationships {
     family: generateFamily(nationality),
     friends: generateFriends(nationality),
     girlfriend: null,
+    children: [],
   };
 }

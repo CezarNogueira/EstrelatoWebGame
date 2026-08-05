@@ -124,6 +124,13 @@ export type Friend = {
   avatarUrl?: string;
 };
 
+export type Child = {
+  id: string;
+  name: string;
+  motherName: string;
+  bornAtPlayerAge: number; // idade do jogador quando o filho nasceu
+};
+
 export type Girlfriend = {
   id: string;
   name: string;
@@ -133,12 +140,15 @@ export type Girlfriend = {
   age?: number;
   occupation?: string;
   avatarUrl?: string;
+  married?: boolean;
+  pregnant?: boolean;
 };
 
 export type Relationships = {
   family: FamilyMember[];
   friends: Friend[];
   girlfriend: Girlfriend | null;
+  children?: Child[];
 };
 
 export type ChatMessage = {
@@ -217,6 +227,18 @@ export type CupMatch = {
   playerRating?: number;
 };
 
+export type GroupStanding = {
+  team: Team;
+  played: number;
+  points: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  goalsFor: number;
+  goalsAgainst: number;
+  goalDifference: number;
+};
+
 export type CupSeasonState = {
   cupName: string;
   isContinental: boolean;
@@ -229,6 +251,14 @@ export type CupSeasonState = {
   champion: boolean;
   playerGoalsTotal: number;
   playerAssistsTotal: number;
+  // Fase de grupos (Copas Continentais)
+  hasGroupStage?: boolean;
+  groupStageDone?: boolean;
+  groupTeams?: Team[];
+  groupStandings?: GroupStanding[];
+  groupRoundsMatches?: CupMatch[][];
+  groupCurrentRoundIndex?: number;
+  opponentPool?: Team[];
 };
 
 export type Player = {
@@ -248,6 +278,7 @@ export type Player = {
   salary: number;
   contractYears: number;
   squadRole?: "STARTER" | "COMPETING" | "ROTATION";
+  coachTrust?: number; // 0 a 100 — confiança do técnico no jogador; sobe com boas atuações na liga, desce com atuações ruins, e agora é isso (em vez de um valor fixo) que decide o squadRole efetivo
   money: number;
   assets: string[];
   hasPersonalTrainer: boolean;

@@ -423,24 +423,39 @@ function selectScenarioForPlayer(player: Player, isSetPieceTaker: boolean): Scen
     weights.FALTA = 12;
   }
 
-  // 1. Quanto mais alto, mais ações de cabeceio (FORCA_AEREA)
-  weights.FORCA_AEREA = Math.max(3, Math.round((h - 160) * 0.95));
+  const hasPlayStyle = (style: PlayStyle) => player.playStyles?.some((ps) => ps.id === style);
 
-  // 2. Quanto mais ritmo, mais situações de corrida difícil (VELOZ)
-  weights.VELOZ = Math.max(3, Math.round((pace - 25) * 0.45));
-
-  // 3. Quanto mais chute, mais situações de chute colocado (CHUTE_COLOCADO)
-  weights.CHUTE_COLOCADO = Math.max(3, Math.round((shooting - 25) * 0.45));
-
-  // 4. As posições PON e LAT têm mais situações de cruzamento difícil (CRUZAMENTO_PRECISO)
-  if (position === "PON" || position === "LAT") {
-    weights.CRUZAMENTO_PRECISO = 32 + Math.round((passing - 50) * 0.2);
-  } else {
-    weights.CRUZAMENTO_PRECISO = 6;
+  // 1. Quanto mais alto, mais ações de cabeceio (FORCA_AEREA - apenas com PlayStyle)
+  if (hasPlayStyle("forca_aerea")) {
+    weights.FORCA_AEREA = Math.max(3, Math.round((h - 160) * 0.95));
   }
 
-  weights.TIKI_TAKA = Math.max(3, Math.round((passing - 25) * 0.3));
-  if (!isAttacker) {
+  // 2. Quanto mais ritmo, mais situações de corrida difícil (VELOZ / Disparar - apenas com PlayStyle)
+  if (hasPlayStyle("veloz")) {
+    weights.VELOZ = Math.max(3, Math.round((pace - 25) * 0.45));
+  }
+
+  // 3. Quanto mais chute, mais situações de chute colocado (CHUTE_COLOCADO - apenas com PlayStyle)
+  if (hasPlayStyle("chute_colocado")) {
+    weights.CHUTE_COLOCADO = Math.max(3, Math.round((shooting - 25) * 0.45));
+  }
+
+  // 4. As posições PON e LAT têm mais situações de cruzamento difícil (CRUZAMENTO_PRECISO - apenas com PlayStyle)
+  if (hasPlayStyle("cruzamento_preciso")) {
+    if (position === "PON" || position === "LAT") {
+      weights.CRUZAMENTO_PRECISO = 32 + Math.round((passing - 50) * 0.2);
+    } else {
+      weights.CRUZAMENTO_PRECISO = 6;
+    }
+  }
+
+  // 5. TIKI_TAKA (apenas com PlayStyle)
+  if (hasPlayStyle("tiki_taka")) {
+    weights.TIKI_TAKA = Math.max(3, Math.round((passing - 25) * 0.3));
+  }
+
+  // 6. XERIFE (apenas com PlayStyle)
+  if (!isAttacker && hasPlayStyle("xerife")) {
     weights.XERIFE = Math.max(5, Math.round((defending - 25) * 0.35));
   }
 

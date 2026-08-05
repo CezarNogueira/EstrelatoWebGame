@@ -181,14 +181,20 @@ export function Dashboard({
       };
 
       if (updatedPlayer.relationships.girlfriend) {
+        const gf = updatedPlayer.relationships.girlfriend;
+        const isMarried = gf.married;
         updatedPlayer.relationships = {
           ...updatedPlayer.relationships,
           girlfriend: {
-            ...updatedPlayer.relationships.girlfriend,
+            ...gf,
             affinity: 0
           }
         };
-        alert(`Sua namorada descobriu que você foi para a balada e discutiu feio com você! A afinidade dela caiu para 0%.`);
+        if (isMarried) {
+          alert(`Escândalo! Sua esposa ${gf.name} descobriu que você foi para a balada e discutiu feio com você! A afinidade dela caiu para 0%.`);
+        } else {
+          alert(`Sua namorada ${gf.name} descobriu que você foi para a balada e discutiu feio com você! A afinidade dela caiu para 0%.`);
+        }
       }
 
       onUpdatePlayer(updatedPlayer);
@@ -734,7 +740,7 @@ export function Dashboard({
           </div>
 
           {/* Career Logs Column */}
-          <div className="md:col-span-3">
+          <div className={player.mode === "QUICK" ? "md:col-span-4" : "md:col-span-3"}>
             <div
               className="border p-6 rounded-xl shadow-lg h-[600px] flex flex-col transition-colors duration-700"
               style={{ backgroundImage: theme.cardGradient, borderColor: theme.border }}
@@ -849,26 +855,27 @@ export function Dashboard({
             </div>
           </div>
 
-          {/* League Table Column */}
-          <div className="md:col-span-1">
-            <div
-              className="border rounded-xl p-2 shadow-lg h-auto flex flex-col transition-colors duration-700"
-              style={{ backgroundImage: theme.cardGradient, borderColor: theme.border }}
-            >
-
-              <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
-                {leagueSeasonState ? (
-                  <>
-                    <LeagueTable standings={leagueSeasonState.standings} playerTeamId={player.currentTeam.id} />
-                  </>
-                ) : (
-                  <div className="text-center text-slate-500 mt-10">
-                    Nenhuma temporada em andamento ainda.
-                  </div>
-                )}
+          {/* League Table Column (apenas no Modo História) */}
+          {player.mode !== "QUICK" && (
+            <div className="md:col-span-1">
+              <div
+                className="border rounded-xl p-2 shadow-lg h-auto flex flex-col transition-colors duration-700"
+                style={{ backgroundImage: theme.cardGradient, borderColor: theme.border }}
+              >
+                <div className="flex-1 overflow-y-auto pr-1 custom-scrollbar">
+                  {leagueSeasonState ? (
+                    <>
+                      <LeagueTable standings={leagueSeasonState.standings} playerTeamId={player.currentTeam.id} />
+                    </>
+                  ) : (
+                    <div className="text-center text-slate-500 mt-10">
+                      Nenhuma temporada em andamento ainda.
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
         </div>
       </div>

@@ -98,7 +98,7 @@ export function RelationshipsModal({ player, onClose, onUpdatePlayer, onTriggerR
     updatedPlayer.chats = chats;
   };
 
-  const handleAction = (action: "elogiar" | "conversar" | "dinheiro" | "presentear" | "insultar" | "tempo") => {
+  const handleAction = (action: "elogiar" | "conversar" | "dinheiro" | "presentear" | "insultar" | "tempo" | "casamento") => {
     if (!selectedPerson) return;
     
     const updatedPlayer = { ...player, relationships: { ...player.relationships }, personal: { ...player.personal } };
@@ -111,6 +111,48 @@ export function RelationshipsModal({ player, onClose, onUpdatePlayer, onTriggerR
       response = "Muito obrigado! Fico muito feliz em ouvir isso. 😊";
       addMessage(updatedPlayer, "Passei para dizer que você é excelente no que faz!", response);
       setAppreciationModal({ message: "Gostou muito do seu elogio e sentiu-se valorizado(a).", affinity: Math.max(0, Math.min(100, newAffinity)) });
+    } else if (action === "casamento") {
+      if (player.age < 18) {
+        alert("Você precisa ter pelo menos 18 anos para se casar.");
+        return;
+      }
+      if (!updatedPlayer.relationships.girlfriend) return;
+      const gf = updatedPlayer.relationships.girlfriend;
+      const acceptChance = Math.min(0.95, Math.max(0.10, gf.affinity / 100));
+      const accepted = Math.random() < acceptChance;
+
+      if (accepted) {
+        newAffinity = 100;
+        updatedPlayer.relationships.girlfriend = {
+          ...gf,
+          married: true,
+          affinity: newAffinity,
+        };
+        addMessage(
+          updatedPlayer,
+          "Você quer se casar comigo? 💍",
+          "SIM! Mil vezes sim! Eu aceito casar com você! 💍❤️🎉"
+        );
+        setAppreciationModal({
+          message: `Disse sim! ${player.name} e ${gf.name} estão casados! 💍🎉❤️`,
+          affinity: 100,
+        });
+      } else {
+        newAffinity = Math.max(0, gf.affinity - 10);
+        updatedPlayer.relationships.girlfriend = {
+          ...gf,
+          affinity: newAffinity,
+        };
+        addMessage(
+          updatedPlayer,
+          "Você quer se casar comigo? 💍",
+          "Ainda não estou pronta pra isso... Precisamos de um pouco mais de tempo. 😔"
+        );
+        setAppreciationModal({
+          message: `${gf.name} achou que ainda é muito cedo para casar e pediu um pouco mais de tempo.`,
+          affinity: newAffinity,
+        });
+      }
     } else if (action === "conversar") {
       newAffinity += 10;
       updatedPlayer.personal.mood = Math.min(100, updatedPlayer.personal.mood + 5);
@@ -240,12 +282,28 @@ export function RelationshipsModal({ player, onClose, onUpdatePlayer, onTriggerR
     let meMessage = "";
 
     if (tipo === "amor") {
+      if (player.age < 18) {
+        alert("Esta ação requer pelo menos 18 anos.");
+        return;
+      }
       newAffinity += 30;
       updatedPlayer.personal.mood = Math.min(100, updatedPlayer.personal.mood + 20);
       updatedPlayer.personal.health = Math.max(0, updatedPlayer.personal.health - 5);
       meMessage = "Vem aqui, vamos aproveitar esse tempo juntos... 😏";
-      response = "Nossa, foi incrível... ❤️";
-      setAppreciationModal({ message: "Tivemos um momento incrível e íntimo juntos.", affinity: Math.max(0, Math.min(100, newAffinity)) });
+      response = "Foi uma noite maravilhosa a dois... ❤️";
+      
+      const gf = updatedPlayer.relationships.girlfriend;
+      if (gf && !gf.pregnant && Math.random() < 0.18) {
+        updatedPlayer.relationships.girlfriend = {
+          ...gf,
+          pregnant: true,
+          affinity: Math.min(100, newAffinity),
+        };
+        response += " Amor, fiz um teste... estou grávida! 👶❤️";
+        setAppreciationModal({ message: "Tivemos uma noite especial a dois e ela te contou emocionada que está grávida! 👶❤️", affinity: Math.max(0, Math.min(100, newAffinity)) });
+      } else {
+        setAppreciationModal({ message: "Tivemos um momento especial e íntimo a dois.", affinity: Math.max(0, Math.min(100, newAffinity)) });
+      }
     } else if (tipo === "cinema") {
       newAffinity += 15;
       updatedPlayer.personal.mood = Math.min(100, updatedPlayer.personal.mood + 10);
@@ -311,7 +369,7 @@ export function RelationshipsModal({ player, onClose, onUpdatePlayer, onTriggerR
 
     let displayRole = role;
     if (type === "friend") displayRole = "Amigo";
-    if (type === "girlfriend") displayRole = "Namorada";
+    if (type === "girlfriend") displayRole = girlfriend?.married ? "Esposa" : "Namorada";
 
     return (
       <button 
@@ -359,7 +417,7 @@ export function RelationshipsModal({ player, onClose, onUpdatePlayer, onTriggerR
               </div>
               <div className="flex-1">
                 <h3 className="text-slate-100 font-medium leading-tight">{selectedPerson.name}</h3>
-                <p className="text-xs text-slate-400">{selectedPerson.type === 'friend' ? 'Amigo' : selectedPerson.type === 'girlfriend' ? 'Namorada' : selectedPerson.role}</p>
+                <p className="text-xs text-slate-400">{selectedPerson.type === 'friend' ? 'Amigo' : selectedPerson.type === 'girlfriend' ? (player.relationships.girlfriend?.married ? 'Esposa' : 'Namorada') : selectedPerson.role}</p>
               </div>
             </div>
 
@@ -414,7 +472,7 @@ export function RelationshipsModal({ player, onClose, onUpdatePlayer, onTriggerR
                 <div className="grid grid-cols-2 gap-2 relative">
                   {selectedPerson.type === "girlfriend" && (
                     <>
-                      {player.age >= 18 && (
+                      {player.age >= 18 && !player.relationships.girlfriend?.pregnant && (
                         <button onClick={() => handleTempoAction("amor")} className="flex flex-col items-center justify-center p-3 rounded-xl bg-pink-500/10 hover:bg-pink-500/20 transition-all gap-1 border border-pink-500/30">
                           <Heart className="w-6 h-6 text-pink-500" />
                           <span className="text-xs text-pink-400 font-bold mt-1">Fazer amor</span>
@@ -489,6 +547,12 @@ export function RelationshipsModal({ player, onClose, onUpdatePlayer, onTriggerR
                     <Frown className="w-5 h-5 text-red-400" />
                     <span className="text-[10px] text-slate-300 font-medium">Insultar</span>
                   </button>
+                  {selectedPerson.type === "girlfriend" && player.age >= 18 && !player.relationships.girlfriend?.married && (player.relationships.girlfriend?.affinity ?? 0) >= 50 && (
+                    <button onClick={() => handleAction("casamento")} className="col-span-3 flex items-center justify-center p-2.5 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 transition-all gap-2 text-amber-300 font-bold text-xs mt-1">
+                      <Heart className="w-4 h-4 fill-amber-400 text-amber-400" />
+                      <span>Pedir em Casamento 💍</span>
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -520,6 +584,28 @@ export function RelationshipsModal({ player, onClose, onUpdatePlayer, onTriggerR
                 {/* Friends */}
                 {friends.map(f => <ContactItem key={f.id} id={f.id} name={f.name} role={f.relationTag} type="friend" affinity={f.affinity} icon={getInitials(f.name)} bgColor="bg-slate-600" defaultMessage="" avatarUrl={f.avatarUrl} />)}
               </div>
+
+              {/* Children */}
+              {player.relationships.children && player.relationships.children.length > 0 && (
+                <div className="p-4 bg-[#182229] border-t border-[#202c33]">
+                  <h4 className="text-xs font-bold text-amber-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    <span>👶</span> Filhos ({player.relationships.children.length})
+                  </h4>
+                  <div className="space-y-2">
+                    {player.relationships.children.map(child => (
+                      <div key={child.id} className="flex items-center justify-between p-2.5 bg-[#202c33] rounded-xl text-xs">
+                        <div>
+                          <p className="font-bold text-slate-200">{child.name}</p>
+                          <p className="text-[10px] text-slate-400">Mãe: {child.motherName}</p>
+                        </div>
+                        <span className="text-[10px] text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded-full border border-amber-500/20 font-medium">
+                          {child.bornAtPlayerAge} anos
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

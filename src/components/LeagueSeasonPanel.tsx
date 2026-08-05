@@ -7,11 +7,15 @@ import {
   resolvePlayerLeagueMatch,
   getPlayerLeaguePosition,
   generateSeasonMatchStats,
+  sanitizeLeagueSeasonState,
+  computeLeagueMatchRating,
+  updateCoachTrust,
+  getEffectiveSquadRole,
 } from "../utils";
 import { InteractiveMatchModal } from "./InteractiveMatchModal";
 import { Play, FastForward, SkipForward } from "lucide-react";
 
-type SeasonResult = { matches: number; goals: number; assists: number; leaguePosition: number; manOfTheMatch?: number };
+type SeasonResult = { matches: number; goals: number; assists: number; leaguePosition: number; manOfTheMatch?: number; coachTrust?: number };
 
 function ratingColor(rating: number) {
   if (rating >= 8.5) return "text-yellow-400";
@@ -40,7 +44,15 @@ export function LeagueSeasonPanel({
   const [seasonGoals, setSeasonGoals] = useState(0);
   const [seasonAssists, setSeasonAssists] = useState(0);
   const [seasonMotm, setSeasonMotm] = useState(0);
+  const [coachTrust, setCoachTrust] = useState(player.coachTrust ?? 50);
   const autoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (state.totalRounds > 38 || state.teams.length > 20 || state.fixtures.some((m) => m.home.id === "__bye__" || m.away.id === "__bye__")) {
+      const sanitized = sanitizeLeagueSeasonState(state, player.currentTeam);
+      onStateChange(sanitized);
+    }
+  }, [state, player.currentTeam, onStateChange]);
 
   const round = state.currentRound;
   const isSeasonOver = round > state.totalRounds;
@@ -54,10 +66,11 @@ export function LeagueSeasonPanel({
     .sort((a, b) => b.round - a.round);
   const lastMatch = playedPlayerMatches[0];
 
-  const advanceRound = (updatedState: LeagueSeasonState, goalsThisMatch: number, assistsThisMatch: number, motmThisMatch: number = 0) => {
+  const advanceRound = (updatedState: LeagueSeasonState, goalsThisMatch: number, assistsThisMatch: number, motmThisMatch: number = 0, latestCoachTrust?: number) => {
     const newGoals = seasonGoals + goalsThisMatch;
     const newAssists = seasonAssists + assistsThisMatch;
     const newMotm = seasonMotm + motmThisMatch;
+    const finalTrust = latestCoachTrust ?? coachTrust;
     setSeasonGoals(newGoals);
     setSeasonAssists(newAssists);
     setSeasonMotm(newMotm);
@@ -65,7 +78,7 @@ export function LeagueSeasonPanel({
     if (round >= state.totalRounds) {
       const leaguePosition = getPlayerLeaguePosition(updatedState, player.currentTeam.id);
       onStateChange({ ...updatedState, currentRound: state.totalRounds + 1 });
-      onComplete({ matches: state.totalRounds, goals: newGoals, assists: newAssists, leaguePosition, manOfTheMatch: newMotm });
+      onComplete({ matches: state.totalRounds, goals: newGoals, assists: newAssists, leaguePosition, manOfTheMatch: newMotm, coachTrust: finalTrust });
       return;
     }
 
@@ -94,7 +107,12 @@ export function LeagueSeasonPanel({
       goals,
       assists
     );
-    advanceRound(updated, goals, assists, isSimMOTM ? 1 : 0);
+    const ownGoals = isHome ? result.homeGoals : result.awayGoals;
+    const opponentGoals = isHome ? result.awayGoals : result.homeGoals;
+    const matchRating = computeLeagueMatchRating(goals, assists, ownGoals - opponentGoals);
+    const newTrust = updateCoachTrust(coachTrust, matchRating);
+    setCoachTrust(newTrust);
+    advanceRound(updated, goals, assists, isSimMOTM ? 1 : 0, newTrust);
   };
 
   const handlePlayMatch = () => setPlaying(true);
@@ -124,7 +142,12 @@ export function LeagueSeasonPanel({
       playerGoals,
       playerAssists
     );
-    advanceRound(updated, playerGoals, playerAssists, isMOTM ? 1 : 0);
+    const ownGoals = isHome ? homeGoals : awayGoals;
+    const opponentGoals = isHome ? awayGoals : homeGoals;
+    const matchRating = computeLeagueMatchRating(playerGoals, playerAssists, ownGoals - opponentGoals);
+    const newTrust = updateCoachTrust(coachTrust, matchRating);
+    setCoachTrust(newTrust);
+    advanceRound(updated, playerGoals, playerAssists, isMOTM ? 1 : 0, newTrust);
   };
 
   // "Simular Tudo": avança rodada a rodada sozinho (sempre simulando, nunca
@@ -216,6 +239,25 @@ export function LeagueSeasonPanel({
           )}
           <p className="text-[10px] text-slate-600 font-bold mt-1">LIG • Rodada {Math.min(round, state.totalRounds)}/{state.totalRounds}</p>
         </div>
+      </div>
+
+      <div className="bg-slate-950 border border-slate-800 rounded-xl p-3">
+        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Confiança do Técnico</p>
+        <div className="w-full h-2 bg-slate-800 rounded-full overflow-hidden mb-2">
+          <div
+            className={`h-full rounded-full transition-all ${
+              coachTrust >= 65 ? "bg-emerald-500" : coachTrust >= 35 ? "bg-amber-500" : "bg-red-500"
+            }`}
+            style={{ width: `${coachTrust}%` }}
+          />
+        </div>
+        <p className="text-xs font-bold text-slate-300">
+          {getEffectiveSquadRole(coachTrust) === "STARTER"
+            ? "Titular Absoluto"
+            : getEffectiveSquadRole(coachTrust) === "COMPETING"
+            ? "Disputando Posição"
+            : "Banco de Reservas"}
+        </p>
       </div>
 
       {!isSeasonOver && (

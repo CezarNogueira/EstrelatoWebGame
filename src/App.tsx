@@ -163,7 +163,7 @@ export default function App() {
   // não concluída).
   const [leagueSeasonState, setLeagueSeasonState] = useState<LeagueSeasonState | null>(null);
   const [pendingLeagueResult, setPendingLeagueResult] = useState<
-    { matches: number; goals: number; assists: number; leaguePosition: number; manOfTheMatch?: number } | null
+    { matches: number; goals: number; assists: number; leaguePosition: number; manOfTheMatch?: number; coachTrust?: number } | null
   >(null);
 
   // Fase 4 - Copas Nacional e Continental, também jogadas ponto a ponto
@@ -171,7 +171,7 @@ export default function App() {
   // time pode estar em até duas copas na mesma temporada.
   const [cupSeasonStates, setCupSeasonStates] = useState<CupSeasonState[]>([]);
   const [leagueResultForSeason, setLeagueResultForSeason] = useState<
-    { matches: number; goals: number; assists: number; leaguePosition: number; manOfTheMatch?: number } | null
+    { matches: number; goals: number; assists: number; leaguePosition: number; manOfTheMatch?: number; coachTrust?: number } | null
   >(null);
   const [clubCupFinals, setClubCupFinals] = useState<{ type: string; won: boolean; goals: number; assists: number }[]>([]);
   const [clubCupMatchesPlayed, setClubCupMatchesPlayed] = useState(0);
@@ -268,7 +268,7 @@ export default function App() {
 
   const proceedAfterLeagueSeason = (
     trainingBuff: Partial<Attributes> | undefined,
-    leagueResult: { matches: number; goals: number; assists: number; leaguePosition: number; manOfTheMatch?: number } | null,
+    leagueResult: { matches: number; goals: number; assists: number; leaguePosition: number; manOfTheMatch?: number; coachTrust?: number } | null,
     resolvedClubCupFinals: { type: string; won: boolean; goals: number; assists: number }[],
     extraFinals: string[] = []
   ) => {
@@ -292,7 +292,7 @@ export default function App() {
     }
   };
 
-  const handleLeagueSeasonComplete = (result: { matches: number; goals: number; assists: number; leaguePosition: number; manOfTheMatch?: number }) => {
+  const handleLeagueSeasonComplete = (result: { matches: number; goals: number; assists: number; leaguePosition: number; manOfTheMatch?: number; coachTrust?: number }) => {
     setLeagueResultForSeason(result);
   };
 
@@ -382,7 +382,7 @@ export default function App() {
   const executeSimulation = (
     trainingBuff?: Partial<Attributes>,
     prePlayedFinals?: {type: string; won: boolean; goals: number; assists: number}[],
-    leagueResult?: { matches: number; goals: number; assists: number; leaguePosition: number; manOfTheMatch?: number }
+    leagueResult?: { matches: number; goals: number; assists: number; leaguePosition: number; manOfTheMatch?: number; coachTrust?: number }
   ) => {
     if (!player) return;
     const { baseUpdatedPlayer, seasonStat, transfer, earnedPoints, proContractOffer } = simulateSeason(player, prePlayedFinals, leagueResult);
@@ -688,13 +688,20 @@ export default function App() {
          p.personal.mood = Math.min(100, p.personal.mood + 10);
          p.personal.social = Math.max(0, p.personal.social - 15);
          if (p.relationships.girlfriend) {
+             const isMarried = p.relationships.girlfriend.married;
              const exGirlfriendName = p.relationships.girlfriend.name;
              p.relationships = { ...p.relationships, girlfriend: null };
              if (p.history.length > 0) {
-               p.history[0].pressMessage = `"Escândalo! ${p.name} é flagrado traindo e o namoro com ${exGirlfriendName} chega ao fim."`;
+               const relTerm = isMarried ? "casamento" : "namoro";
+               p.history[0].pressMessage = `"Escândalo! ${p.name} é flagrado traindo e o ${relTerm} com ${exGirlfriendName} chega ao fim."`;
              }
+             const modalMsg = isMarried 
+               ? `Você ficou com a sua amiga, mas sua esposa descobriu tudo e o casamento chegou ao fim.`
+               : `Você ficou com a sua amiga, mas sua namorada descobriu tudo e terminou com você.`;
+             setAppreciationModal({ message: modalMsg, affinity: 100 });
+         } else {
+             setAppreciationModal({ message: `Você ficou com a sua amiga.`, affinity: 100 });
          }
-         setAppreciationModal({ message: `Você ficou com a sua amiga, mas sua namorada descobriu tudo e terminou com você.`, affinity: 100 });
          setPendingRomanceEvent(null);
          setPendingSimulationPhase(stateToPass);
          return;
@@ -774,10 +781,12 @@ export default function App() {
           p.personal.health = Math.max(0, p.personal.health - 5);
 
           if (p.relationships.girlfriend) {
+            const isMarried = p.relationships.girlfriend.married;
             const exGirlfriendName = p.relationships.girlfriend.name;
             p.relationships = { ...p.relationships, girlfriend: null };
             if (p.history.length > 0) {
-              p.history[0].pressMessage = `"Escândalo! ${p.name} é flagrado em um affair e o namoro com ${exGirlfriendName} chega ao fim."`;
+              const relTerm = isMarried ? "casamento" : "namoro";
+              p.history[0].pressMessage = `"Escândalo! ${p.name} é flagrado em um affair e o ${relTerm} com ${exGirlfriendName} chega ao fim."`;
             }
           } else if (p.history.length > 0) {
             p.history[0].pressMessage = `"Escândalo! ${p.name} é flagrado em um affair e vira manchete da imprensa marrom."`;
@@ -1133,6 +1142,7 @@ export default function App() {
       p.contractYears = 0;
       p.salary = 0;
       p.squadRole = "ROTATION";
+      p.coachTrust = 35;
       if (p.history.length > 0) {
         p.history[0].pressMessage = `"${p.name} não chega a um acordo e fica sem clube!"`;
       }
@@ -1164,6 +1174,7 @@ export default function App() {
     p.contractYears = years;
     if (extras) {
       p.squadRole = extras.role;
+      p.coachTrust = extras.role === "STARTER" ? 65 : extras.role === "COMPETING" ? 50 : 35;
       p.money += extras.signingBonus;
     }
 

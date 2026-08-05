@@ -9,6 +9,7 @@ import {
   cupReachedFinalRound,
   countCupMatchesPlayed,
   generateSeasonMatchStats,
+  sanitizeCupSeasonState,
 } from "../utils";
 import { InteractiveMatchModal } from "./InteractiveMatchModal";
 import { Play, FastForward, Trophy, SkipForward } from "lucide-react";
@@ -35,6 +36,13 @@ export function CupSeasonPanel({
   const [cupMotm, setCupMotm] = useState(0);
   const autoTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => {
+    const sanitized = sanitizeCupSeasonState(state, player.currentTeam);
+    if (sanitized !== state) {
+      onStateChange(sanitized);
+    }
+  }, [state, player.currentTeam, onStateChange]);
+
   const isNationalCup =
     state.cupName.includes("Copa do Mundo") ||
     state.cupName.includes("Eurocopa") ||
@@ -42,10 +50,20 @@ export function CupSeasonPanel({
     state.cupName.includes("Copa da Ásia") ||
     state.cupName.includes("Copa Continental (Seleção)");
 
+  const isGroupStage = !!(state.hasGroupStage && !state.groupStageDone);
   const isDone = state.eliminated || state.champion;
+
   const roundIdx = state.currentRoundIndex;
-  const roundName = state.roundNames[roundIdx];
-  const matches = state.roundsMatches[roundIdx] || [];
+  const grpIdx = state.groupCurrentRoundIndex || 0;
+
+  const roundName = isGroupStage
+    ? `Fase de Grupos (${grpIdx + 1}/3)`
+    : state.roundNames[roundIdx];
+
+  const matches = isGroupStage
+    ? state.groupRoundsMatches?.[grpIdx] || []
+    : state.roundsMatches[roundIdx] || [];
+
   const playerFixture = matches.find((m) => m.isPlayerMatch);
   const opponentTeam: Team | undefined =
     playerFixture && (playerFixture.home.id === state.playerTeamId ? playerFixture.away : playerFixture.home);
@@ -143,7 +161,7 @@ export function CupSeasonPanel({
         finalType={state.cupName}
         headerLabel={`${roundName} - ${state.cupName}`}
         explicitOpponent={opponentTeam}
-        allowDraw={false}
+        allowDraw={isGroupStage}
         onComplete={handleMatchComplete}
       />
     );
@@ -189,8 +207,62 @@ export function CupSeasonPanel({
         <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest shrink-0">{roundName}</p>
       </div>
 
+      {/* Tabela da Fase de Grupos */}
+      {isGroupStage && state.groupStandings && (
+        <div className="bg-slate-900/90 rounded-lg p-2 border border-slate-800 space-y-1 my-1">
+          <div className="flex justify-between items-center text-[10px] font-bold text-slate-400 border-b border-slate-800 pb-1">
+            <span className="truncate w-28 uppercase tracking-wider text-[9px]">Fase de Grupos</span>
+            <div className="flex gap-1.5 text-center text-[9px] font-mono">
+              <span className="w-3">P</span>
+              <span className="w-3">J</span>
+              <span className="w-3">V</span>
+              <span className="w-3">E</span>
+              <span className="w-3">D</span>
+              <span className="w-4">SG</span>
+            </div>
+          </div>
+          <div className="space-y-0.5">
+            {state.groupStandings.map((row, idx) => {
+              const isPlayerTeam = row.team.id === state.playerTeamId;
+              const isQualifyingZone = idx < 2;
+              return (
+                <div
+                  key={row.team.id}
+                  className={`flex justify-between items-center text-[10px] px-1 py-0.5 rounded ${
+                    isPlayerTeam
+                      ? "bg-emerald-500/25 text-emerald-300 font-bold border border-emerald-500/40"
+                      : isQualifyingZone
+                      ? "text-slate-200"
+                      : "text-slate-400 opacity-60"
+                  }`}
+                >
+                  <div className="flex items-center gap-1 truncate w-28">
+                    <span className={`text-[9px] font-black w-2.5 ${isQualifyingZone ? "text-emerald-400" : "text-slate-500"}`}>
+                      {idx + 1}
+                    </span>
+                    <span className="truncate text-[10px]">{row.team.name}</span>
+                  </div>
+                  <div className="flex gap-1.5 text-center text-[9px] font-mono">
+                    <span className={`w-3 font-bold ${isQualifyingZone ? "text-emerald-400" : "text-slate-300"}`}>{row.points}</span>
+                    <span className="w-3 text-slate-400">{row.played}</span>
+                    <span className="w-3 text-slate-400">{row.wins}</span>
+                    <span className="w-3 text-slate-400">{row.draws}</span>
+                    <span className="w-3 text-slate-400">{row.losses}</span>
+                    <span className="w-4 text-slate-400">{row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-[8px] text-emerald-400/80 text-center uppercase tracking-wider font-semibold pt-0.5">
+            1º e 2º se classificam para as Oitavas
+          </p>
+        </div>
+      )}
+
       {playerFixture && opponentTeam && (
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-2 bg-slate-900/50 p-1.5 rounded-lg border border-slate-800">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Próximo Jogo:</span>
           <div className="flex items-center gap-1.5 min-w-0">
             {opponentTeam.logo ? (
               <img src={opponentTeam.logo} className="w-4 h-4 object-contain shrink-0" alt={opponentTeam.name} />
