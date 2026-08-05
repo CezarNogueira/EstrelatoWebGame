@@ -57,7 +57,7 @@ export function CupSeasonPanel({
   const grpIdx = state.groupCurrentRoundIndex || 0;
 
   const roundName = isGroupStage
-    ? `Fase de Grupos (${grpIdx + 1}/3)`
+    ? `Fase de Grupos`
     : state.roundNames[roundIdx];
 
   const matches = isGroupStage
@@ -197,11 +197,6 @@ export function CupSeasonPanel({
     <div className={`border rounded-xl p-3 space-y-2 ${isNationalCup ? "bg-emerald-950/30 border-emerald-500/40" : "bg-slate-950 border-slate-800"}`}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-1.5 min-w-0">
-          {isNationalCup && (
-            <span className="text-[9px] font-black px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 uppercase tracking-widest shrink-0">
-              Seleção
-            </span>
-          )}
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest truncate">{state.cupName}</p>
         </div>
         <p className="text-[10px] font-bold text-amber-500 uppercase tracking-widest shrink-0">{roundName}</p>
