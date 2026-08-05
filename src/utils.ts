@@ -1418,9 +1418,16 @@ export const simulateSeason = (
 
   let finalUpdatedPlayer: Player = baseUpdatedPlayer;
 
-  if (finalUpdatedPlayer.chats && finalUpdatedPlayer.chats["treinador"]) {
+  // Limpa o chat de cada pessoa antes de sortear a mensagem da nova
+  // temporada (mesmo padrão que já era feito só com o treinador) - assim o
+  // chat sempre mostra só a conversa atual, em vez de acumular mensagens de
+  // temporadas passadas junto com as novas.
+  if (finalUpdatedPlayer.chats) {
     finalUpdatedPlayer.chats = { ...finalUpdatedPlayer.chats };
     delete finalUpdatedPlayer.chats["treinador"];
+    for (const member of newFamily) delete finalUpdatedPlayer.chats[member.id];
+    for (const friend of newFriends) delete finalUpdatedPlayer.chats[friend.id];
+    if (newGirlfriend) delete finalUpdatedPlayer.chats[newGirlfriend.id];
   }
 
   if (babyBornMessage && newGirlfriend) {
@@ -2762,5 +2769,3 @@ export function sanitizeCupSeasonState(state: CupSeasonState, playerTeam?: Team)
     opponentPool: newOpponentPool,
   };
 }
-
-
